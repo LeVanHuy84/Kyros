@@ -55,3 +55,8 @@ tasks.withType(JavaCompile).configureEach {
         error 'NullAway'
     }
 }
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
