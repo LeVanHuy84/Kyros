@@ -19,3 +19,14 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+scalar:
+  enabled: true
+  url: /v3/api-docs
+  path: /scalar
+  pageTitle: "AI Executive Assistant API Reference"
+
