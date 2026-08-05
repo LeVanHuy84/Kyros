@@ -33,7 +33,7 @@ const Verify: React.FC = () => {
         setStatus('success');
       } catch (err: any) {
         setStatus('error');
-        setErrorMsg(err.response?.data?.detail || 'Invalid or expired verification token.');
+        setErrorMsg(err.friendlyMessage || 'Invalid or expired verification token.');
       }
     };
 
@@ -50,7 +50,7 @@ const Verify: React.FC = () => {
       await apiClient.post('/auth/resend-verification', { email });
       setResendSuccess(true);
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || 'Failed to resend verification email.');
+      setErrorMsg(err.friendlyMessage || 'Failed to resend verification email.');
     } finally {
       setResendLoading(false);
     }

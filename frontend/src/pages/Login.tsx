@@ -48,7 +48,7 @@ const Login: React.FC = () => {
       setResendSuccess(true);
       setShowResend(false);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to resend verification email.');
+      setError(err.friendlyMessage || 'Failed to resend verification email.');
     } finally {
       setResendLoading(false);
     }
@@ -86,19 +86,13 @@ const Login: React.FC = () => {
       navigate('/agent');
     } catch (err: any) {
       console.error(err);
-      const detail = err.response?.data?.detail;
-      if (detail) {
-        setError(detail);
-        if (detail.toLowerCase().includes('verify your email') || detail.toLowerCase().includes('not verified')) {
-          setShowResend(true);
-        }
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError(isRegister 
-          ? 'Registration failed. This email may already be registered.' 
-          : 'Sign in failed. Please verify your email and password.'
-        );
+      const msg = err.friendlyMessage || (isRegister 
+        ? 'Registration failed. This email may already be registered.' 
+        : 'Sign in failed. Please verify your email and password.'
+      );
+      setError(msg);
+      if (msg.toLowerCase().includes('verify your email') || msg.toLowerCase().includes('not verified')) {
+        setShowResend(true);
       }
     } finally {
       setIsLoading(false);

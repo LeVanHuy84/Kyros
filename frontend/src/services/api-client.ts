@@ -42,6 +42,18 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 503) {
       console.error('Service temporarily unavailable (Redis connection down). Session check failed.');
     }
+
+    // Attach friendly error messages centrally for better UX and error reporting
+    let friendlyMessage = '';
+    if (error.code === 'ERR_NETWORK' || !error.response) {
+      friendlyMessage = 'Cannot connect to the server. Please verify the backend is running.';
+    } else if (error.response.status >= 500) {
+      friendlyMessage = `Cannot connect to the server. Please verify the backend is running. (Status: ${error.response.status})`;
+    } else {
+      friendlyMessage = error.response.data?.detail || error.response.data?.message || '';
+    }
+    
+    error.friendlyMessage = friendlyMessage;
     
     return Promise.reject(error);
   }
