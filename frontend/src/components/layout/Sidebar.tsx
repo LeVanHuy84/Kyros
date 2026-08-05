@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Bot, ListTodo, Calendar, Cpu, Settings, Link2, ShieldAlert } from 'lucide-react';
+import { Bot, ListTodo, Calendar, Settings, Link2, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { TenantSelector } from './TenantSelector';
 
@@ -13,7 +13,7 @@ export const Sidebar: React.FC = () => {
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-brand">
-          <Cpu size={24} style={{ color: 'var(--color-secondary)' }} aria-hidden="true" />
+          <img src="/favicon.svg" alt="Kyros Logo" style={{ width: '24px', height: '24px' }} aria-hidden="true" />
           <h1>Kyros</h1>
         </div>
         <p className="sidebar-sub">Tenant Workspace v2.0</p>
@@ -50,8 +50,8 @@ export const Sidebar: React.FC = () => {
 
         {isSystemOperator && (
           <>
-            <div style={{ height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.1)', margin: '12px 0 4px 0' }} />
-            <div style={{ padding: '0 16px', fontSize: '11px', fontWeight: '600', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.1)', margin: '20px 0 10px 0' }} />
+            <div className="sidebar-section-title">
               Admin Console
             </div>
             <NavLink to="/admin/users" className="nav-link">
@@ -65,11 +65,11 @@ export const Sidebar: React.FC = () => {
           </>
         )}
       </nav>
-
+ 
       <div className="profile-card">
         <div className="profile-info">
           <span className="profile-name">{user?.name || 'Jane Doe'}</span>
-          <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)' }}>
+          <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.5)' }}>
             {user?.email || 'jane.doe@example.com'}
           </span>
         </div>

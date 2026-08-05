@@ -21,13 +21,18 @@ class ArchitectureTests {
 
     for (String module : modules) {
       String modulePackage = BASE_PACKAGE + "." + module;
+      JavaClasses moduleClasses =
+          new ClassFileImporter()
+              .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+              .importPackages(modulePackage);
+
       onionArchitecture()
           .domainModels(modulePackage + ".domain..")
           .applicationServices(modulePackage + ".application..")
           .adapter("presentation", modulePackage + ".presentation..")
           .adapter("infrastructure", modulePackage + ".infrastructure..")
           .withOptionalLayers(true)
-          .check(importedClasses());
+          .check(moduleClasses);
     }
   }
 

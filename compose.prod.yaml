@@ -3,9 +3,9 @@ services:
     image: ${IMAGE_REPOSITORY}/backend:latest
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:${PORT:-8080}"
     environment:
-      PORT: 8080
+      PORT: ${PORT:-8080}
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/assistant_db
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-assistant_user}
@@ -24,7 +24,7 @@ services:
     image: ${IMAGE_REPOSITORY}/frontend:latest
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       - backend
 

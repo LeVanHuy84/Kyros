@@ -1,11 +1,26 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, History, PlayCircle, ClipboardCheck } from 'lucide-react';
+import { Bell, History, PlayCircle, ClipboardCheck, Sun, Moon } from 'lucide-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export const TopNav: React.FC = () => {
   const { activeWorkspace } = useWorkspace();
   const location = useLocation();
+  const { theme, setTheme } = useTheme();
+
+  const handleThemeToggle = () => {
+    if (theme === 'dark') {
+      setTheme('light');
+    } else if (theme === 'light') {
+      setTheme('dark');
+    } else {
+      const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(isSystemDark ? 'light' : 'dark');
+    }
+  };
+
+  const isDarkActive = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   // Determine Title and Description based on the current path
   const getPageMeta = () => {
@@ -70,6 +85,16 @@ export const TopNav: React.FC = () => {
 
         {/* Global Action Icons */}
         <div className="header-actions">
+          {/* Theme Toggle Switch */}
+          <button 
+            className="action-btn" 
+            title={`Toggle Theme (Current: ${theme})`}
+            onClick={handleThemeToggle}
+            aria-label="Toggle Theme"
+          >
+            {isDarkActive ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
           {/* Pending Approvals Queue [Q] */}
           <button 
             className="action-btn" 

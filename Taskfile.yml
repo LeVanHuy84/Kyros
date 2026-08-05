@@ -5,6 +5,18 @@ vars:
   GRADLE_CMD: '{{if eq OS "windows"}}gradlew.bat{{else}}./gradlew{{end}}'
 
 tasks:
+  dev:
+    desc: "Start database infrastructure, then launch backend and frontend concurrently"
+    cmds:
+      - task: infra-up
+      - task: start-parallel
+
+  start-parallel:
+    internal: true
+    deps:
+      - dev-backend
+      - dev-frontend
+
   format:
     desc: "Format all code across the monorepo"
     cmds:
