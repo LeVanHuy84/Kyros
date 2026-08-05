@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
 
 @Entity
 @Table(name = "session_events", schema = "auth")
@@ -27,6 +28,7 @@ public class SessionEventJpaEntity {
   @Column(name = "occurred_at", nullable = false, updatable = false)
   private Instant occurredAt;
 
+  @JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
   @Column(name = "metadata")
   private String metadata;
 

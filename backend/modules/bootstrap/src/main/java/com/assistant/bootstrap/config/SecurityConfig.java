@@ -27,12 +27,25 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             auth ->
                 auth.requestMatchers(
-                        "/api/auth/register", "/api/auth/login", "/v3/api-docs/**", "/scalar")
+                        "/api/auth/register",
+                        "/api/auth/login",
+                        "/v3/api-docs",
+                        "/v3/api-docs/**",
+                        "/scalar",
+                        "/scalar/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
+  }
+
+  @Bean
+  public org.springframework.security.core.userdetails.UserDetailsService userDetailsService() {
+    return username -> {
+      throw new org.springframework.security.core.userdetails.UsernameNotFoundException(
+          "User not found: " + username);
+    };
   }
 }
