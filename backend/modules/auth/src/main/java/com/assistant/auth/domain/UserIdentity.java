@@ -42,7 +42,7 @@ public class UserIdentity {
         id,
         email,
         passwordHash,
-        AccountStatus.Active,
+        AccountStatus.PendingVerification,
         0,
         "EndUser",
         Instant.now(),
@@ -132,6 +132,14 @@ public class UserIdentity {
 
   public void suspendAccount() {
     this.status = AccountStatus.Suspended;
+    this.updatedAt = Instant.now();
+  }
+
+  public void verifyEmail() {
+    if (this.status != AccountStatus.PendingVerification) {
+      throw new IllegalStateException("Only pending verification accounts can be verified");
+    }
+    this.status = AccountStatus.Active;
     this.updatedAt = Instant.now();
   }
 }

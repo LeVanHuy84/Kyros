@@ -9,7 +9,28 @@ export const AppLayout: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { activeWorkspace, isLoading: wsLoading } = useWorkspace();
 
-  if (authLoading || wsLoading) {
+  if (authLoading) {
+    return (
+      <div style={{
+        display: 'flex',
+        height: '100vh',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'var(--bg-app)',
+        color: 'var(--text-main)',
+        fontFamily: 'var(--font-sans)'
+      }}>
+        <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Loading authentication...</span>
+      </div>
+    );
+  }
+
+  // Security Check: Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (wsLoading) {
     return (
       <div style={{
         display: 'flex',
@@ -38,11 +59,6 @@ export const AppLayout: React.FC = () => {
         </div>
       </div>
     );
-  }
-
-  // Security Check: Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
   }
 
   // Workspace Check: Redirect to workspace selector if no active workspace

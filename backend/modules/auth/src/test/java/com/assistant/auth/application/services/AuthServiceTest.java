@@ -1,11 +1,19 @@
 package com.assistant.auth.application.services;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.assistant.auth.application.ports.out.EmailSenderPort;
 import com.assistant.auth.application.ports.out.PasswordHasherPort;
 import com.assistant.auth.application.ports.out.TokenGeneratorPort;
 import com.assistant.auth.application.ports.out.TokenRevocationCachePort;
 import com.assistant.auth.domain.AccountStatus;
+import com.assistant.auth.domain.EmailVerificationToken;
+import com.assistant.auth.domain.EmailVerificationTokenRepository;
 import com.assistant.auth.domain.SessionEvent;
 import com.assistant.auth.domain.UserIdentity;
 import com.assistant.auth.domain.UserRepository;
@@ -13,7 +21,14 @@ import com.assistant.kernel.domain.UserId;
 import com.assistant.kernel.event.UserRegistered;
 import com.assistant.kernel.exception.DomainException;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -21,22 +36,32 @@ import org.springframework.context.ApplicationEventPublisher;
 class AuthServiceTest {
 
   private FakeUserRepository userRepository;
+  private FakeEmailVerificationTokenRepository tokenRepository;
   private FakePasswordHasher passwordHasher;
   private FakeTokenGenerator tokenGenerator;
   private FakeTokenRevocationCache tokenRevocationCache;
+  private FakeEmailSender emailSender;
   private FakeEventPublisher eventPublisher;
   private AuthService authService;
 
   @BeforeEach
   void setUp() {
     userRepository = new FakeUserRepository();
+    tokenRepository = new FakeEmailVerificationTokenRepository();
     passwordHasher = new FakePasswordHasher();
     tokenGenerator = new FakeTokenGenerator();
     tokenRevocationCache = new FakeTokenRevocationCache();
+    emailSender = new FakeEmailSender();
     eventPublisher = new FakeEventPublisher();
     authService =
         new AuthService(
-            userRepository, passwordHasher, tokenGenerator, tokenRevocationCache, eventPublisher);
+            userRepository,
+            tokenRepository,
+            passwordHasher,
+            tokenGenerator,
+            tokenRevocationCache,
+            emailSender,
+            eventPublisher);
   }
 
   @Test
@@ -49,7 +74,7 @@ class AuthServiceTest {
     assertNotNull(user);
     assertEquals("test@example.com", user.getEmail());
     assertEquals("hashed_" + password, user.getPasswordHash());
-    assertEquals(AccountStatus.Active, user.getStatus());
+    assertEquals(AccountStatus.PendingVerification, user.getStatus());
 
     // Verify stored in repository
     assertTrue(userRepository.findById(user.getId()).isPresent());
@@ -59,6 +84,11 @@ class AuthServiceTest {
     UserRegistered event = (UserRegistered) eventPublisher.publishedEvents.get(0);
     assertEquals(user.getId(), event.userId());
     assertEquals("test@example.com", event.email());
+
+    // Verify verification token saved and email sent
+    assertNotNull(emailSender.lastToken);
+    assertEquals("test@example.com", emailSender.lastEmail);
+    assertTrue(tokenRepository.findByToken(emailSender.lastToken).isPresent());
   }
 
   @Test
@@ -70,17 +100,31 @@ class AuthServiceTest {
   }
 
   @Test
-  void shouldAuthenticateUserSuccessfully() {
+  void shouldAuthenticateUserSuccessfullyAfterVerification() {
     String email = "auth@example.com";
     String password = "myPassword";
 
     authService.register(email, password);
 
+    // Verify before login
+    String verificationToken = emailSender.lastToken;
+    assertNotNull(verificationToken);
+
+    // Attempt login before verifying should fail
+    assertThrows(DomainException.class, () -> authService.authenticate(email, password));
+
+    // Verify account
+    authService.verify(verificationToken);
+
+    // Login should succeed now
     var result = authService.authenticate(email, password);
 
     assertNotNull(result);
     assertEquals("Bearer", result.tokenType());
     assertEquals("token_auth@example.com", result.accessToken());
+
+    UserIdentity verifiedUser = userRepository.findByEmail(email).orElseThrow();
+    assertEquals(AccountStatus.Active, verifiedUser.getStatus());
   }
 
   @Test
@@ -88,6 +132,9 @@ class AuthServiceTest {
     String email = "lock@example.com";
     String correctPassword = "correctPassword";
     authService.register(email, correctPassword);
+
+    // Verify first
+    authService.verify(emailSender.lastToken);
 
     // Fail 4 times
     for (int i = 0; i < 4; i++) {
@@ -108,6 +155,31 @@ class AuthServiceTest {
     DomainException exception =
         assertThrows(DomainException.class, () -> authService.authenticate(email, correctPassword));
     assertTrue(exception.getMessage().contains("locked"));
+  }
+
+  @Test
+  void shouldResendVerificationTokenSuccessfully() {
+    String email = "resend@example.com";
+    authService.register(email, "password123");
+
+    String firstToken = emailSender.lastToken;
+    assertNotNull(firstToken);
+
+    // Resend
+    authService.resend(email);
+
+    String secondToken = emailSender.lastToken;
+    assertNotNull(secondToken);
+    assertNotEquals(firstToken, secondToken);
+
+    // Old token should be deleted
+    assertFalse(tokenRepository.findByToken(firstToken).isPresent());
+    assertTrue(tokenRepository.findByToken(secondToken).isPresent());
+
+    // Verify with new token
+    authService.verify(secondToken);
+    UserIdentity user = userRepository.findByEmail(email).orElseThrow();
+    assertEquals(AccountStatus.Active, user.getStatus());
   }
 
   @Test
@@ -154,6 +226,37 @@ class AuthServiceTest {
     }
   }
 
+  private static class FakeEmailVerificationTokenRepository
+      implements EmailVerificationTokenRepository {
+    private final Map<UUID, EmailVerificationToken> tokens = new HashMap<>();
+
+    @Override
+    public EmailVerificationToken save(EmailVerificationToken token) {
+      tokens.put(token.getId(), token);
+      return token;
+    }
+
+    @Override
+    public Optional<EmailVerificationToken> findByToken(String token) {
+      return tokens.values().stream().filter(t -> t.getToken().equals(token)).findFirst();
+    }
+
+    @Override
+    public Optional<EmailVerificationToken> findByUserId(UserId userId) {
+      return tokens.values().stream().filter(t -> t.getUserId().equals(userId)).findFirst();
+    }
+
+    @Override
+    public void delete(EmailVerificationToken token) {
+      tokens.remove(token.getId());
+    }
+
+    @Override
+    public void deleteByUserId(UserId userId) {
+      tokens.values().removeIf(t -> t.getUserId().equals(userId));
+    }
+  }
+
   private static class FakePasswordHasher implements PasswordHasherPort {
     @Override
     public String hash(String rawPassword) {
@@ -184,6 +287,17 @@ class AuthServiceTest {
     @Override
     public boolean isRevoked(String jti) {
       return revokedJtis.contains(jti);
+    }
+  }
+
+  private static class FakeEmailSender implements EmailSenderPort {
+    private String lastEmail;
+    private String lastToken;
+
+    @Override
+    public void sendVerificationEmail(String email, String token) {
+      this.lastEmail = email;
+      this.lastToken = token;
     }
   }
 

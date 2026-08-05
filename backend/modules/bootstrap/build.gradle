@@ -44,4 +44,18 @@ tasks.named('bootRun') {
         "--enable-native-access=ALL-UNNAMED",
         "--sun-misc-unsafe-memory-access=allow"
     ]
+
+    // Load local environment variables from monorepo root .env file
+    def envFile = rootProject.file('../.env')
+    if (envFile.exists()) {
+        envFile.eachLine { line ->
+            line = line.trim()
+            if (!line.isEmpty() && !line.startsWith('#') && line.contains('=')) {
+                def parts = line.split('=', 2)
+                if (parts.length == 2) {
+                    environment parts[0].trim(), parts[1].trim()
+                }
+            }
+        }
+    }
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import apiClient from '../services/api-client';
 import { ShieldCheck, Loader2, Eye, EyeOff } from 'lucide-react';
 
 const Login: React.FC = () => {
@@ -14,6 +15,11 @@ const Login: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Verification Resend States
+  const [showResend, setShowResend] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   // Mount Guard: Redirect if already logged in
   useEffect(() => {
@@ -29,11 +35,30 @@ const Login: React.FC = () => {
     setShowPassword(false);
     setShowConfirmPassword(false);
     setError('');
+    setShowResend(false);
+    setResendSuccess(false);
+  };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setResendSuccess(false);
+    setError('');
+    try {
+      await apiClient.post('/auth/resend-verification', { email });
+      setResendSuccess(true);
+      setShowResend(false);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to resend verification email.');
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setResendSuccess(false);
+    setShowResend(false);
     
     if (!email || !password) {
       setError('Please fill in all fields.');
@@ -61,8 +86,12 @@ const Login: React.FC = () => {
       navigate('/agent');
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.detail) {
-        setError(err.response.data.detail);
+      const detail = err.response?.data?.detail;
+      if (detail) {
+        setError(detail);
+        if (detail.toLowerCase().includes('verify your email') || detail.toLowerCase().includes('not verified')) {
+          setShowResend(true);
+        }
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
@@ -130,11 +159,50 @@ const Login: React.FC = () => {
             color: 'var(--color-danger)',
             fontSize: '13px',
             display: 'flex',
-            alignItems: 'center',
+            flexDirection: 'column',
             gap: '8px',
-            lineHeight: '1.4'
+            lineHeight: '1.4',
+            textAlign: 'left'
           }}>
             <span>{error}</span>
+            {showResend && (
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resendLoading}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-primary)',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  padding: 0,
+                  textDecoration: 'underline',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  outline: 'none'
+                }}
+              >
+                {resendLoading && <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />}
+                Resend Verification Email
+              </button>
+            )}
+          </div>
+        )}
+
+        {resendSuccess && (
+          <div style={{
+            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+            border: '1px solid var(--color-success)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '12px 14px',
+            color: 'var(--color-success)',
+            fontSize: '13px',
+            lineHeight: '1.4'
+          }}>
+            A new email verification link has been sent. Please check your inbox.
           </div>
         )}
 

@@ -48,13 +48,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     
-    if (storedToken && storedUser) {
+    // Ensure we have a valid 3-part JWT, discarding legacy mock credentials
+    if (storedToken && storedToken.split('.').length === 3 && storedUser) {
       setToken(storedToken);
       try {
         setUser(JSON.parse(storedUser));
       } catch (e) {
         console.error('Failed to parse user from localStorage', e);
       }
+    } else if (storedToken || storedUser) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('active_workspace_id');
     }
     setIsLoading(false);
   }, []);

@@ -29,6 +29,8 @@ public class SecurityConfig {
                 auth.requestMatchers(
                         "/api/auth/register",
                         "/api/auth/login",
+                        "/api/auth/verify",
+                        "/api/auth/resend-verification",
                         "/v3/api-docs",
                         "/v3/api-docs/**",
                         "/scalar",

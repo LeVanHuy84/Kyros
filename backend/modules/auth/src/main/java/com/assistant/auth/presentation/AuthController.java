@@ -3,11 +3,16 @@ package com.assistant.auth.presentation;
 import com.assistant.auth.application.ports.in.AuthenticateUserUseCase;
 import com.assistant.auth.application.ports.in.LogoutUseCase;
 import com.assistant.auth.application.ports.in.RegisterUserUseCase;
+import com.assistant.auth.application.ports.in.ResendVerificationUseCase;
+import com.assistant.auth.application.ports.in.VerifyEmailUseCase;
 import com.assistant.auth.domain.UserIdentity;
 import com.assistant.auth.presentation.dto.AuthResponse;
 import com.assistant.auth.presentation.dto.LoginRequest;
 import com.assistant.auth.presentation.dto.RegisterUserRequest;
+import com.assistant.auth.presentation.dto.ResendVerificationRequest;
 import com.assistant.auth.presentation.dto.UserResponse;
+import com.assistant.auth.presentation.dto.VerifyEmailRequest;
+import com.assistant.auth.presentation.dto.VerifyResponse;
 import com.assistant.auth.presentation.security.JwtAuthenticationToken;
 import com.assistant.kernel.domain.UserId;
 import jakarta.validation.Valid;
@@ -29,14 +34,20 @@ public class AuthController {
   private final RegisterUserUseCase registerUseCase;
   private final AuthenticateUserUseCase authenticateUseCase;
   private final LogoutUseCase logoutUseCase;
+  private final VerifyEmailUseCase verifyEmailUseCase;
+  private final ResendVerificationUseCase resendVerificationUseCase;
 
   public AuthController(
       RegisterUserUseCase registerUseCase,
       AuthenticateUserUseCase authenticateUseCase,
-      LogoutUseCase logoutUseCase) {
+      LogoutUseCase logoutUseCase,
+      VerifyEmailUseCase verifyEmailUseCase,
+      ResendVerificationUseCase resendVerificationUseCase) {
     this.registerUseCase = registerUseCase;
     this.authenticateUseCase = authenticateUseCase;
     this.logoutUseCase = logoutUseCase;
+    this.verifyEmailUseCase = verifyEmailUseCase;
+    this.resendVerificationUseCase = resendVerificationUseCase;
   }
 
   @PostMapping("/register")
@@ -62,6 +73,20 @@ public class AuthController {
       logoutUseCase.logout((UserId) jwtAuth.getPrincipal(), jwtAuth.getJti(), remaining);
     }
     SecurityContextHolder.clearContext();
+    return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("/verify")
+  public ResponseEntity<VerifyResponse> verifyEmail(
+      @Valid @RequestBody VerifyEmailRequest request) {
+    verifyEmailUseCase.verify(request.token());
+    return ResponseEntity.ok(new VerifyResponse(true, "Email verified successfully"));
+  }
+
+  @PostMapping("/resend-verification")
+  public ResponseEntity<Void> resendVerification(
+      @Valid @RequestBody ResendVerificationRequest request) {
+    resendVerificationUseCase.resend(request.email());
     return ResponseEntity.noContent().build();
   }
 }

@@ -16,6 +16,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const UserAdmin = lazy(() => import('./pages/admin/UserAdmin'));
 const WorkspaceAdmin = lazy(() => import('./pages/admin/WorkspaceAdmin'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const Verify = lazy(() => import('./pages/Verify'));
 
 const PageLoader = () => (
   <div style={{
@@ -45,6 +46,7 @@ function App() {
                 
                 {/* Public Auth Routes */}
                 <Route path="/login" element={<Login />} />
+                <Route path="/verify" element={<Verify />} />
                 
                 {/* Workspace Selection Guard Route */}
                 <Route path="/workspaces" element={<Workspaces />} />
