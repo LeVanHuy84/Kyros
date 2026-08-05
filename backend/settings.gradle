@@ -1,0 +1,31 @@
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    // Include the build-logic project for internal convention plugins
+    includeBuild 'modules/build-logic'
+}
+
+rootProject.name = 'ai-executive-assistant-backend'
+
+dependencyResolutionManagement {
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    repositories {
+        mavenCentral()
+    }
+}
+
+// Include all modular monolith bounded context modules
+include(
+    ':modules:shared-kernel',
+    ':modules:auth',
+    ':modules:workspace',
+    ':modules:todo',
+    ':modules:calendar',
+    ':modules:memory',
+    ':modules:notification',
+    ':modules:connector',
+    ':modules:agent',
+    ':modules:bootstrap'
+)

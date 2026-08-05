@@ -1,0 +1,11 @@
+plugins {
+    id 'java-quality'
+}
+
+dependencies {
+    implementation project(':modules:shared-kernel')
+    implementation project(':modules:workspace')
+    implementation project(':modules:todo')
+    implementation project(':modules:calendar')
+    implementation project(':modules:notification')
+}

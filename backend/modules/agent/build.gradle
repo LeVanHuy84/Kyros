@@ -1,0 +1,9 @@
+plugins {
+    id 'java-quality'
+}
+
+dependencies {
+    implementation project(':modules:shared-kernel')
+    implementation project(':modules:workspace')
+    implementation project(':modules:memory')
+}

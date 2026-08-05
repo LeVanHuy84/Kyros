@@ -1,0 +1,34 @@
+plugins {
+    alias(libs.plugins.spring.boot) apply false
+    id 'java'
+    alias(libs.plugins.spotless) apply false
+}
+
+allprojects {
+    apply plugin: 'com.diffplug.spotless'
+
+    spotless {
+        format('misc') {
+            target '*.md', '.gitignore', '*.yml', '*.yaml'
+            trimTrailingWhitespace()
+            indentWithSpaces(2)
+            endWithNewline()
+        }
+        format('gradle') {
+            target '*.gradle'
+            trimTrailingWhitespace()
+            indentWithSpaces(4)
+            endWithNewline()
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'java-library'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+}

@@ -1,0 +1,4071 @@
+openapi: 3.1.0
+info:
+  title: AI Executive Assistant API
+  version: 1.0.0
+  description: |
+    Standardized REST API specification for the AI Executive Assistant modular monolith system.
+    This API comprises 8 bounded contexts: Auth (Identity & Access Management), Workspace (Tenancy boundaries),
+    Todo (Tasks & Recurrence), Calendar (Events & Reminders), Memory (Conversations & Preferences),
+    Notification (Inbox & Routing Profiles), Connector (Third-party Syncing & Conflicts), and AI Agent.
+
+    ### Common Conventions
+    - **Authentication**: All protected endpoints require a Bearer token (`Authorization: Bearer <JWT>`).
+    - **Workspace Tenancy**: Endpoints under `/api/v1/workspaces/{workspaceId}` guarantee strict tenant isolation.
+    - **Errors**: Standard RFC 7807 Problem Details are returned for all error scenarios across all contexts.
+    - **Pagination**: Offset-based paginated collections use a standardized envelope and 0-indexed pages, with the exception of the Connector context, which uses cursor-based pagination.
+servers:
+  - url: https://api.assistant.com
+    description: Production Server
+paths:
+  # --- AUTH CONTEXT PATHS ---
+  /api/v1/auth/register:
+    post:
+      summary: Register User
+      description: Register a new user identity in the system. Provisioning of the user's primary workspace happens asynchronously via the `UserRegistered` event.
+      operationId: registerUser
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '201':
+          description: User registered successfully. Workspace provisioning initiated asynchronously.
+        '400':
+          description: Validation failure (e.g., password does not meet complexity requirements).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: Email already registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/auth/login:
+    post:
+      summary: Authenticate User
+      description: Authenticate user using email and password, returning a JWT token upon success.
+      operationId: loginUser
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+      responses:
+        '200':
+          description: Successfully authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid email or password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Account is locked, suspended, or not active.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/auth/logout:
+    post:
+      summary: Invalidate Token
+      description: Invalidate the current session token. Scoped to the currently authenticated user.
+      operationId: logoutUser
+      tags:
+        - Auth
+      responses:
+        '204':
+          description: Token invalidated successfully.
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/auth/password:
+    put:
+      summary: Change Password
+      description: Change the password for the currently authenticated user.
+      operationId: changePassword
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Password updated successfully.
+        '400':
+          description: New password does not meet complexity requirements or old password was invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/admin/users:
+    get:
+      summary: Search User Identities
+      description: Search user accounts by email or paginate through all users. Requires SYSTEM_OPERATOR global role.
+      operationId: searchUserIdentities
+      tags:
+        - Auth
+      parameters:
+        - name: email
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search pattern for email.
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Search results.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIdentityPage'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Forbidden (Requires SYSTEM_OPERATOR role).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/admin/users/{userId}:
+    get:
+      summary: Get User Identity
+      description: Retrieve details of a specific user identity. Requires SYSTEM_OPERATOR global role.
+      operationId: getUserIdentity
+      tags:
+        - Auth
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: User identity details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIdentityResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: User not found.
+
+  /api/v1/admin/users/{userId}/suspend:
+    post:
+      summary: Suspend User Account
+      description: Administratively suspend a user account, preventing login. Requires SYSTEM_OPERATOR global role.
+      operationId: suspendUser
+      tags:
+        - Auth
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '204':
+          description: User account suspended.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: User not found.
+
+  /api/v1/admin/users/{userId}/reactivate:
+    post:
+      summary: Reactivate User Account
+      description: Reactivate a suspended user account. Requires SYSTEM_OPERATOR global role.
+      operationId: reactivateUser
+      tags:
+        - Auth
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '204':
+          description: User account reactivated.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: User not found.
+
+  /api/v1/admin/users/{userId}/unlock:
+    post:
+      summary: Unlock User Account
+      description: Unlock an account locked due to excessive failed login attempts. Requires SYSTEM_OPERATOR global role.
+      operationId: unlockUser
+      tags:
+        - Auth
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '204':
+          description: User account unlocked.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: User not found.
+
+  /api/v1/admin/users/{userId}/roles:
+    post:
+      summary: Assign Global Role
+      description: Assign a system-wide global role to the specified user. Requires SYSTEM_OPERATOR global role.
+      operationId: assignGlobalRole
+      tags:
+        - Auth
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignGlobalRoleRequest'
+      responses:
+        '204':
+          description: Role assigned.
+        '400':
+          description: Validation error or invalid role.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: User not found.
+
+  /api/v1/admin/users/{userId}/roles/{role}:
+    delete:
+      summary: Revoke Global Role
+      description: Revoke a global role from the user. Users must retain at least one global role. Requires SYSTEM_OPERATOR global role.
+      operationId: revokeGlobalRole
+      tags:
+        - Auth
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - name: role
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/GlobalRole'
+          description: The global role name to revoke.
+      responses:
+        '204':
+          description: Role revoked.
+        '400':
+          description: Attempting to revoke the last global role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: User not found.
+
+  # --- WORKSPACE CONTEXT PATHS ---
+  /api/v1/workspaces/primary:
+    get:
+      summary: Resolve Primary Workspace
+      description: Resolve the primary workspace for the currently authenticated user.
+      operationId: resolvePrimaryWorkspace
+      tags:
+        - Workspace
+      responses:
+        '200':
+          description: Primary workspace details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceResponse'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/workspaces/{workspaceId}:
+    get:
+      summary: Get Workspace Details
+      description: Retrieve configuration details for a specific workspace. Requires membership in the workspace.
+      operationId: getWorkspaceDetails
+      tags:
+        - Workspace
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Workspace details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden (User lacks workspace membership).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Workspace not found.
+    patch:
+      summary: Rename Workspace
+      description: Rename the workspace. Requires OWNER role in the workspace.
+      operationId: renameWorkspace
+      tags:
+        - Workspace
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameWorkspaceRequest'
+      responses:
+        '200':
+          description: Workspace renamed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceResponse'
+        '400':
+          description: Validation error.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden (Not owner).
+        '404':
+          description: Workspace not found.
+        '409':
+          description: Cannot rename a suspended or archived workspace.
+
+  /api/v1/workspaces/{workspaceId}/suspend:
+    post:
+      summary: Suspend Workspace
+      description: Administratively suspend a workspace. Requires SYSTEM_OPERATOR global role.
+      operationId: suspendWorkspace
+      tags:
+        - Workspace
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuspendWorkspaceRequest'
+      responses:
+        '204':
+          description: Workspace suspended.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Workspace not found.
+        '409':
+          description: Invalid state transition.
+
+  /api/v1/workspaces/{workspaceId}/reactivate:
+    post:
+      summary: Reactivate Workspace
+      description: Reactivate a suspended workspace. Requires SYSTEM_OPERATOR global role.
+      operationId: reactivateWorkspace
+      tags:
+        - Workspace
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactivateWorkspaceRequest'
+      responses:
+        '204':
+          description: Workspace reactivated.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Workspace not found.
+        '409':
+          description: Invalid state transition.
+
+  /api/v1/workspaces/{workspaceId}/archive:
+    post:
+      summary: Archive Workspace
+      description: Archive a workspace (terminal state). Requires SYSTEM_OPERATOR global role.
+      operationId: archiveWorkspace
+      tags:
+        - Workspace
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArchiveWorkspaceRequest'
+      responses:
+        '204':
+          description: Workspace archived.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Workspace not found.
+        '409':
+          description: Invalid state transition.
+
+  /api/v1/workspaces/{workspaceId}/validate-access:
+    get:
+      summary: Validate Workspace Access
+      description: Utility endpoint to verify if the caller is the owner of this workspace and has active access (often utilized for integration testing).
+      operationId: validateWorkspaceAccess
+      tags:
+        - Workspace
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Access status check.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceValidateAccessResponse'
+        '401':
+          description: Unauthorized.
+
+  # --- TODO CONTEXT PATHS ---
+  /api/v1/workspaces/{workspaceId}/tasks:
+    post:
+      summary: Create Task
+      description: Create a new task in the specified workspace.
+      operationId: createTask
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created successfully.
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URI location of the created task.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          description: Validation error.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden (Workspace access denied).
+    get:
+      summary: List and Filter Tasks
+      description: Retrieve a paginated list of tasks in the workspace, with optional filter options. Standard offset-based, 0-indexed pagination.
+      operationId: listTasks
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageSize'
+        - name: tag
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter tasks containing this tag.
+        - name: priority
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/TaskPriority'
+          description: Filter by priority.
+        - name: includeCompleted
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Include completed tasks in search results.
+        - name: sortBy
+          in: query
+          required: false
+          schema:
+            type: string
+            default: dueDate
+          description: Property to sort by.
+        - name: sortOrder
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: ASC
+          description: Sort direction.
+      responses:
+        '200':
+          description: Paginated tasks matching filter criteria.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/tasks/deleted:
+    get:
+      summary: List Recoverable Deleted Tasks
+      description: Fetch soft-deleted tasks that are currently eligible for recovery (within the 2-hour window).
+      operationId: listDeletedTasks
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: List of soft-deleted tasks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/tasks/{taskId}:
+    get:
+      summary: Get Task Details
+      description: Retrieve full detail of a specific task by ID.
+      operationId: getTask
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: Task details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Task not found.
+    put:
+      summary: Update Task
+      description: Update task details. Enforces optimistic locking via the `version` field. Mutating soft-deleted tasks is prohibited.
+      operationId: updateTask
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Updated task details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          description: Validation error.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Task not found.
+        '409':
+          description: Optimistic locking version mismatch (Concurrency Conflict).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+    delete:
+      summary: Soft-Delete Task
+      description: Soft-delete a task. Soft-deleted tasks are stored for a 2-hour recovery window before being hard-deleted.
+      operationId: softDeleteTask
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '204':
+          description: Task soft-deleted successfully (idempotent).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Task not found.
+
+  /api/v1/workspaces/{workspaceId}/tasks/{taskId}/recover:
+    post:
+      summary: Recover Soft-Deleted Task
+      description: Recover a soft-deleted task, returning it to Active state. Fails if execution happens outside the 2-hour recovery limit.
+      operationId: recoverTask
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: Task recovered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Task not found.
+        '422':
+          description: Recovery window has expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/workspaces/{workspaceId}/tasks/{taskId}/complete:
+    post:
+      summary: Complete Task
+      description: Mark a task as completed.
+      operationId: completeTask
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: Task marked completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Task not found.
+
+  /api/v1/workspaces/{workspaceId}/tasks/{taskId}/reopen:
+    post:
+      summary: Reopen Completed Task
+      description: Reopen a completed task, returning it to Active state.
+      operationId: reopenTask
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: Task reopened.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Task not found.
+
+  /api/v1/workspaces/{workspaceId}/tasks/{taskId}/tags:
+    post:
+      summary: Add Tags to Task
+      description: Add classification tags to a task. Max 50 characters per tag.
+      operationId: addTaskTags
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddTagsRequest'
+      responses:
+        '200':
+          description: Tags added successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          description: Invalid tags.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Task not found.
+
+  /api/v1/workspaces/{workspaceId}/tasks/{taskId}/tags/{tag}:
+    delete:
+      summary: Remove Tag from Task
+      description: Revoke a specific tag from a task.
+      operationId: removeTaskTag
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+        - name: tag
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The tag string to remove.
+      responses:
+        '204':
+          description: Tag removed.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Task or tag not found.
+
+  /api/v1/workspaces/{workspaceId}/tasks/{taskId}/recurrence:
+    get:
+      summary: Get Recurrence Template
+      description: Retrieve the recurrence configuration template bound to a parent task.
+      operationId: getTaskRecurrence
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: Recurrence details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurrenceTemplateResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Recurrence configuration not found for task.
+    put:
+      summary: Configure Task Recurrence
+      description: Configure or attach a recurrence pattern to a task.
+      operationId: configureTaskRecurrence
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigureRecurrenceRequest'
+      responses:
+        '200':
+          description: Recurrence configured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurrenceTemplateResponse'
+        '400':
+          description: Invalid recurrence rules (Frequencies must be DAILY, WEEKLY, or MONTHLY).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Task not found.
+        '409':
+          description: Recurrence schedule collision or overlap detected.
+
+  /api/v1/workspaces/{workspaceId}/tasks/{taskId}/recurrence/pause:
+    post:
+      summary: Pause Recurrence Generation
+      description: Temporarily suspend recurrence generation loops for a task.
+      operationId: pauseTaskRecurrence
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '204':
+          description: Recurrence loop paused.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Recurrence not found.
+
+  /api/v1/workspaces/{workspaceId}/tasks/{taskId}/recurrence/resume:
+    post:
+      summary: Resume Recurrence Generation
+      description: Resume a paused recurrence generation loops.
+      operationId: resumeTaskRecurrence
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '204':
+          description: Recurrence loop resumed.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Recurrence not found.
+
+  /api/v1/workspaces/{workspaceId}/tasks/{taskId}/recurrence/stop:
+    post:
+      summary: Stop Recurrence Generation
+      description: Permanently terminate recurrence generation.
+      operationId: stopTaskRecurrence
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '204':
+          description: Recurrence loop stopped permanently.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Recurrence not found.
+
+  /api/v1/workspaces/{workspaceId}/tasks/{taskId}/instances:
+    get:
+      summary: List Generated Recurrence Instances
+      description: List all child recurrence instances created from the parent task recurrence template.
+      operationId: getTaskInstances
+      tags:
+        - Todo
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/TaskId'
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: List of child task instances.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Parent task not found.
+
+  # --- CALENDAR CONTEXT PATHS ---
+  /api/v1/workspaces/{workspaceId}/calendar/events:
+    post:
+      summary: Create Event
+      description: Create a scheduled event commitments. Evaluates overlap prevention policies if configured.
+      operationId: createEvent
+      tags:
+        - Calendar
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '201':
+          description: Event created.
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URI of the created event.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDTO'
+        '400':
+          description: Validation error (e.g. chronological consistency rules violated).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '409':
+          description: Overlap conflict (CalendarEventConflictDetected).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    get:
+      summary: List Time-Bounded Events
+      description: List events in workspace within a specific time range. Standard offset-based, 0-indexed pagination.
+      operationId: listEvents
+      tags:
+        - Calendar
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: startTime
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: ISO-8601 lower bound timestamp.
+        - name: endTime
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: ISO-8601 upper bound timestamp.
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: List of events.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/calendar/events/{eventId}:
+    get:
+      summary: Get Event Details
+      description: Retrieve detailed metadata for a single calendar event.
+      operationId: getEvent
+      tags:
+        - Calendar
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/EventId'
+      responses:
+        '200':
+          description: Event details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDTO'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Event not found.
+    patch:
+      summary: Update Event Metadata
+      description: Modify event descriptive text (title, description). Rescheduling the time boundaries must use `/reschedule`.
+      operationId: updateEventMetadata
+      tags:
+        - Calendar
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/EventId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventMetadataRequest'
+      responses:
+        '200':
+          description: Event metadata updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDTO'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Event not found.
+    delete:
+      summary: Delete Event
+      description: Cancel and delete a calendar event. Deleting an already deleted event is idempotent.
+      operationId: deleteEvent
+      tags:
+        - Calendar
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/EventId'
+      responses:
+        '204':
+          description: Event deleted successfully.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Event not found.
+
+  /api/v1/workspaces/{workspaceId}/calendar/events/{eventId}/reschedule:
+    post:
+      summary: Reschedule Event
+      description: Change the startTime and endTime of an event. Evaluates overlaps if configured.
+      operationId: rescheduleEvent
+      tags:
+        - Calendar
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/EventId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescheduleEventRequest'
+      responses:
+        '200':
+          description: Event rescheduled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDTO'
+        '400':
+          description: Invalid time range.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Event not found.
+        '409':
+          description: Overlap conflict.
+
+  /api/v1/workspaces/{workspaceId}/calendar/events/{eventId}/reminders:
+    post:
+      summary: Add Event Reminder
+      description: Register a new alarm reminder trigger offset for the event.
+      operationId: addEventReminder
+      tags:
+        - Calendar
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/EventId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddReminderRequest'
+      responses:
+        '201':
+          description: Reminder created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderDTO'
+        '400':
+          description: Invalid lead time (must be strictly positive).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Event not found.
+
+  /api/v1/workspaces/{workspaceId}/calendar/events/{eventId}/reminders/{reminderId}:
+    delete:
+      summary: Remove Event Reminder
+      description: Delete a scheduled reminder.
+      operationId: removeEventReminder
+      tags:
+        - Calendar
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/EventId'
+        - $ref: '#/components/parameters/ReminderId'
+      responses:
+        '204':
+          description: Reminder removed.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Reminder or Event not found.
+
+  /api/v1/workspaces/{workspaceId}/calendar/events/{eventId}/reminders/{reminderId}/snooze:
+    post:
+      summary: Snooze Reminder
+      description: Snooze a triggered alarm reminder by a positive offset.
+      operationId: snoozeEventReminder
+      tags:
+        - Calendar
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/EventId'
+        - $ref: '#/components/parameters/ReminderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SnoozeReminderRequest'
+      responses:
+        '204':
+          description: Reminder snoozed.
+        '400':
+          description: Invalid snooze minutes.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Reminder or Event not found.
+
+  /api/v1/workspaces/{workspaceId}/calendar/events/{eventId}/reminders/{reminderId}/dismiss:
+    post:
+      summary: Dismiss Reminder
+      description: Dismiss a scheduled or triggered reminder alarm.
+      operationId: dismissEventReminder
+      tags:
+        - Calendar
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/EventId'
+        - $ref: '#/components/parameters/ReminderId'
+      responses:
+        '204':
+          description: Reminder dismissed.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Reminder or Event not found.
+
+  # --- MEMORY CONTEXT PATHS ---
+  /api/v1/workspaces/{workspaceId}/conversations:
+    post:
+      summary: Start Conversation
+      description: Create a new multi-turn dialogue thread between a user and the AI Agent.
+      operationId: startConversation
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartConversationRequest'
+      responses:
+        '201':
+          description: Conversation started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationSummary'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+    get:
+      summary: List Conversations
+      description: List recent conversation threads for the user in the workspace. Standard offset-based, 0-indexed pagination.
+      operationId: listConversations
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: List of conversations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/conversations/{conversationId}:
+    delete:
+      summary: Archive Conversation
+      description: Archive a conversation. Note this does not delete the turns, but transitions state to Archived (mutations are prohibited).
+      operationId: archiveConversation
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '204':
+          description: Conversation archived.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Conversation not found.
+
+  /api/v1/workspaces/{workspaceId}/conversations/{conversationId}/turns:
+    get:
+      summary: Fetch Conversation Turns
+      description: Fetch paginated turns history inside a conversation. Ordered chronological by default.
+      operationId: getConversationTurns
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConversationId'
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: List of conversation message turns.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationTurnPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Conversation not found.
+    post:
+      summary: Append Conversation Turn
+      description: Post a new message turn into a conversation. Message content cannot be blank. Turns must maintain chronological sequence order.
+      operationId: appendConversationTurn
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConversationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppendTurnRequest'
+      responses:
+        '201':
+          description: Message turn appended.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationTurn'
+        '400':
+          description: Blank content or validation error.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Conversation not found.
+        '409':
+          description: Conversation is archived (CONVERSATION_ARCHIVED) or turn timestamp sequence is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/workspaces/{workspaceId}/conversations/{conversationId}/clear:
+    post:
+      summary: Clear Conversation History
+      description: Delete all messages/turns associated with the conversation thread.
+      operationId: clearConversationTurns
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '204':
+          description: Conversation message history cleared.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Conversation not found.
+        '409':
+          description: Conversation is archived (CONVERSATION_ARCHIVED).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/workspaces/{workspaceId}/preferences:
+    get:
+      summary: Get User Preferences
+      description: Retrieve workspace preferences for the authenticated user context.
+      operationId: getUserPreferences
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: User preferences profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferencesResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+    put:
+      summary: Update User Preferences
+      description: Update user preference settings in the workspace.
+      operationId: updateUserPreferences
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePreferencesRequest'
+      responses:
+        '200':
+          description: Preferences updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferencesResponse'
+        '400':
+          description: Validation error (e.g. invalid timezone or invalid priority bounds).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/preferences/reset:
+    post:
+      summary: Reset User Preferences
+      description: Reset user preference variables to system-wide default standards.
+      operationId: resetUserPreferences
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Preferences reset.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferencesResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/memory-entries:
+    get:
+      summary: Search Semantic Memories
+      description: List or perform vector/semantic searches over long-term extracted facts. Standard offset-based, 0-indexed pagination.
+      operationId: listMemoryEntries
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Plaintext keyword/semantic search query.
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: List of semantic memory items.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryEntryPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/memory-entries/{memoryEntryId}:
+    get:
+      summary: Get Memory Entry
+      description: Retrieve details of a specific semantic memory fact. Note parameter naming matches response properties.
+      operationId: getMemoryEntry
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/MemoryEntryId'
+      responses:
+        '200':
+          description: Memory fact details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryEntryResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Memory entry not found.
+    put:
+      summary: Revise Memory Entry
+      description: Manually revise/override a semantic fact. Rejections can happen if sensitive data constraints are triggered.
+      operationId: updateMemoryEntry
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/MemoryEntryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMemoryEntryRequest'
+      responses:
+        '200':
+          description: Memory entry updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryEntryResponse'
+        '400':
+          description: Validation error (e.g. blank content).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Memory entry not found.
+        '422':
+          description: Sensitive data content rejected.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    delete:
+      summary: Delete Memory Entry
+      description: Delete a specific semantic memory fact.
+      operationId: deleteMemoryEntry
+      tags:
+        - Memory
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/MemoryEntryId'
+      responses:
+        '204':
+          description: Memory fact deleted.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Memory entry not found.
+
+  # --- NOTIFICATION CONTEXT PATHS ---
+  /api/v1/workspaces/{workspaceId}/notifications:
+    get:
+      summary: List In-App Notifications
+      description: Retrieve a paginated list of inbox notifications. Standard offset-based, 0-indexed pagination.
+      operationId: listNotifications
+      tags:
+        - Notification
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/NotificationStatus'
+            default: Unread
+          description: Filter notifications by status.
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: List of notifications.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/notifications/unread-count:
+    get:
+      summary: Get Unread Notifications Count
+      description: Retrieve total count of unread notifications inside the user workspace. Avoids paging query loads for badges.
+      operationId: getUnreadNotificationsCount
+      tags:
+        - Notification
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Total unread notifications count.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationUnreadCountResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/notifications/{notificationId}/read:
+    post:
+      summary: Mark Notification as Read
+      description: Mark a specific notification in inbox as read.
+      operationId: markNotificationRead
+      tags:
+        - Notification
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/NotificationId'
+      responses:
+        '204':
+          description: Notification read.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Notification not found.
+        '409':
+          description: State conflict (attempting to read a dismissed notification).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/workspaces/{workspaceId}/notifications/read-all:
+    post:
+      summary: Mark All Notifications Read
+      description: Bulk action marking all currently active unread notifications as read.
+      operationId: markAllNotificationsRead
+      tags:
+        - Notification
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '204':
+          description: All notifications marked read.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/notifications/{notificationId}/dismiss:
+    post:
+      summary: Dismiss Notification
+      description: Dismiss an in-app notification to hide it from standard inbox dashboard feeds.
+      operationId: dismissNotification
+      tags:
+        - Notification
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/NotificationId'
+      responses:
+        '204':
+          description: Notification dismissed.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Notification not found.
+
+  /api/v1/workspaces/{workspaceId}/notification-profile:
+    get:
+      summary: Get Notification Profile
+      description: Fetch routing configurations, Slack webhook vaults refs, and digest schedules.
+      operationId: getNotificationProfile
+      tags:
+        - Notification
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Profile settings DTO.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationProfileDTO'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Profile not found.
+    put:
+      summary: Update Notification Profile
+      description: Save updated notification channels maps or digest schedules.
+      operationId: updateNotificationProfile
+      tags:
+        - Notification
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNotificationProfileRequest'
+      responses:
+        '200':
+          description: Profile updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationProfileDTO'
+        '400':
+          description: Validation error (e.g. invalid webhooks or email formats).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  # --- CONNECTOR CONTEXT PATHS ---
+  /api/v1/workspaces/{workspaceId}/connectors/connections:
+    get:
+      summary: List Integrations Connections
+      description: Fetch third-party connection configurations. Cursor-based pagination is utilized due to syncing log load characteristics.
+      operationId: listConnections
+      tags:
+        - Connector
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Opaque cursor-paginated list of integration connections.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorConnectionPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+    post:
+      summary: Register Connection
+      description: Configure a new external third-party integration credential. Credentials are encrypted in Vault in-memory.
+      operationId: registerConnection
+      tags:
+        - Connector
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterConnectionRequest'
+      responses:
+        '201':
+          description: Connection registered.
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URI of the registered connection resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionDTO'
+        '400':
+          description: Invalid provider credentials.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/connectors/connections/{connectionId}:
+    put:
+      summary: Update Connection Sync Mode
+      description: Edit filters or synchronization modes of a connection.
+      operationId: updateConnection
+      tags:
+        - Connector
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConnectionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConnectionRequest'
+      responses:
+        '200':
+          description: Connection sync properties updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionDTO'
+        '400':
+          description: Invalid update parameters.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Connection not found.
+
+  /api/v1/workspaces/{workspaceId}/connectors/connections/{connectionId}/suspend:
+    post:
+      summary: Suspend Connection
+      description: Temporarily suspend background polling loops for a connection.
+      operationId: suspendConnection
+      tags:
+        - Connector
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConnectionId'
+      responses:
+        '204':
+          description: Connection suspended.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Connection not found.
+
+  /api/v1/workspaces/{workspaceId}/connectors/connections/{connectionId}/reactivate:
+    post:
+      summary: Reactivate Connection
+      description: Reactivate connection background polling tasks.
+      operationId: reactivateConnection
+      tags:
+        - Connector
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConnectionId'
+      responses:
+        '204':
+          description: Connection reactivated.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Connection not found.
+
+  /api/v1/workspaces/{workspaceId}/connectors/connections/{connectionId}/revoke:
+    post:
+      summary: Revoke Credentials
+      description: Revoke authorization credentials locally and at Vault storage.
+      operationId: revokeConnection
+      tags:
+        - Connector
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConnectionId'
+      responses:
+        '204':
+          description: Credentials revoked.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Connection not found.
+
+  /api/v1/workspaces/{workspaceId}/connectors/connections/{connectionId}/reauthorize:
+    post:
+      summary: Reauthorize Connection
+      description: Update credentials for an unauthorized connection.
+      operationId: reauthorizeConnection
+      tags:
+        - Connector
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConnectionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReauthorizeConnectionRequest'
+      responses:
+        '204':
+          description: Credentials renewed.
+        '400':
+          description: Invalid credential inputs.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Connection not found.
+
+  /api/v1/workspaces/{workspaceId}/connectors/connections/{connectionId}/sync:
+    post:
+      summary: Trigger Sync Saga
+      description: Trigger a manual synchronization cycle, running as an asynchronous Saga orchestrator. Returns 202 Accepted.
+      operationId: triggerSync
+      tags:
+        - Connector
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConnectionId'
+      responses:
+        '202':
+          description: Sync saga accepted and initiated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorSyncInitiatedResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Connection not found.
+        '409':
+          description: Cannot sync (connection suspended, unauthorized, or sync already running).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/workspaces/{workspaceId}/connectors/connections/{connectionId}/health:
+    get:
+      summary: Get Connection Health
+      description: Retrieve connection health stats, backoff triggers, and retry timestamps.
+      operationId: getConnectionHealth
+      tags:
+        - Connector
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConnectionId'
+      responses:
+        '200':
+          description: Health metadata status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionHealthDTO'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Connection not found.
+
+  /api/v1/workspaces/{workspaceId}/connectors/connections/{connectionId}/conflicts:
+    get:
+      summary: List Sync Conflicts
+      description: List outstanding data synchronization conflicts requiring human intervention resolution. Uses cursor pagination.
+      operationId: listSyncConflicts
+      tags:
+        - Connector
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConnectionId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: List of synchronization conflicts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorConflictPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Connection not found.
+
+  /api/v1/workspaces/{workspaceId}/connectors/connections/{connectionId}/conflicts/{conflictId}/resolve:
+    post:
+      summary: Resolve Sync Conflict
+      description: Resolve a synchronization conflict using a resolution strategy.
+      operationId: resolveSyncConflict
+      tags:
+        - Connector
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ConnectionId'
+        - $ref: '#/components/parameters/ConflictId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveConflictRequest'
+      responses:
+        '204':
+          description: Conflict resolved successfully.
+        '400':
+          description: Invalid conflict strategy.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Conflict or Connection not found.
+
+  # --- AI AGENT CONTEXT PATHS ---
+  /api/v1/workspaces/{workspaceId}/agent/sessions:
+    post:
+      summary: Submit Goal
+      description: Submit a high-level goal and start the planning process (Reason -> Plan -> Approve -> Execute -> Reflect).
+      operationId: submitAgentGoal
+      tags:
+        - AI Agent
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitGoalRequest'
+      responses:
+        '201':
+          description: Agent session created.
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URI of the created agent session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentSessionResponse'
+        '400':
+          description: Blank or invalid goal text.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+    get:
+      summary: List Agent Sessions
+      description: Retrieve a paginated history of agent sessions. Standard offset-based, 0-indexed pagination.
+      operationId: listAgentSessions
+      tags:
+        - AI Agent
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AgentSessionStatus'
+          description: Filter sessions by execution status.
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: List of agent sessions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentSessionPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/agent/sessions/active:
+    get:
+      summary: Get Active Agent Session
+      description: Fetch the currently running or awaiting-approval agent session, if one exists.
+      operationId: getActiveAgentSession
+      tags:
+        - AI Agent
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Current active agent session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentSessionResponse'
+        '204':
+          description: No active agent session exists.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/agent/sessions/{sessionId}:
+    get:
+      summary: Get Session Details
+      description: Fetch detailed execution status graphs and plan steps of a specific session.
+      operationId: getAgentSession
+      tags:
+        - AI Agent
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Session details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentSessionResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Session not found.
+
+  /api/v1/workspaces/{workspaceId}/agent/sessions/{sessionId}/steps:
+    get:
+      summary: Get Agent Plan Steps
+      description: Retrieve progress logs and variables details of plan steps for a fine-grained polling UI.
+      operationId: getAgentSessionSteps
+      tags:
+        - AI Agent
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: List of steps in the agent session plan.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanStep'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Session not found.
+
+  /api/v1/workspaces/{workspaceId}/agent/approvals:
+    get:
+      summary: List Approval Requests
+      description: Fetch human-in-the-loop plan confirmation requests. Standard offset-based, 0-indexed pagination.
+      operationId: listApprovalRequests
+      tags:
+        - AI Agent
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/PageOffset'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: List of approval checkpoints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalPage'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+  /api/v1/workspaces/{workspaceId}/agent/approvals/{approvalId}:
+    get:
+      summary: Get Approval Request
+      description: Get details of a plan snapshot pending approval.
+      operationId: getApprovalRequest
+      tags:
+        - AI Agent
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ApprovalId'
+      responses:
+        '200':
+          description: Approval request details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequestResponse'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Approval not found.
+
+  /api/v1/workspaces/{workspaceId}/agent/approvals/{approvalId}/resolve:
+    post:
+      summary: Resolve Plan Approval
+      description: Resolve (approve or reject) a pending plan checkpoint. Rejecting will mark the session as Succeeded/Failed depending on context; approving resumes task execution.
+      operationId: resolveApprovalRequest
+      tags:
+        - AI Agent
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ApprovalId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveApprovalRequest'
+      responses:
+        '200':
+          description: Approval checkpoint resolved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequestResponse'
+        '400':
+          description: Invalid resolution payload.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Approval checkpoint not found.
+        '422':
+          description: Already resolved or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/v1/workspaces/{workspaceId}/agent/questions:
+    post:
+      summary: Ask Grounded Question
+      description: Ask a search/grounded question using context mappings from the current workspace memory databases. Renamed from `/qa` to adhere to REST naming standards.
+      operationId: askGroundedQuestion
+      tags:
+        - AI Agent
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AskGroundedQuestionRequest'
+      responses:
+        '200':
+          description: Grounded search response answers and citations list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroundedAnswerResponse'
+        '400':
+          description: Validation error.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+
+# --- SECURITY REQUIREMENTS ---
+security:
+  - BearerAuth: []
+
+# --- COMPONENTS ---
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Provide the authentication JWT token. Format is 'Bearer <token>'.
+
+  parameters:
+    WorkspaceId:
+      name: workspaceId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the workspace (tenant boundary).
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the user identity.
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the task.
+    EventId:
+      name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the calendar event.
+    ReminderId:
+      name: reminderId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the reminder.
+    ConversationId:
+      name: conversationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the conversation.
+    MemoryEntryId:
+      name: memoryEntryId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the semantic memory entry.
+    NotificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the notification.
+    ConnectionId:
+      name: connectionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the connector connection.
+    ConflictId:
+      name: conflictId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the synchronization conflict.
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the AI agent session.
+    ApprovalId:
+      name: approvalId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The unique identifier of the approval request.
+    PageOffset:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+      description: Zero-based page offset index.
+    PageSize:
+      name: size
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+      description: Max number of items to return in a page.
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+      description: Max number of connections/conflicts to return.
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Opaque base64-encoded cursor indicating page offset.
+
+  schemas:
+    # --- ERROR SCHEMAS ---
+    ValidationError:
+      type: object
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          description: The field that failed validation.
+          example: resolution
+        message:
+          type: string
+          description: Human-readable validation error message.
+          example: Must be 'Approved' or 'Rejected'.
+
+    ProblemDetails:
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+      properties:
+        type:
+          type: string
+          format: uri
+          description: A URI reference that identifies the problem type.
+          example: https://api.assistant.com/errors/invalid-request
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type.
+          example: Invalid Request
+        status:
+          type: integer
+          description: The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 400
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+          example: The provided resolution is invalid.
+        instance:
+          type: string
+          format: uri-reference
+          description: A URI reference that identifies the specific occurrence of the problem.
+          example: /api/v1/workspaces/c9a22d4f-3a21-4f18-bb53-6c8430b8b211/agent/approvals/8b3d6f1a-5b12-4f33-90d2-1c2436d4b299/resolve
+        errorCode:
+          type: string
+          description: Application-specific error code.
+          example: AUTH-002
+        errors:
+          type: array
+          description: List of validation errors.
+          items:
+            $ref: '#/components/schemas/ValidationError'
+
+    # --- AUTH SCHEMAS ---
+    RegisterUserRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Valid unique user email.
+          example: jane.doe@example.com
+        password:
+          type: string
+          description: Password meeting complexity requirements. Minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character.
+          example: Str0ng!P@ssw0rd
+
+    LoginUserRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: jane.doe@example.com
+        password:
+          type: string
+          example: Str0ng!P@ssw0rd
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+          example: Str0ng!P@ssw0rd
+        newPassword:
+          type: string
+          example: N3w!Str0ngP@ss
+
+    AssignGlobalRoleRequest:
+      type: object
+      required:
+        - roleName
+      properties:
+        roleName:
+          $ref: '#/components/schemas/GlobalRole'
+
+    GlobalRole:
+      type: string
+      enum:
+        - END_USER
+        - SYSTEM_OPERATOR
+      example: END_USER
+
+    UserStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - LOCKED
+        - SUSPENDED
+      example: ACTIVE
+
+    TokenResponse:
+      type: object
+      required:
+        - accessToken
+        - tokenType
+        - expiresIn
+      properties:
+        accessToken:
+          type: string
+          description: JWT bearer token.
+          example: eyJhbGciOiJIUzI1NiIsInR...
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          description: Token lifetime in seconds.
+          example: 3600
+
+    UserIdentityResponse:
+      type: object
+      required:
+        - userId
+        - email
+        - status
+        - globalRoles
+        - failedLoginCount
+      properties:
+        userId:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        email:
+          type: string
+          format: email
+          example: jane.doe@example.com
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        globalRoles:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalRole'
+        failedLoginCount:
+          type: integer
+          example: 0
+
+    UserIdentityPage:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserIdentityResponse'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 1
+
+    # --- WORKSPACE SCHEMAS ---
+    RenameWorkspaceRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: The new name of the workspace.
+          example: Jane's Primary Workspace
+
+    SuspendWorkspaceRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Audit reason for suspending workspace.
+          example: Violation of terms
+
+    ReactivateWorkspaceRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Audit reason for reactivating workspace.
+          example: Resolved issue
+
+    ArchiveWorkspaceRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Audit reason for archiving workspace.
+          example: User requested account deletion
+
+    WorkspaceStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - SUSPENDED
+        - ARCHIVED
+      example: ACTIVE
+
+    WorkspaceResponse:
+      type: object
+      required:
+        - workspaceId
+        - name
+        - status
+        - ownerId
+        - isPrimary
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+          example: ws-9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        name:
+          type: string
+          example: Jane's Primary Workspace
+        status:
+          $ref: '#/components/schemas/WorkspaceStatus'
+        ownerId:
+          type: string
+          format: uuid
+          example: usr-1234-5678
+        isPrimary:
+          type: boolean
+          example: true
+
+    WorkspaceValidateAccessResponse:
+      type: object
+      required:
+        - workspaceId
+        - userId
+        - hasAccess
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+          example: ws-9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        userId:
+          type: string
+          format: uuid
+          example: usr-1234-5678
+        hasAccess:
+          type: boolean
+          example: true
+
+    # --- TODO SCHEMAS ---
+    TaskPriority:
+      type: string
+      enum:
+        - High
+        - Medium
+        - Low
+      example: High
+
+    TaskLifecycleStatus:
+      type: string
+      enum:
+        - Active
+        - Completed
+        - SoftDeleted
+      description: |
+        The lifecycle state of the task. Note: Mutating operations are prohibited on SoftDeleted tasks.
+      example: Active
+
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: Non-empty task title.
+          example: Finalize Q3 Report
+        description:
+          type: string
+          description: Optional task details.
+          example: Include financial summaries and team KPIs.
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+          default: Medium
+        dueDate:
+          type: string
+          format: date-time
+          description: Optional due date.
+          example: "2026-08-10T17:00:00Z"
+        tags:
+          type: array
+          items:
+            type: string
+          description: Optional tags.
+          example: ["work", "finance"]
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Finalize Q3 Report (Draft)
+        description:
+          type: string
+          example: Updated scope to only include Q3.
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        dueDate:
+          type: string
+          format: date-time
+          example: "2026-08-15T17:00:00Z"
+        version:
+          type: integer
+          description: Used for optimistic locking.
+          example: 2
+
+    AddTagsRequest:
+      type: object
+      required:
+        - tags
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["urgent", "review"]
+
+    ConfigureRecurrenceRequest:
+      type: object
+      required:
+        - pattern
+      properties:
+        pattern:
+          type: string
+          enum: [DAILY, WEEKLY, MONTHLY]
+          example: WEEKLY
+        interval:
+          type: integer
+          default: 1
+          example: 1
+
+    TaskResponse:
+      type: object
+      required:
+        - taskId
+        - workspaceId
+        - title
+        - priority
+        - lifecycleStatus
+        - version
+        - createdAt
+        - updatedAt
+      properties:
+        taskId:
+          type: string
+          format: uuid
+          example: task-uuid
+        workspaceId:
+          type: string
+          format: uuid
+          example: workspace-uuid
+        parentTaskId:
+          type: string
+          format: uuid
+          nullable: true
+          example: parent-task-uuid-or-null
+        title:
+          type: string
+          example: Finalize Q3 Report
+        description:
+          type: string
+          example: Include financial summaries and team KPIs.
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["work", "finance"]
+        dueDate:
+          type: string
+          format: date-time
+          example: "2026-08-10T17:00:00Z"
+        lifecycleStatus:
+          $ref: '#/components/schemas/TaskLifecycleStatus'
+        version:
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-08-02T19:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-08-02T19:00:00Z"
+
+    TaskPage:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskResponse'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 50
+        totalElements:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 1
+
+    RecurrenceStatus:
+      type: string
+      enum:
+        - Active
+        - Paused
+        - Stopped
+      example: Active
+
+    RecurrenceTemplateResponse:
+      type: object
+      required:
+        - taskId
+        - pattern
+        - recurrenceStatus
+      properties:
+        taskId:
+          type: string
+          format: uuid
+          example: task-uuid
+        pattern:
+          type: string
+          enum: [DAILY, WEEKLY, MONTHLY]
+          example: WEEKLY
+        interval:
+          type: integer
+          default: 1
+          example: 1
+        lastGeneratedOccurrence:
+          type: string
+          format: date-time
+          example: "2026-08-02T10:00:00Z"
+        recurrenceStatus:
+          $ref: '#/components/schemas/RecurrenceStatus'
+
+    # --- CALENDAR SCHEMAS ---
+    EventStatus:
+      type: string
+      enum:
+        - Scheduled
+        - Deleted
+      example: Scheduled
+
+    ReminderStatus:
+      type: string
+      enum:
+        - Scheduled
+        - Triggered
+        - Snoozed
+        - Dismissed
+      example: Scheduled
+
+    CreateEventRequest:
+      type: object
+      required:
+        - title
+        - startTime
+        - endTime
+      properties:
+        title:
+          type: string
+          example: Q3 Planning
+        description:
+          type: string
+          example: Quarterly planning session with the team.
+        startTime:
+          type: string
+          format: date-time
+          example: "2026-10-15T14:00:00Z"
+        endTime:
+          type: string
+          format: date-time
+          example: "2026-10-15T16:00:00Z"
+        reminderOffsets:
+          type: array
+          items:
+            type: integer
+          description: List of offsets in minutes.
+          example: [15, 60]
+
+    UpdateEventMetadataRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Q3 Planning (Rescheduled)
+        description:
+          type: string
+          example: Finalized schedule for Q3 team planning.
+
+    RescheduleEventRequest:
+      type: object
+      required:
+        - startTime
+        - endTime
+      properties:
+        startTime:
+          type: string
+          format: date-time
+          example: "2026-10-16T14:00:00Z"
+        endTime:
+          type: string
+          format: date-time
+          example: "2026-10-16T16:00:00Z"
+
+    AddReminderRequest:
+      type: object
+      required:
+        - leadTimeMinutes
+      properties:
+        leadTimeMinutes:
+          type: integer
+          minimum: 1
+          example: 15
+
+    SnoozeReminderRequest:
+      type: object
+      required:
+        - snoozeMinutes
+      properties:
+        snoozeMinutes:
+          type: integer
+          minimum: 1
+          example: 5
+
+    ReminderDTO:
+      type: object
+      required:
+        - reminderId
+        - leadTimeMinutes
+        - status
+      properties:
+        reminderId:
+          type: string
+          format: uuid
+          example: r-789
+        leadTimeMinutes:
+          type: integer
+          example: 15
+        triggerTime:
+          type: string
+          format: date-time
+          example: "2026-10-15T13:45:00Z"
+        status:
+          $ref: '#/components/schemas/ReminderStatus'
+
+    EventDTO:
+      type: object
+      required:
+        - eventId
+        - workspaceId
+        - userId
+        - title
+        - startTime
+        - endTime
+        - status
+      properties:
+        eventId:
+          type: string
+          format: uuid
+          example: e-456
+        workspaceId:
+          type: string
+          format: uuid
+          example: w-123
+        userId:
+          type: string
+          format: uuid
+          example: u-999
+        title:
+          type: string
+          example: Q3 Planning
+        description:
+          type: string
+          example: Quarterly planning session with the team.
+        startTime:
+          type: string
+          format: date-time
+          example: "2026-10-15T14:00:00Z"
+        endTime:
+          type: string
+          format: date-time
+          example: "2026-10-15T16:00:00Z"
+        status:
+          $ref: '#/components/schemas/EventStatus'
+        reminders:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReminderDTO'
+
+    EventPage:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventDTO'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 50
+        totalElements:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 1
+
+    # --- MEMORY SCHEMAS ---
+    ConversationStatus:
+      type: string
+      enum:
+        - Active
+        - Cleared
+        - Archived
+      example: Active
+
+    StartConversationRequest:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: Optional AI Agent session ID.
+          example: 3e2b34a1-8d2b-4567-a2f2-9871ab12cdef
+
+    AppendTurnRequest:
+      type: object
+      required:
+        - senderRole
+        - messageContent
+      properties:
+        senderRole:
+          type: string
+          enum:
+            - User
+            - Agent
+          example: User
+        messageContent:
+          type: string
+          description: Non-blank message body.
+          example: Can you summarize my meetings for today?
+
+    UpdatePreferencesRequest:
+      type: object
+      required:
+        - timezone
+        - defaultPriority
+        - preventCalendarOverlap
+        - leadTimeMinutes
+      properties:
+        timezone:
+          type: string
+          description: Valid IANA timezone ID.
+          example: America/Los_Angeles
+        defaultPriority:
+          $ref: '#/components/schemas/TaskPriority'
+        preventCalendarOverlap:
+          type: boolean
+          example: true
+        leadTimeMinutes:
+          type: integer
+          minimum: 1
+          maximum: 10080
+          example: 10
+
+    UpdateMemoryEntryRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          example: User prefers finishing API designs before Wednesdays.
+
+    ConversationSummary:
+      type: object
+      required:
+        - id
+        - workspaceId
+        - title
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: conv-5678
+        workspaceId:
+          type: string
+          format: uuid
+          example: ws-1234
+        title:
+          type: string
+          example: Meeting summary conversation
+        lastTurnTimestamp:
+          type: string
+          format: date-time
+          example: "2026-08-02T19:55:00Z"
+        status:
+          $ref: '#/components/schemas/ConversationStatus'
+
+    ConversationPage:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationSummary'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 1
+
+    ConversationTurn:
+      type: object
+      required:
+        - id
+        - role
+        - content
+        - timestamp
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: turn-9999
+        role:
+          type: string
+          enum:
+            - User
+            - Agent
+          example: User
+        content:
+          type: string
+          example: Can you summarize my meetings for today?
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-08-02T19:55:00Z"
+
+    ConversationTurnPage:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationTurn'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 1
+
+    PreferencesResponse:
+      type: object
+      required:
+        - workspaceId
+        - userId
+        - timezone
+        - defaultPriority
+        - preventCalendarOverlap
+        - leadTimeMinutes
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+          example: ws-1234
+        userId:
+          type: string
+          format: uuid
+          example: user-8888
+        timezone:
+          type: string
+          example: America/Los_Angeles
+        defaultPriority:
+          $ref: '#/components/schemas/TaskPriority'
+        preventCalendarOverlap:
+          type: boolean
+          example: true
+        leadTimeMinutes:
+          type: integer
+          example: 10
+
+    MemoryEntryResponse:
+      type: object
+      required:
+        - memoryEntryId
+        - workspaceId
+        - content
+        - confidenceScore
+        - createdAt
+        - updatedAt
+      properties:
+        memoryEntryId:
+          type: string
+          format: uuid
+          description: Unique identifier of the memory entry (aligned to URL path parameter).
+          example: memory-entry-1234
+        workspaceId:
+          type: string
+          format: uuid
+          example: ws-1234
+        content:
+          type: string
+          example: User prefers finishing API designs before Wednesdays.
+        confidenceScore:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.95
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-08-02T10:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-08-02T10:00:00Z"
+
+    MemoryEntryPage:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemoryEntryResponse'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 1
+
+    # --- NOTIFICATION SCHEMAS ---
+    NotificationUrgencyLevel:
+      type: string
+      enum:
+        - Low
+        - Normal
+        - Urgent
+        - Critical
+      example: Normal
+
+    NotificationStatus:
+      type: string
+      enum:
+        - Unread
+        - Read
+        - Dismissed
+      example: Unread
+
+    NotificationConsentPolicy:
+      type: string
+      enum:
+        - ENABLED
+        - DISABLED
+      example: ENABLED
+
+    InAppNotificationDTO:
+      type: object
+      required:
+        - notificationId
+        - workspaceId
+        - title
+        - content
+        - urgencyLevel
+        - status
+        - createdAt
+      properties:
+        notificationId:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174001
+        workspaceId:
+          type: string
+          format: uuid
+          example: c9a22d4f-3a21-4f18-bb53-6c8430b8b211
+        title:
+          type: string
+          example: Task Overdue
+        content:
+          type: string
+          example: Finalize Q3 Report is overdue.
+        urgencyLevel:
+          $ref: '#/components/schemas/NotificationUrgencyLevel'
+        status:
+          $ref: '#/components/schemas/NotificationStatus'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-08-02T19:55:00Z"
+
+    NotificationPage:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/InAppNotificationDTO'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 1
+
+    NotificationUnreadCountResponse:
+      type: object
+      required:
+        - unreadCount
+      properties:
+        unreadCount:
+          type: integer
+          example: 5
+
+    NotificationProfileDTO:
+      type: object
+      required:
+        - workspaceId
+        - channelRoutingMap
+        - consentPolicy
+      properties:
+        workspaceId:
+          type: string
+          format: uuid
+          example: c9a22d4f-3a21-4f18-bb53-6c8430b8b211
+        channelRoutingMap:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+              enum:
+                - InApp
+                - Email
+                - Slack
+          description: Keys are urgency levels (Low, Normal, Urgent, Critical). Values are arrays of channels.
+          example:
+            Normal: ["InApp", "Email"]
+            Urgent: ["InApp", "Slack"]
+        emailAddress:
+          type: string
+          format: email
+          example: jane.doe@example.com
+        slackWebhookRef:
+          type: string
+          description: Vault key referencing the Slack OAuth token/webhook.
+          example: vault:slack:webhook:123
+        digestSchedule:
+          type: string
+          description: Cron expression for email digests.
+          example: "0 18 * * 1-5"
+        consentPolicy:
+          $ref: '#/components/schemas/NotificationConsentPolicy'
+
+    UpdateNotificationProfileRequest:
+      type: object
+      required:
+        - channelRoutingMap
+        - consentPolicy
+      properties:
+        channelRoutingMap:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+              enum:
+                - InApp
+                - Email
+                - Slack
+        emailAddress:
+          type: string
+          format: email
+          example: jane.doe@example.com
+        slackWebhookRef:
+          type: string
+          example: vault:slack:webhook:123
+        digestSchedule:
+          type: string
+          example: "0 18 * * 1-5"
+        consentPolicy:
+          $ref: '#/components/schemas/NotificationConsentPolicy'
+
+    # --- CONNECTOR SCHEMAS ---
+    ConnectorProviderType:
+      type: string
+      enum:
+        - GoogleCalendar
+        - Slack
+        - GitHub
+        - TickTick
+        - Notion
+        - Jira
+      example: GitHub
+
+    ConnectorSyncMode:
+      type: string
+      enum:
+        - Bidirectional
+        - OneWayImport
+        - OneWayExport
+      example: Bidirectional
+
+    ConnectorConnectionStatus:
+      type: string
+      enum:
+        - Active
+        - Suspended
+        - Unauthorized
+        - Syncing
+      example: Active
+
+    ConnectorConflictStatus:
+      type: string
+      enum:
+        - Pending
+        - Resolved
+        - Ignored
+      example: Pending
+
+    ConnectorConflictStrategy:
+      type: string
+      enum:
+        - UseLocal
+        - UseRemote
+        - ManualMerge
+      example: UseLocal
+
+    ConnectorConflictEntityType:
+      type: string
+      enum:
+        - Task
+        - Event
+      example: Task
+
+    RegisterConnectionRequest:
+      type: object
+      required:
+        - providerType
+        - syncMode
+      properties:
+        providerType:
+          $ref: '#/components/schemas/ConnectorProviderType'
+        syncMode:
+          $ref: '#/components/schemas/ConnectorSyncMode'
+        rawCredentials:
+          type: object
+          properties:
+            accessToken:
+              type: string
+              example: ghp_abcdef1234567890
+            refreshToken:
+              type: string
+              example: r_abcdef1234567890
+
+    UpdateConnectionRequest:
+      type: object
+      required:
+        - syncMode
+      properties:
+        syncMode:
+          $ref: '#/components/schemas/ConnectorSyncMode'
+        filterRules:
+          type: object
+          properties:
+            tags:
+              type: array
+              items:
+                type: string
+              example: ["synced"]
+            project:
+              type: string
+              example: Assistant
+
+    ReauthorizeConnectionRequest:
+      type: object
+      required:
+        - rawCredentials
+      properties:
+        rawCredentials:
+          type: object
+          required:
+            - accessToken
+          properties:
+            accessToken:
+              type: string
+              example: ghp_abcdef1234567890
+            refreshToken:
+              type: string
+              example: r_abcdef1234567890
+
+    ResolveConflictRequest:
+      type: object
+      required:
+        - strategy
+      properties:
+        strategy:
+          $ref: '#/components/schemas/ConnectorConflictStrategy'
+
+    ConnectionDTO:
+      type: object
+      required:
+        - connectionId
+        - workspaceId
+        - providerType
+        - status
+        - syncMode
+      properties:
+        connectionId:
+          type: string
+          format: uuid
+          example: conn-9876
+        workspaceId:
+          type: string
+          format: uuid
+          example: ws-1234
+        providerType:
+          $ref: '#/components/schemas/ConnectorProviderType'
+        status:
+          $ref: '#/components/schemas/ConnectorConnectionStatus'
+        syncMode:
+          $ref: '#/components/schemas/ConnectorSyncMode'
+        filterRules:
+          type: object
+          properties:
+            tags:
+              type: array
+              items:
+                type: string
+              example: ["synced"]
+            project:
+              type: string
+              example: Assistant
+
+    ConnectionHealthDTO:
+      type: object
+      required:
+        - connectionId
+        - status
+        - isInBackoff
+      properties:
+        connectionId:
+          type: string
+          format: uuid
+          example: conn-9876
+        status:
+          $ref: '#/components/schemas/ConnectorConnectionStatus'
+        lastSuccessfulSync:
+          type: string
+          format: date-time
+          example: "2026-08-02T10:00:00Z"
+        lastError:
+          type: string
+          example: "Rate limit exceeded"
+        isInBackoff:
+          type: boolean
+          example: true
+        retryAfter:
+          type: string
+          format: date-time
+          example: "2026-08-02T10:05:00Z"
+
+    SyncConflictDTO:
+      type: object
+      required:
+        - conflictId
+        - connectionId
+        - entityType
+        - localEntityId
+        - remoteEntityId
+        - status
+      properties:
+        conflictId:
+          type: string
+          format: uuid
+          example: conf-5555
+        connectionId:
+          type: string
+          format: uuid
+          example: conn-9876
+        entityType:
+          $ref: '#/components/schemas/ConnectorConflictEntityType'
+        localEntityId:
+          type: string
+          example: task-123
+        remoteEntityId:
+          type: string
+          example: jira-456
+        status:
+          $ref: '#/components/schemas/ConnectorConflictStatus'
+        localSnapshot:
+          type: object
+          properties:
+            title:
+              type: string
+              example: "Prepare budget"
+            description:
+              type: string
+              example: "Need to prepare Q3 budget details."
+        remoteSnapshot:
+          type: object
+          properties:
+            title:
+              type: string
+              example: "Prepare Q3 budget"
+            description:
+              type: string
+              example: "Include financial spreadsheet."
+
+    ConnectorConnectionPage:
+      type: object
+      required:
+        - data
+        - nextCursor
+        - hasMore
+      description: Cursor-paginated envelope, standard sync-log exception.
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectionDTO'
+        nextCursor:
+          type: string
+          nullable: true
+          example: base64-encoded-cursor
+        hasMore:
+          type: boolean
+          example: true
+
+    ConnectorConflictPage:
+      type: object
+      required:
+        - data
+        - nextCursor
+        - hasMore
+      description: Cursor-paginated envelope, standard sync-log exception.
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncConflictDTO'
+        nextCursor:
+          type: string
+          nullable: true
+          example: base64-encoded-cursor
+        hasMore:
+          type: boolean
+          example: true
+
+    ConnectorSyncInitiatedResponse:
+      type: object
+      required:
+        - message
+        - connectionId
+      properties:
+        message:
+          type: string
+          example: Sync saga initiated.
+        connectionId:
+          type: string
+          format: uuid
+          example: conn-9876
+
+    # --- AI AGENT SCHEMAS ---
+    AgentSessionStatus:
+      type: string
+      enum:
+        - Planning
+        - AwaitingApproval
+        - Executing
+        - Succeeded
+        - Failed
+        - Escalated
+      example: Planning
+
+    PlanStepStatus:
+      type: string
+      enum:
+        - Pending
+        - Running
+        - Succeeded
+        - Failed
+      example: Pending
+
+    ApprovalStatus:
+      type: string
+      enum:
+        - Pending
+        - Approved
+        - Rejected
+        - Expired
+      example: Pending
+
+    SubmitGoalRequest:
+      type: object
+      required:
+        - goalText
+      properties:
+        goalText:
+          type: string
+          minLength: 5
+          maxLength: 1000
+          example: "Schedule a meeting with John tomorrow at 2 PM..."
+
+    ResolveApprovalRequest:
+      type: object
+      required:
+        - resolution
+      properties:
+        resolution:
+          type: string
+          enum:
+            - Approved
+            - Rejected
+          example: Approved
+
+    AskGroundedQuestionRequest:
+      type: object
+      required:
+        - questionText
+      properties:
+        questionText:
+          type: string
+          minLength: 5
+          maxLength: 1000
+          example: "What are my main deliverables for this week?"
+
+    PlanStep:
+      type: object
+      required:
+        - stepId
+        - toolName
+        - status
+      properties:
+        stepId:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-4a1b-8c2d-3e4f5a6b7c8d
+        toolName:
+          type: string
+          example: CalendarPort.createEvent
+        parameters:
+          type: object
+          additionalProperties: true
+          example:
+            title: "Meeting with John"
+            startTime: "2026-10-15T14:00:00Z"
+        status:
+          $ref: '#/components/schemas/PlanStepStatus'
+
+    AgentSessionResponse:
+      type: object
+      required:
+        - sessionId
+        - workspaceId
+        - goal
+        - status
+        - replanCount
+        - steps
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          example: 3e2b34a1-8d2b-4567-a2f2-9871ab12cdef
+        workspaceId:
+          type: string
+          format: uuid
+          example: c9a22d4f-3a21-4f18-bb53-6c8430b8b211
+        goal:
+          type: string
+          example: "Schedule a meeting with John tomorrow at 2 PM..."
+        status:
+          $ref: '#/components/schemas/AgentSessionStatus'
+        replanCount:
+          type: integer
+          example: 0
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanStep'
+
+    AgentSessionPage:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentSessionResponse'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 1
+
+    ApprovalRequestResponse:
+      type: object
+      required:
+        - approvalId
+        - sessionId
+        - workspaceId
+        - status
+        - planSnapshot
+      properties:
+        approvalId:
+          type: string
+          format: uuid
+          example: 8b3d6f1a-5b12-4f33-90d2-1c2436d4b299
+        sessionId:
+          type: string
+          format: uuid
+          example: 3e2b34a1-8d2b-4567-a2f2-9871ab12cdef
+        workspaceId:
+          type: string
+          format: uuid
+          example: c9a22d4f-3a21-4f18-bb53-6c8430b8b211
+        status:
+          $ref: '#/components/schemas/ApprovalStatus'
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2026-08-04T12:00:00Z"
+        planSnapshot:
+          type: array
+          items:
+            type: object
+            required:
+              - stepId
+              - toolName
+              - description
+            properties:
+              stepId:
+                type: string
+                format: uuid
+                example: a1b2c3d4-e5f6-4a1b-8c2d-3e4f5a6b7c8d
+              toolName:
+                type: string
+                example: CalendarPort.createEvent
+              description:
+                type: string
+                example: Schedule meeting with John for tomorrow at 2 PM
+
+    ApprovalPage:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovalRequestResponse'
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 1
+
+    GroundedAnswerResponse:
+      type: object
+      required:
+        - answerText
+        - citations
+      properties:
+        answerText:
+          type: string
+          example: "Your main deliverables for this week are the Q3 Performance Report and finalizing the API Design document."
+        citations:
+          type: array
+          items:
+            type: object
+            required:
+              - documentId
+              - sourceType
+              - snippetText
+            properties:
+              documentId:
+                type: string
+                example: task-9876
+              sourceType:
+                type: string
+                example: TodoTask
+              snippetText:
+                type: string
+                example: "Complete Q3 Performance Report by Thursday."
+tags:
+  - name: Auth
+    description: Identity & Access Management (register, login, logout, password change, user administration)
+  - name: Workspace
+    description: Tenant workspace boundary resolution, renaming, and administration
+  - name: Todo
+    description: Task creation, updating, soft-deletion, recovery, completion, tagging, and recurrence template management
+  - name: Calendar
+    description: Event scheduling, rescheduling, and reminder management
+  - name: Memory
+    description: Conversation history, user preferences, and long-term semantic memory entries
+  - name: Notification
+    description: In-app inbox notifications, unread count, and user notification profiles
+  - name: Connector
+    description: Third-party integration connections, manual sync triggers (Saga), health status, and sync conflict resolution
+  - name: AI Agent
+    description: Submit goals, track session execution, handle plan step approvals, and ask grounded questions

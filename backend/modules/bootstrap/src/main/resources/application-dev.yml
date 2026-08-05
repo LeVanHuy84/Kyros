@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/assistant_db
+    username: assistant_user
+    password: assistant_secure_pwd
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  flyway:
+    enabled: true
+    locations: classpath:db/migration

@@ -1,0 +1,82 @@
+version: "3"
+
+vars:
+  MAIN_MODULE: modules:bootstrap
+  GRADLE_CMD: '{{if eq OS "windows"}}gradlew.bat{{else}}./gradlew{{end}}'
+
+tasks:
+  format:
+    desc: "Format all code across the monorepo"
+    cmds:
+      - task: format-backend
+      - task: format-frontend
+
+  check:
+    desc: "Run all lint and static analysis checks across the monorepo"
+    cmds:
+      - task: check-backend
+      - task: check-frontend
+
+  dev-backend:
+    desc: "Launch backend application locally in development mode"
+    dir: backend
+    cmds:
+      - '{{.GRADLE_CMD}} :{{.MAIN_MODULE}}:bootRun --args="--spring.profiles.active=dev"'
+
+  format-frontend:
+    desc: "Automatically format frontend files using Prettier"
+    dir: frontend
+    cmds:
+      - "npm run format"
+
+  check-frontend:
+    desc: "Run frontend static analysis checks (oxlint)"
+    dir: frontend
+    cmds:
+      - "npm run lint"
+
+  test-backend:
+    desc: "Run all automated backend unit and architecture tests"
+    dir: backend
+    cmds:
+      - "{{.GRADLE_CMD}} test"
+
+  format-backend:
+    desc: "Automatically format backend files using Spotless"
+    dir: backend
+    cmds:
+      - "{{.GRADLE_CMD}} spotlessApply"
+
+  check-backend:
+    desc: "Run backend static analysis checks (Checkstyle, SpotBugs, ErrorProne, NullAway)"
+    dir: backend
+    cmds:
+      - "{{.GRADLE_CMD}} check"
+
+  verify-backend:
+    desc: "Run clean, compilation, test, and quality tasks for backend (CI equivalence)"
+    dir: backend
+    cmds:
+      - "{{.GRADLE_CMD}} clean build"
+
+  dev-frontend:
+    desc: "Launch frontend application locally in development mode"
+    dir: frontend
+    cmds:
+      - "npm run dev"
+
+  build-frontend:
+    desc: "Build frontend application for production"
+    dir: frontend
+    cmds:
+      - "npm run build"
+
+  infra-up:
+    desc: "Start Postgres and Redis database infrastructure containers"
+    cmds:
+      - "docker compose up postgres redis -d"
+
+  infra-down:
+    desc: "Stop and remove database infrastructure containers"
+    cmds:
+      - "docker compose down"

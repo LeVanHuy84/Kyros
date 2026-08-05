@@ -1,0 +1,23 @@
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-slide-up {
+  animation: slideUpFade var(--transition-normal) forwards;
+}
+
+.interactive-card {
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.interactive-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}

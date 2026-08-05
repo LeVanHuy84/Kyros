@@ -1,0 +1,57 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
+plugins {
+    id 'java'
+    id 'com.diffplug.spotless'
+    id 'com.github.spotbugs'
+    id 'net.ltgt.errorprone'
+    id 'checkstyle'
+}
+
+checkstyle {
+    toolVersion = '10.15.0'
+}
+
+spotless {
+    java {
+        googleJavaFormat('1.27.0').reflowLongStrings()
+    }
+}
+
+spotbugs {
+    toolVersion.set('4.10.3')
+    ignoreFailures = false
+    effort.set(com.github.spotbugs.snom.Effort.valueOf('MAX'))
+    reportLevel.set(com.github.spotbugs.snom.Confidence.valueOf('HIGH'))
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+    reports {
+        html.required.set(true)
+        xml.required.set(false)
+    }
+}
+
+dependencies {
+    compileOnly 'org.jspecify:jspecify:1.0.0'
+    errorprone 'com.google.errorprone:error_prone_core:2.37.0'
+    errorprone 'com.uber.nullaway:nullaway:0.13.7'
+    spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.13.0'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release.set(21)
+    options.compilerArgs.addAll([
+        '-XDaddTypeAnnotationsToSymbol=true',
+        '-XDcompilePolicy=simple',
+        '--should-stop=ifError=FLOW'
+    ])
+    options.errorprone {
+        excludedPaths = '.*/build/generated/.*'
+        disableWarningsInGeneratedCode = true
+        option 'NullAway:OnlyNullMarked', 'true'
+        option 'NullAway:JSpecifyMode', 'true'
+        error 'NullAway'
+    }
+}

@@ -1,0 +1,52 @@
+:root {
+  /* Brand Color Palette - Deep Indigo (#4F46E5) & Cyan (#22D3EE) */
+  --color-primary-h: 243;
+  --color-primary-s: 75%;
+  --color-primary-l: 59%;
+  --color-primary: hsl(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l));
+
+  --color-secondary-h: 189;
+  --color-secondary-s: 87%;
+  --color-secondary-l: 54%;
+  --color-secondary: hsl(var(--color-secondary-h), var(--color-secondary-s), var(--color-secondary-l));
+  
+  --color-success: hsl(142, 70%, 45%);
+  --color-warning: hsl(38, 92%, 50%);
+  --color-danger: hsl(350, 89%, 60%);
+
+  /* Light Theme Specifics (White Background) */
+  --bg-app: hsl(220, 20%, 97%);
+  --bg-card: hsl(0, 0%, 100%);
+  --bg-sidebar: hsl(222, 47%, 11%); /* Dark Navy sidebar for premium contrast */
+  --text-main: hsl(222, 47%, 15%);
+  --text-muted: hsl(220, 15%, 45%);
+  --border-color: hsl(220, 20%, 90%);
+  
+  /* Shadows & Radius */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+
+  /* Font Styles */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-base: 16px;
+  
+  /* Transition Speeds */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark Theme Overrides (Dark Navy Theme) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-app: hsl(222, 47%, 6%);     /* Very Deep Navy */
+    --bg-card: hsl(222, 47%, 11%);    /* Dark Navy */
+    --bg-sidebar: hsl(222, 47%, 4%);  /* Black Navy */
+    --text-main: hsl(210, 40%, 98%);
+    --text-muted: hsl(215, 20%, 65%);
+    --border-color: hsl(222, 30%, 18%);
+  }
+}

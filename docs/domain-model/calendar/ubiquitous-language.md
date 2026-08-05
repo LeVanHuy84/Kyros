@@ -1,0 +1,52 @@
+# Ubiquitous Language — Calendar Bounded Context
+
+This document defines the core business terms and concepts within the **Calendar Bounded Context** of the AI Executive Assistant. Standardizing these terms ensures clear communication between business analysts, domain experts, developers, and the AI Agent.
+
+---
+
+## Glossary of Terms
+
+### 1. Calendar Event
+- **Definition**: A scheduled block of time reserved for a specific activity or commitment.
+- **Synonyms**: Event, Appointment, Schedule Block.
+- **Context-Specific Meaning**: An event has a Title, Start Time, End Time, optional Description, and zero or more associated Reminders. It exists strictly within a single Workspace.
+
+### 2. Start Time
+- **Definition**: The specific date and time when a Calendar Event is scheduled to begin.
+- **Synonyms**: Event Start, Start Date.
+- **Context-Specific Meaning**: Must be defined for every event and must precede the End Time.
+
+### 3. End Time
+- **Definition**: The specific date and time when a Calendar Event is scheduled to conclude.
+- **Synonyms**: Event End, End Date.
+- **Context-Specific Meaning**: Must be defined for every event and must occur chronologically after the Start Time.
+
+### 4. Reminder
+- **Definition**: An alert configuration associated with a Calendar Event, designed to notify the user before the event starts.
+- **Synonyms**: Event Alert, Notification Trigger.
+- **Context-Specific Meaning**: Reminders are strictly bound to a single Calendar Event and are defined by a Lead Time. An event can have multiple reminders, and they can be snoozed or dismissed.
+
+### 5. Lead Time
+- **Definition**: The duration before the Start Time of an event when a Reminder should be triggered.
+- **Synonyms**: Advanced Notice, Alert Offset.
+- **Context-Specific Meaning**: Expressed as a time offset (e.g., 15 minutes, 1 hour, 1 day) relative to the event's Start Time.
+
+### 6. Snooze
+- **Definition**: The action of temporarily delaying a triggered Reminder notification.
+- **Synonyms**: Delay Alert, Pause Reminder.
+- **Context-Specific Meaning**: Temporarily updates the trigger time of a specific reminder to a short, user-defined duration in the future (e.g., 5 or 10 minutes).
+
+### 7. Dismiss
+- **Definition**: The action of acknowledging a triggered Reminder notification and stopping any further alerts for it.
+- **Synonyms**: Acknowledge, Clear Reminder.
+- **Context-Specific Meaning**: Permanently deactivates a triggered reminder instance so that it does not fire again.
+
+### 8. Schedule Collision
+- **Definition**: An occurrence where two or more Calendar Events overlap in their scheduled time intervals.
+- **Synonyms**: Overlap, Scheduling Conflict.
+- **Context-Specific Meaning**: A collision occurs if the time range $[Start_A, End_A]$ intersects with $[Start_B, End_B]$.
+
+### 9. Overlap Constraint
+- **Definition**: A preference setting that dictates whether the system should permit overlapping Calendar Events.
+- **Synonyms**: Prevent Calendar Overlap, Overlap Prevention Policy.
+- **Context-Specific Meaning**: A user-defined preference. If enabled, the system enforces an invariant that rejects any event creation or update that would cause a Schedule Collision. If disabled, overlapping events are allowed.
