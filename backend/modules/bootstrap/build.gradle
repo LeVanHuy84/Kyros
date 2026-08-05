@@ -23,6 +23,9 @@ dependencies {
     implementation libs.spring.boot.starter.validation
     implementation libs.flyway.core
     implementation libs.flyway.database.postgresql
+    implementation libs.jjwt.api
+    runtimeOnly libs.jjwt.impl
+    runtimeOnly libs.jjwt.jackson
     runtimeOnly libs.postgresql
 
     testImplementation libs.spring.boot.starter.test
