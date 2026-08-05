@@ -1,31 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Loader2, Eye, EyeOff } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { login, register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('operator@assistant.ai');
-  const [password, setPassword] = useState('••••••••');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isRegister, setIsRegister] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Mount Guard: Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/agent');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleToggleMode = () => {
+    setIsRegister(!isRegister);
+    setPassword('');
+    setConfirmPassword('');
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setError('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    
     if (!email || !password) {
       setError('Please fill in all fields.');
       return;
     }
     
-    // Mock successful authentication
-    const mockUser = {
-      email,
-      name: email === 'operator@assistant.ai' ? 'Operator Jane' : 'Jane Doe',
-      roles: email === 'operator@assistant.ai' ? ['USER', 'SYSTEM_OPERATOR'] : ['USER']
-    };
+    if (isRegister) {
+      if (password.length < 8) {
+        setError('Password must be at least 8 characters long.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match. Please re-enter.');
+        return;
+      }
+    }
     
-    login('mock-jwt-token-xyz', 'mock-refresh-token-123', mockUser);
-    navigate('/agent');
+    setIsLoading(true);
+    try {
+      if (isRegister) {
+        await register(email, password);
+      } else {
+        await login(email, password);
+      }
+      navigate('/agent');
+    } catch (err: any) {
+      console.error(err);
+      if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError(isRegister 
+          ? 'Registration failed. This email may already be registered.' 
+          : 'Sign in failed. Please verify your email and password.'
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -66,9 +114,9 @@ const Login: React.FC = () => {
             <img src="/favicon.svg" alt="Kyros Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <h2 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-main)', margin: '8px 0 0 0', letterSpacing: '-0.5px' }}>
-            Sign in to Kyros
+            {isRegister ? 'Create an account' : 'Sign in to Kyros'}
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: 0 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
             AI Executive Assistant Coordinator
           </p>
         </div>
@@ -78,12 +126,13 @@ const Login: React.FC = () => {
             backgroundColor: 'rgba(239, 68, 68, 0.08)',
             border: '1px solid var(--color-danger)',
             borderRadius: 'var(--radius-sm)',
-            padding: '12px',
+            padding: '12px 14px',
             color: 'var(--color-danger)',
             fontSize: '13px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
+            lineHeight: '1.4'
           }}>
             <span>{error}</span>
           </div>
@@ -113,28 +162,97 @@ const Login: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)' }}>Password</label>
-              <a href="#" style={{ fontSize: '12px' }}>Forgot password?</a>
+              {!isRegister && <a href="#" style={{ fontSize: '12px' }}>Forgot password?</a>}
             </div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-color)',
-                backgroundColor: 'var(--bg-app)',
-                color: 'var(--text-main)',
-                outline: 'none',
-                transition: 'border-color var(--transition-fast)'
-              }}
-              required
-            />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={isRegister ? 'At least 8 characters' : '••••••••'}
+                style={{
+                  width: '100%',
+                  padding: '10px 40px 10px 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-app)',
+                  color: 'var(--text-main)',
+                  outline: 'none',
+                  transition: 'border-color var(--transition-fast)'
+                }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px',
+                  outline: 'none'
+                }}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
+
+          {isRegister && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)' }}>Confirm Password</label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  style={{
+                    width: '100%',
+                    padding: '10px 40px 10px 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-app)',
+                    color: 'var(--text-main)',
+                    outline: 'none',
+                    transition: 'border-color var(--transition-fast)'
+                  }}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '4px',
+                    outline: 'none'
+                  }}
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"
+            disabled={isLoading}
             style={{
               width: '100%',
               padding: '12px',
@@ -142,17 +260,40 @@ const Login: React.FC = () => {
               color: '#ffffff',
               border: 'none',
               borderRadius: 'var(--radius-sm)',
-              cursor: 'pointer',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
               fontWeight: '600',
               fontSize: '14px',
               boxShadow: 'var(--shadow-sm)',
               transition: 'opacity var(--transition-fast)',
-              marginTop: '8px'
+              marginTop: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
             }}
           >
-            Sign In
+            {isLoading && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
+            <span>{isRegister ? 'Register' : 'Sign In'}</span>
           </button>
         </form>
+
+        <div style={{ textAlign: 'center', marginTop: '-8px' }}>
+          <button
+            type="button"
+            onClick={handleToggleMode}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--color-primary)',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              outline: 'none'
+            }}
+          >
+            {isRegister ? 'Already have an account? Sign In' : "Don't have an account? Register"}
+          </button>
+        </div>
 
         <div style={{
           borderTop: '1px solid var(--border-color)',
@@ -168,6 +309,11 @@ const Login: React.FC = () => {
           <span>Tip: Use <strong>operator@assistant.ai</strong> for Operator views.</span>
         </div>
       </div>
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

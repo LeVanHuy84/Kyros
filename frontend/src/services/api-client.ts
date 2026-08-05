@@ -30,25 +30,17 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    // Enforce instant session clearance on 401 Unauthorized responses
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('active_workspace_id');
+      window.location.href = '/login';
+    }
     
-    // Auto-refresh token on 401 Unauthorized responses
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const response = await axios.post('/api/auth/refresh', {
-          refreshToken: localStorage.getItem('refresh_token'),
-        });
-        const { token } = response.data;
-        localStorage.setItem('token', token);
-        originalRequest.headers['Authorization'] = `Bearer ${token}`;
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
+    // Fail-closed notification for Redis database offline
+    if (error.response?.status === 503) {
+      console.error('Service temporarily unavailable (Redis connection down). Session check failed.');
     }
     
     return Promise.reject(error);

@@ -15,6 +15,7 @@ const Integrations = lazy(() => import('./pages/Integrations'));
 const Settings = lazy(() => import('./pages/Settings'));
 const UserAdmin = lazy(() => import('./pages/admin/UserAdmin'));
 const WorkspaceAdmin = lazy(() => import('./pages/admin/WorkspaceAdmin'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 const PageLoader = () => (
   <div style={{
@@ -110,8 +111,8 @@ function App() {
                   />
                 </Route>
 
-                {/* Catch-all Redirect */}
-                <Route path="*" element={<Navigate to="/agent" replace />} />
+                {/* Catch-all Fallback (Not Found Page) */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
           </BrowserRouter>

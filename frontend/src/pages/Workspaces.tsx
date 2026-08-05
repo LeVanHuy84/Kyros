@@ -1,11 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useAuth } from '../context/AuthContext';
 import { Briefcase, ChevronRight, Plus } from 'lucide-react';
 
 const Workspaces: React.FC = () => {
   const { workspaces, selectWorkspace, createWorkspace } = useWorkspace();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSelect = (id: string) => {
     selectWorkspace(id);

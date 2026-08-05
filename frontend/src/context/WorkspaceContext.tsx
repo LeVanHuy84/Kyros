@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import apiClient from '../services/api-client';
+import { useAuth } from './AuthContext';
 
 export interface Workspace {
   id: string;
@@ -16,53 +18,111 @@ interface WorkspaceContextType {
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
 
-// Default mock workspaces for initial startup
-const DEFAULT_WORKSPACES: Workspace[] = [
-  { id: 'workspace-demo-uuid', name: "Jane's Workspace", status: 'ACTIVE' },
-  { id: 'workspace-marketing-uuid', name: 'Marketing Workspace', status: 'ACTIVE' },
-  { id: 'workspace-suspended-uuid', name: 'Archived Workspace', status: 'SUSPENDED' },
-];
-
 export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>(DEFAULT_WORKSPACES);
+  const { isAuthenticated } = useAuth();
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const storedWorkspaceId = localStorage.getItem('active_workspace_id');
-    const found = workspaces.find(w => w.id === storedWorkspaceId);
-    
-    if (found) {
-      setActiveWorkspace(found);
-    } else if (workspaces.length > 0) {
-      // Default to first active workspace if none stored
-      const firstActive = workspaces.find(w => w.status === 'ACTIVE') || workspaces[0];
-      setActiveWorkspace(firstActive);
-      localStorage.setItem('active_workspace_id', firstActive.id);
-    }
-    setIsLoading(false);
-  }, [workspaces]);
+  const fetchWorkspaces = async () => {
+    try {
+      setIsLoading(true);
+      // Fetch all workspaces assigned to the user
+      const response = await apiClient.get('/workspaces');
+      const wsList: Workspace[] = response.data.map((w: any) => ({
+        id: w.id,
+        name: w.name,
+        status: w.status
+      }));
+      setWorkspaces(wsList);
 
-  const selectWorkspace = (id: string) => {
+      if (wsList.length > 0) {
+        try {
+          // Attempt to retrieve primary workspace configuration
+          const primaryResponse = await apiClient.get('/workspaces/primary');
+          const primaryWs = wsList.find(w => w.id === primaryResponse.data.id);
+          if (primaryWs && primaryWs.status === 'ACTIVE') {
+            setActiveWorkspace(primaryWs);
+            localStorage.setItem('active_workspace_id', primaryWs.id);
+          } else {
+            fallbackSelect(wsList);
+          }
+        } catch {
+          // If primary workspace is not set/found, fallback
+          fallbackSelect(wsList);
+        }
+      } else {
+        setActiveWorkspace(null);
+        localStorage.removeItem('active_workspace_id');
+      }
+    } catch (error) {
+      console.error('Failed to fetch workspaces from server', error);
+      setWorkspaces([]);
+      setActiveWorkspace(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fallbackSelect = (wsList: Workspace[]) => {
+    const storedWorkspaceId = localStorage.getItem('active_workspace_id');
+    const storedWs = wsList.find(w => w.id === storedWorkspaceId);
+    
+    if (storedWs && storedWs.status === 'ACTIVE') {
+      setActiveWorkspace(storedWs);
+    } else {
+      const firstActive = wsList.find(w => w.status === 'ACTIVE') || wsList[0];
+      setActiveWorkspace(firstActive || null);
+      if (firstActive) {
+        localStorage.setItem('active_workspace_id', firstActive.id);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchWorkspaces();
+    } else {
+      setWorkspaces([]);
+      setActiveWorkspace(null);
+      setIsLoading(false);
+      localStorage.removeItem('active_workspace_id');
+    }
+  }, [isAuthenticated]);
+
+  const selectWorkspace = async (id: string) => {
     const target = workspaces.find(w => w.id === id);
-    if (target) {
+    if (target && target.status === 'ACTIVE') {
       setActiveWorkspace(target);
       localStorage.setItem('active_workspace_id', id);
-      // Clear conversation state or trigger a sync if needed in real app
+      try {
+        // Persist primary workspace configuration to backend
+        await apiClient.post(`/workspaces/primary/${id}`);
+      } catch (e) {
+        console.warn('Failed to update primary workspace on server', e);
+      }
     }
   };
 
   const createWorkspace = async (name: string): Promise<Workspace> => {
-    // Mimic API creation call
+    const response = await apiClient.post('/workspaces', { name });
     const newWs: Workspace = {
-      id: `workspace-${Math.random().toString(36).substr(2, 9)}`,
-      name,
-      status: 'ACTIVE'
+      id: response.data.id,
+      name: response.data.name,
+      status: response.data.status
     };
     
     setWorkspaces(prev => [...prev, newWs]);
     setActiveWorkspace(newWs);
     localStorage.setItem('active_workspace_id', newWs.id);
+    
+    try {
+      // Auto-set as primary
+      await apiClient.post(`/workspaces/primary/${newWs.id}`);
+    } catch (e) {
+      console.warn('Failed to set newly created workspace as primary', e);
+    }
+    
     return newWs;
   };
 
