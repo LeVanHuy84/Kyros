@@ -7,8 +7,12 @@ archUnit = "1.3.0"
 postgresql = "42.7.2"
 redis = "3.4.2"
 jjwt = "0.12.6"
+springdocOpenapi = "2.8.3"
+scalarWebmvc = "0.6.60"
 
 [libraries]
+springdoc-openapi-starter-webmvc-api = { module = "org.springdoc:springdoc-openapi-starter-webmvc-api", version.ref = "springdocOpenapi" }
+scalar-webmvc = { module = "com.scalar.maven:scalar-webmvc", version.ref = "scalarWebmvc" }
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
 jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
 jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }

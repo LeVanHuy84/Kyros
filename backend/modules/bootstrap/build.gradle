@@ -27,6 +27,9 @@ dependencies {
     runtimeOnly libs.jjwt.impl
     runtimeOnly libs.jjwt.jackson
     runtimeOnly libs.postgresql
+    implementation libs.springdoc.openapi.starter.webmvc.api
+    implementation libs.scalar.webmvc
+
 
     testImplementation libs.spring.boot.starter.test
     testImplementation libs.archunit
