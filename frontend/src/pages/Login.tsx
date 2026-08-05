@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Cpu, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 const Login: React.FC = () => {
   const { login } = useAuth();
@@ -52,16 +52,18 @@ const Login: React.FC = () => {
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textAlign: 'center' }}>
           <div style={{
-            width: '48px',
-            height: '48px',
+            width: '64px',
+            height: '64px',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'var(--color-primary)',
+            backgroundColor: 'var(--bg-app)',
+            border: '1px solid var(--border-color)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#ffffff'
+            boxShadow: 'var(--shadow-sm)',
+            padding: '12px'
           }}>
-            <Cpu size={24} />
+            <img src="/favicon.svg" alt="Kyros Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <h2 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-main)', margin: '8px 0 0 0', letterSpacing: '-0.5px' }}>
             Sign in to Kyros
