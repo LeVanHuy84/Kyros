@@ -47,8 +47,9 @@ public class WorkspaceTag {
   }
 
   public void rename(String newName) {
-    if (newName == null || newName.isBlank())
+    if (newName == null || newName.isBlank()) {
       throw new IllegalArgumentException("Tag name must not be blank");
+    }
     this.name = newName.trim();
   }
 
