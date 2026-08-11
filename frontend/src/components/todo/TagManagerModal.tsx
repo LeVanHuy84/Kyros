@@ -12,7 +12,7 @@ const TAG_COLORS = [
   '#8b5cf6',
   '#14b8a6',
   '#f97316',
-  '#64748b'
+  '#64748b',
 ];
 
 interface TagManagerModalProps {
@@ -20,8 +20,12 @@ interface TagManagerModalProps {
   onClose: () => void;
 }
 
-export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClose }) => {
-  const { tags, isLoading, error, setError, createTag, updateTag, deleteTag } = useWorkspaceTags();
+export const TagManagerModal: React.FC<TagManagerModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
+  const { tags, isLoading, error, setError, createTag, updateTag, deleteTag } =
+    useWorkspaceTags();
 
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState<string>(TAG_COLORS[0]);
@@ -80,7 +84,7 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 110,
-        padding: '20px'
+        padding: '20px',
       }}
     >
       <div
@@ -93,17 +97,35 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
           boxShadow: 'var(--shadow-lg)',
           backgroundColor: 'var(--bg-card)',
           maxHeight: '80vh',
-          overflowY: 'auto'
+          overflowY: 'auto',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-main)', margin: 0 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <h3
+            style={{
+              fontSize: '20px',
+              fontWeight: '600',
+              color: 'var(--text-main)',
+              margin: 0,
+            }}
+          >
             Manage Workspace Tags
           </h3>
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+            }}
           >
             <X size={20} />
           </button>
@@ -120,14 +142,19 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
               border: '1px solid var(--color-danger)',
               borderRadius: 'var(--radius-sm)',
               color: 'var(--color-danger)',
-              fontSize: '14px'
+              fontSize: '14px',
             }}
           >
             <AlertCircle size={16} />
             <span style={{ flexGrow: 1 }}>{error}</span>
             <button
               onClick={() => setError(null)}
-              style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer' }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--color-danger)',
+                cursor: 'pointer',
+              }}
             >
               <X size={14} />
             </button>
@@ -135,13 +162,31 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
         )}
 
         {/* Add new tag */}
-        <form onSubmit={handleAdd} style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexGrow: 1 }}>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>New Tag</label>
+        <form
+          onSubmit={handleAdd}
+          style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              flexGrow: 1,
+            }}
+          >
+            <label
+              style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: 'var(--text-main)',
+              }}
+            >
+              New Tag
+            </label>
             <input
               type="text"
               value={newName}
-              onChange={e => setNewName(e.target.value)}
+              onChange={(e) => setNewName(e.target.value)}
               placeholder="e.g. urgent, design, work"
               style={{
                 padding: '12px 16px',
@@ -151,14 +196,22 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
                 color: 'var(--text-main)',
                 fontSize: '15px',
                 outline: 'none',
-                fontFamily: 'var(--font-sans)'
+                fontFamily: 'var(--font-sans)',
               }}
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>Color</label>
+            <label
+              style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: 'var(--text-main)',
+              }}
+            >
+              Color
+            </label>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {TAG_COLORS.map(color => (
+              {TAG_COLORS.map((color) => (
                 <button
                   key={color}
                   type="button"
@@ -168,16 +221,23 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
                     height: '24px',
                     borderRadius: '50%',
                     backgroundColor: color,
-                    border: newColor === color ? '2px solid var(--text-main)' : '2px solid transparent',
+                    border:
+                      newColor === color
+                        ? '2px solid var(--text-main)'
+                        : '2px solid transparent',
                     cursor: 'pointer',
-                    padding: 0
+                    padding: 0,
                   }}
                   aria-label={`Color ${color}`}
                 />
               ))}
             </div>
           </div>
-          <button type="submit" className="btn btn-primary" style={{ height: '44px' }}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            style={{ height: '44px' }}
+          >
             <Plus size={16} />
             <span>Add</span>
           </button>
@@ -185,31 +245,78 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
 
         {/* Tags table */}
         {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '14px' }}>
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '24px 0',
+              color: 'var(--text-muted)',
+              fontSize: '14px',
+            }}
+          >
             Loading tags...
           </div>
         ) : tags.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: '14px' }}>
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '32px 0',
+              color: 'var(--text-muted)',
+              fontSize: '14px',
+            }}
+          >
             No workspace tags yet. Add your first tag above.
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'left' }}>
-                <th style={{ padding: '10px 12px', borderBottom: '1px solid var(--border-color)' }}>Name</th>
-                <th style={{ padding: '10px 12px', borderBottom: '1px solid var(--border-color)' }}>Color</th>
-                <th style={{ padding: '10px 12px', borderBottom: '1px solid var(--border-color)', textAlign: 'right' }}>Actions</th>
+              <tr
+                style={{
+                  color: 'var(--text-muted)',
+                  fontSize: '13px',
+                  textAlign: 'left',
+                }}
+              >
+                <th
+                  style={{
+                    padding: '10px 12px',
+                    borderBottom: '1px solid var(--border-color)',
+                  }}
+                >
+                  Name
+                </th>
+                <th
+                  style={{
+                    padding: '10px 12px',
+                    borderBottom: '1px solid var(--border-color)',
+                  }}
+                >
+                  Color
+                </th>
+                <th
+                  style={{
+                    padding: '10px 12px',
+                    borderBottom: '1px solid var(--border-color)',
+                    textAlign: 'right',
+                  }}
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
-              {tags.map(tag => (
+              {tags.map((tag) => (
                 <tr key={tag.tagId}>
-                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border-color)' }}>
+                  <td
+                    style={{
+                      padding: '10px 12px',
+                      borderBottom: '1px solid var(--border-color)',
+                    }}
+                  >
                     {editingId === tag.tagId ? (
                       <input
                         type="text"
                         value={editName}
-                        onChange={e => setEditName(e.target.value)}
+                        onChange={(e) => setEditName(e.target.value)}
                         style={{
                           padding: '8px 10px',
                           borderRadius: 'var(--radius-sm)',
@@ -218,7 +325,7 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
                           color: 'var(--text-main)',
                           fontSize: '14px',
                           outline: 'none',
-                          fontFamily: 'var(--font-sans)'
+                          fontFamily: 'var(--font-sans)',
                         }}
                       />
                     ) : (
@@ -230,17 +337,28 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
                           borderRadius: '8px',
                           color: tag.color ? '#fff' : 'var(--text-main)',
                           backgroundColor: tag.color || 'var(--border-color)',
-                          border: 'none'
+                          border: 'none',
                         }}
                       >
                         {tag.name}
                       </span>
                     )}
                   </td>
-                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border-color)' }}>
+                  <td
+                    style={{
+                      padding: '10px 12px',
+                      borderBottom: '1px solid var(--border-color)',
+                    }}
+                  >
                     {editingId === tag.tagId ? (
-                      <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                        {TAG_COLORS.map(color => (
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '5px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        {TAG_COLORS.map((color) => (
                           <button
                             key={color}
                             type="button"
@@ -250,9 +368,12 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
                               height: '20px',
                               borderRadius: '50%',
                               backgroundColor: color,
-                              border: editColor === color ? '2px solid var(--text-main)' : '2px solid transparent',
+                              border:
+                                editColor === color
+                                  ? '2px solid var(--text-main)'
+                                  : '2px solid transparent',
                               cursor: 'pointer',
-                              padding: 0
+                              padding: 0,
                             }}
                             aria-label={`Color ${color}`}
                           />
@@ -265,14 +386,26 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
                           height: '16px',
                           borderRadius: '50%',
                           display: 'inline-block',
-                          backgroundColor: tag.color || 'var(--border-color)'
+                          backgroundColor: tag.color || 'var(--border-color)',
                         }}
                       />
                     )}
                   </td>
-                  <td style={{ padding: '10px 12px', borderBottom: '1px solid var(--border-color)', textAlign: 'right' }}>
+                  <td
+                    style={{
+                      padding: '10px 12px',
+                      borderBottom: '1px solid var(--border-color)',
+                      textAlign: 'right',
+                    }}
+                  >
                     {editingId === tag.tagId ? (
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '8px',
+                          justifyContent: 'flex-end',
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={handleSaveEdit}
@@ -291,10 +424,18 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({ isOpen, onClos
                         </button>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '8px',
+                          justifyContent: 'flex-end',
+                        }}
+                      >
                         <button
                           type="button"
-                          onClick={() => startEdit(tag.tagId, tag.name, tag.color)}
+                          onClick={() =>
+                            startEdit(tag.tagId, tag.name, tag.color)
+                          }
                           className="btn btn-secondary"
                           style={{ padding: '6px 10px', fontSize: '13px' }}
                           title="Edit Tag"

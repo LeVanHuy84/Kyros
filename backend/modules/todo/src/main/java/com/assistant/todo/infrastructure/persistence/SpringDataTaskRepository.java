@@ -33,15 +33,13 @@ public interface SpringDataTaskRepository extends JpaRepository<TaskJpaEntity, U
       @Param("parentTaskId") UUID parentTaskId, @Param("dueDate") Instant dueDate);
 
   @Query(
-      "SELECT DISTINCT t FROM TaskJpaEntity t LEFT JOIN t.tags tag "
-          + "WHERE t.workspaceId = :workspaceId "
-          + "AND t.deletedAt IS NULL "
-          + "AND (:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', CAST(:title AS string), '%'))) "
-          + "AND (:priority IS NULL OR t.priority = CAST(:priority AS string)) "
-          + "AND (:tag IS NULL OR tag.name = CAST(:tag AS string)) "
-          + "AND (:status IS NULL OR t.status = CAST(:status AS string)) "
-          + "AND (CAST(:dueDateFrom AS timestamp) IS NULL OR t.dueDate >= :dueDateFrom) "
-          + "AND (CAST(:dueDateTo AS timestamp) IS NULL OR t.dueDate <= :dueDateTo)")
+      "SELECT DISTINCT t FROM TaskJpaEntity t LEFT JOIN t.tags tag WHERE t.workspaceId ="
+          + " :workspaceId AND t.deletedAt IS NULL AND (:title IS NULL OR LOWER(t.title) LIKE"
+          + " LOWER(CONCAT('%', CAST(:title AS string), '%'))) AND (:priority IS NULL OR t.priority"
+          + " = CAST(:priority AS string)) AND (:tag IS NULL OR tag.name = CAST(:tag AS string))"
+          + " AND (:status IS NULL OR t.status = CAST(:status AS string)) AND (CAST(:dueDateFrom AS"
+          + " timestamp) IS NULL OR t.dueDate >= :dueDateFrom) AND (CAST(:dueDateTo AS timestamp)"
+          + " IS NULL OR t.dueDate <= :dueDateTo)")
   Page<TaskJpaEntity> findAllTasksFiltered(
       @Param("workspaceId") UUID workspaceId,
       @Param("title") String title,
@@ -59,15 +57,13 @@ public interface SpringDataTaskRepository extends JpaRepository<TaskJpaEntity, U
       @Param("workspaceId") UUID workspaceId, Pageable pageable);
 
   @Query(
-      "SELECT COUNT(DISTINCT t) FROM TaskJpaEntity t LEFT JOIN t.tags tag "
-          + "WHERE t.workspaceId = :workspaceId "
-          + "AND t.deletedAt IS NULL "
-          + "AND (:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', CAST(:title AS string), '%'))) "
-          + "AND (:priority IS NULL OR t.priority = CAST(:priority AS string)) "
-          + "AND (:tag IS NULL OR tag.name = CAST(:tag AS string)) "
-          + "AND (:status IS NULL OR t.status = CAST(:status AS string)) "
-          + "AND (CAST(:dueDateFrom AS timestamp) IS NULL OR t.dueDate >= :dueDateFrom) "
-          + "AND (CAST(:dueDateTo AS timestamp) IS NULL OR t.dueDate <= :dueDateTo)")
+      "SELECT COUNT(DISTINCT t) FROM TaskJpaEntity t LEFT JOIN t.tags tag WHERE t.workspaceId ="
+          + " :workspaceId AND t.deletedAt IS NULL AND (:title IS NULL OR LOWER(t.title) LIKE"
+          + " LOWER(CONCAT('%', CAST(:title AS string), '%'))) AND (:priority IS NULL OR t.priority"
+          + " = CAST(:priority AS string)) AND (:tag IS NULL OR tag.name = CAST(:tag AS string))"
+          + " AND (:status IS NULL OR t.status = CAST(:status AS string)) AND (CAST(:dueDateFrom AS"
+          + " timestamp) IS NULL OR t.dueDate >= :dueDateFrom) AND (CAST(:dueDateTo AS timestamp)"
+          + " IS NULL OR t.dueDate <= :dueDateTo)")
   long countAllTasksFiltered(
       @Param("workspaceId") UUID workspaceId,
       @Param("title") String title,

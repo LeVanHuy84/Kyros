@@ -3,13 +3,17 @@ import { ChevronDown, Plus } from 'lucide-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 
 export const TenantSelector: React.FC = () => {
-  const { workspaces, activeWorkspace, selectWorkspace, createWorkspace } = useWorkspace();
+  const { workspaces, activeWorkspace, selectWorkspace, createWorkspace } =
+    useWorkspace();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -34,14 +38,20 @@ export const TenantSelector: React.FC = () => {
 
   return (
     <div className="workspace-selector-container" ref={containerRef}>
-      <button 
-        className="workspace-selector-trigger" 
+      <button
+        className="workspace-selector-trigger"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
         <span>{activeWorkspace.name}</span>
-        <ChevronDown size={14} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform var(--transition-fast)' }} />
+        <ChevronDown
+          size={14}
+          style={{
+            transform: isOpen ? 'rotate(180deg)' : 'none',
+            transition: 'transform var(--transition-fast)',
+          }}
+        />
       </button>
 
       {isOpen && (
@@ -55,7 +65,9 @@ export const TenantSelector: React.FC = () => {
               onClick={() => handleSelect(ws.id)}
             >
               <span>{ws.name}</span>
-              <span className={`workspace-status-dot ${ws.status === 'SUSPENDED' ? 'suspended' : ''}`} />
+              <span
+                className={`workspace-status-dot ${ws.status === 'SUSPENDED' ? 'suspended' : ''}`}
+              />
             </button>
           ))}
           <div className="workspace-create-divider" />

@@ -1,7 +1,7 @@
 package com.assistant.todo.presentation.dto;
 
-import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public record UpdateWorkspaceTagRequest(
     @Size(max = 100, message = "Tag name cannot exceed 100 characters") String name,

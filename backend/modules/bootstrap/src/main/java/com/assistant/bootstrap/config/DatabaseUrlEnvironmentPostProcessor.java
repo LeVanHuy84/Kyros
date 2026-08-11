@@ -1,32 +1,35 @@
 package com.assistant.bootstrap.config;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.MapPropertySource;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
 
 public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
   private static final String PROPERTY_SOURCE_NAME = "databaseAndRedisUrl";
 
   @Override
-  public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+  public void postProcessEnvironment(
+      ConfigurableEnvironment environment, SpringApplication application) {
     Map<String, Object> properties = new HashMap<>();
 
     addDatabaseProperties(environment, properties);
     addRedisProperties(environment, properties);
 
     if (!properties.isEmpty()) {
-      environment.getPropertySources().addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, properties));
+      environment
+          .getPropertySources()
+          .addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, properties));
     }
   }
 
-  private void addDatabaseProperties(ConfigurableEnvironment environment, Map<String, Object> properties) {
+  private void addDatabaseProperties(
+      ConfigurableEnvironment environment, Map<String, Object> properties) {
     String databaseUrl = environment.getProperty("DATABASE_URL");
     if (databaseUrl == null || databaseUrl.isBlank()) {
       return;
@@ -78,7 +81,8 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
     }
   }
 
-  private void addRedisProperties(ConfigurableEnvironment environment, Map<String, Object> properties) {
+  private void addRedisProperties(
+      ConfigurableEnvironment environment, Map<String, Object> properties) {
     String redisUrl = environment.getProperty("REDIS_URL");
     if (redisUrl == null || redisUrl.isEmpty()) {
       return;

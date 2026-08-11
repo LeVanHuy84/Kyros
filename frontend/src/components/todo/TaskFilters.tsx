@@ -30,25 +30,30 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
   dueDateFrom,
   setDueDateFrom,
   dueDateTo,
-  setDueDateTo
+  setDueDateTo,
 }) => {
   return (
-    <div style={{ 
-      display: 'flex', 
-      gap: '16px', 
-      flexWrap: 'wrap', 
-      alignItems: 'center' 
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: '16px',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+      }}
+    >
       {/* Search Input */}
       <div style={{ position: 'relative', flexGrow: 1, minWidth: '240px' }}>
-        <Search size={18} style={{ 
-          position: 'absolute', 
-          left: '14px', 
-          top: '50%', 
-          transform: 'translateY(-50%)', 
-          color: 'var(--text-muted)', 
-          opacity: 0.7 
-        }} />
+        <Search
+          size={18}
+          style={{
+            position: 'absolute',
+            left: '14px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: 'var(--text-muted)',
+            opacity: 0.7,
+          }}
+        />
         <input
           type="text"
           placeholder="Search tasks..."
@@ -64,10 +69,10 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
             fontSize: '15px',
             fontFamily: 'var(--font-sans)',
             outline: 'none',
-            transition: 'border-color var(--transition-fast)'
+            transition: 'border-color var(--transition-fast)',
           }}
-          onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
-          onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
+          onFocus={(e) => (e.target.style.borderColor = 'var(--color-primary)')}
+          onBlur={(e) => (e.target.style.borderColor = 'var(--border-color)')}
         />
       </div>
 
@@ -85,7 +90,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
             color: 'var(--text-main)',
             fontSize: '15px',
             outline: 'none',
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           <option value="">All Priorities</option>
@@ -107,7 +112,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
           color: 'var(--text-main)',
           fontSize: '15px',
           outline: 'none',
-          cursor: 'pointer'
+          cursor: 'pointer',
         }}
       >
         <option value="">All Statuses</option>
@@ -128,12 +133,14 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
             color: 'var(--text-main)',
             fontSize: '15px',
             outline: 'none',
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           <option value="">All Tags</option>
-          {allTags.map(t => (
-            <option key={t} value={t}>{t}</option>
+          {allTags.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
           ))}
         </select>
       )}
@@ -155,7 +162,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
             fontSize: '15px',
             outline: 'none',
             cursor: 'pointer',
-            fontFamily: 'var(--font-sans)'
+            fontFamily: 'var(--font-sans)',
           }}
         />
         <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>–</span>
@@ -173,7 +180,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
             fontSize: '15px',
             outline: 'none',
             cursor: 'pointer',
-            fontFamily: 'var(--font-sans)'
+            fontFamily: 'var(--font-sans)',
           }}
         />
       </div>

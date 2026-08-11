@@ -59,7 +59,8 @@ public class WorkspaceTagController {
     WorkspaceId wsId = new WorkspaceId(workspaceId);
     WorkspaceTagResponse tag =
         WorkspaceTagResponse.fromDomain(tagPort.createTag(wsId, request.name(), request.color()));
-    return ResponseEntity.created(URI.create("/api/v1/workspaces/" + workspaceId + "/tags/" + tag.tagId()))
+    return ResponseEntity.created(
+            URI.create("/api/v1/workspaces/" + workspaceId + "/tags/" + tag.tagId()))
         .body(tag);
   }
 

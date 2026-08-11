@@ -20,8 +20,7 @@ public class WorkspaceTagRepositoryAdapter implements WorkspaceTagRepository {
 
   @Override
   public List<WorkspaceTag> findAllByWorkspaceId(WorkspaceId workspaceId) {
-    return repo.findAllByWorkspaceIdOrderByNameAsc(workspaceId.value())
-        .stream()
+    return repo.findAllByWorkspaceIdOrderByNameAsc(workspaceId.value()).stream()
         .map(this::toDomain)
         .collect(Collectors.toList());
   }

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  Tag as TagIcon, 
-  RefreshCw, 
-  CheckCircle2, 
-  Clock, 
-  Play, 
-  Pause, 
-  StopCircle, 
-  Edit3, 
+import {
+  Calendar,
+  Tag as TagIcon,
+  RefreshCw,
+  CheckCircle2,
+  Clock,
+  Play,
+  Pause,
+  StopCircle,
+  Edit3,
   Trash2,
-  RotateCcw
+  RotateCcw,
 } from 'lucide-react';
 import type { Task, RecurrenceRule } from '../../hooks/useTasks';
 
@@ -23,7 +23,10 @@ interface TaskCardProps {
   onEdit: (task: Task) => void;
   onSoftDelete: (taskId: string) => void;
   onRecover: (taskId: string) => void;
-  onRecurrenceAction: (taskId: string, action: 'pause' | 'resume' | 'stop') => void;
+  onRecurrenceAction: (
+    taskId: string,
+    action: 'pause' | 'resume' | 'stop'
+  ) => void;
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({
@@ -35,7 +38,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onEdit,
   onSoftDelete,
   onRecover,
-  onRecurrenceAction
+  onRecurrenceAction,
 }) => {
   const [now, setNow] = useState<number>(Date.now());
 
@@ -51,7 +54,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   };
 
   // Helper: Calculate Remaining Soft Delete Window (2 hours max)
@@ -72,10 +79,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     return `${mins}m left`;
   };
 
-  const isPurging = task.status === 'SoftDeleted' && getRemainingTrashTime(task.deletedAt) === 'Purging...';
+  const isPurging =
+    task.status === 'SoftDeleted' &&
+    getRemainingTrashTime(task.deletedAt) === 'Purging...';
 
   return (
-    <div 
+    <div
       style={{
         padding: '20px 24px',
         border: '1px solid var(--border-color)',
@@ -88,7 +97,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         backgroundColor: 'var(--bg-app)',
         boxShadow: 'var(--shadow-sm)',
         opacity: task.status === 'SoftDeleted' ? 0.75 : 1,
-        transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)'
+        transition:
+          'border-color var(--transition-fast), box-shadow var(--transition-fast)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = 'var(--color-primary)';
@@ -99,10 +109,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
       }}
     >
-      
       {/* Left: Task Content details */}
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flexGrow: 1, minWidth: 0 }}>
-        
+      <div
+        style={{
+          display: 'flex',
+          gap: '16px',
+          alignItems: 'flex-start',
+          flexGrow: 1,
+          minWidth: 0,
+        }}
+      >
         {/* Completion Checkbox */}
         {task.status !== 'SoftDeleted' && (
           <button
@@ -111,47 +127,93 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              color: task.status === 'Completed' ? 'var(--color-success)' : 'var(--text-muted)',
+              color:
+                task.status === 'Completed'
+                  ? 'var(--color-success)'
+                  : 'var(--text-muted)',
               padding: 0,
               marginTop: '2px',
-              transition: 'color var(--transition-fast)'
+              transition: 'color var(--transition-fast)',
             }}
-            aria-label={task.status === 'Completed' ? 'Mark active' : 'Complete task'}
+            aria-label={
+              task.status === 'Completed' ? 'Mark active' : 'Complete task'
+            }
           >
-            <CheckCircle2 
-              size={22} 
-              fill={task.status === 'Completed' ? 'rgba(16, 185, 129, 0.1)' : 'transparent'} 
+            <CheckCircle2
+              size={22}
+              fill={
+                task.status === 'Completed'
+                  ? 'rgba(16, 185, 129, 0.1)'
+                  : 'transparent'
+              }
             />
           </button>
         )}
 
         {/* Task texts */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0, width: '100%' }}>
-          
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            minWidth: 0,
+            width: '100%',
+          }}
+        >
           {/* Title & Priority */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <span style={{ 
-              fontWeight: '600', 
-              fontSize: '16px', 
-              color: 'var(--text-main)',
-              textDecoration: task.status === 'Completed' ? 'line-through' : 'none',
-              opacity: task.status === 'Completed' ? 0.6 : 1
-            }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <span
+              style={{
+                fontWeight: '600',
+                fontSize: '16px',
+                color: 'var(--text-main)',
+                textDecoration:
+                  task.status === 'Completed' ? 'line-through' : 'none',
+                opacity: task.status === 'Completed' ? 0.6 : 1,
+              }}
+            >
               {task.title}
             </span>
-            
-            <span className={`badge ${
-              task.priority === 'High' ? 'badge-high' : task.priority === 'Medium' ? 'badge-medium' : 'badge-low'
-            }`}>
+
+            <span
+              className={`badge ${
+                task.priority === 'High'
+                  ? 'badge-high'
+                  : task.priority === 'Medium'
+                    ? 'badge-medium'
+                    : 'badge-low'
+              }`}
+            >
               {task.priority}
             </span>
 
             {/* Recurrence Rule Indicator */}
             {rule && rule.recurrenceStatus && (
-              <span className={`badge ${
-                rule.recurrenceStatus === 'Active' ? 'badge-success' : 'badge-muted'
-              }`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <RefreshCw size={11} className={rule.recurrenceStatus === 'Active' ? 'spin-slow' : ''} />
+              <span
+                className={`badge ${
+                  rule.recurrenceStatus === 'Active'
+                    ? 'badge-success'
+                    : 'badge-muted'
+                }`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <RefreshCw
+                  size={11}
+                  className={
+                    rule.recurrenceStatus === 'Active' ? 'spin-slow' : ''
+                  }
+                />
                 {rule.pattern} ({rule.interval}x) - {rule.recurrenceStatus}
               </span>
             )}
@@ -159,25 +221,42 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
           {/* Description */}
           {task.description && (
-            <p style={{ 
-              margin: 0, 
-              fontSize: '14px', 
-              color: 'var(--text-muted)', 
-              lineHeight: '1.5',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: '14px',
+                color: 'var(--text-muted)',
+                lineHeight: '1.5',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
               {task.description}
             </p>
           )}
 
           {/* Bottom Line: Due Date & Tags */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginTop: '4px' }}>
-            
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              flexWrap: 'wrap',
+              marginTop: '4px',
+            }}
+          >
             {/* Due Date */}
             {task.dueDate && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-muted)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  color: 'var(--text-muted)',
+                }}
+              >
                 <Calendar size={14} />
                 <span>{formatDate(task.dueDate)}</span>
               </div>
@@ -185,7 +264,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
             {/* Soft Delete Countdown */}
             {task.status === 'SoftDeleted' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--color-danger)', fontWeight: '600' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  color: 'var(--color-danger)',
+                  fontWeight: '600',
+                }}
+              >
                 <Clock size={14} />
                 <span>{getRemainingTrashTime(task.deletedAt)}</span>
               </div>
@@ -194,17 +282,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             {/* Tags list */}
             {task.tags && task.tags.length > 0 && (
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {task.tags.map(t => (
-                  <span 
-                    key={t} 
-                    className="badge badge-muted" 
-                    style={{ 
-                      fontSize: '11px', 
-                      padding: '2px 8px', 
+                {task.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="badge badge-muted"
+                    style={{
+                      fontSize: '11px',
+                      padding: '2px 8px',
                       borderRadius: '6px',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px'
+                      gap: '4px',
                     }}
                   >
                     <TagIcon size={10} />
@@ -214,13 +302,18 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </div>
             )}
           </div>
-
         </div>
       </div>
 
       {/* Right: Action Buttons based on Tab */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-        
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          flexShrink: 0,
+        }}
+      >
         {/* All Tasks Tab actions */}
         {activeTab === 'all' && (
           <>
@@ -271,7 +364,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               <button
                 onClick={() => onRecurrenceAction(task.taskId, 'resume')}
                 className="btn btn-primary"
-                style={{ padding: '8px 12px', fontSize: '13px', backgroundColor: 'var(--color-success)' }}
+                style={{
+                  padding: '8px 12px',
+                  fontSize: '13px',
+                  backgroundColor: 'var(--color-success)',
+                }}
               >
                 <Play size={14} />
                 <span>Resume</span>
@@ -302,9 +399,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <span>Recover</span>
           </button>
         )}
-
       </div>
-
     </div>
   );
 };

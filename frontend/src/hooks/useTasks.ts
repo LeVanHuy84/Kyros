@@ -37,21 +37,25 @@ export interface TaskMetrics {
 export const useTasks = () => {
   const { activeWorkspace } = useWorkspace();
   const { tags: workspaceTags } = useWorkspaceTags();
-  
+
   // Data State
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [recurrenceRules, setRecurrenceRules] = useState<Record<string, RecurrenceRule>>({});
-  const [activeTab, setActiveTab] = useState<'all' | 'recurrence' | 'trash'>('all');
+  const [recurrenceRules, setRecurrenceRules] = useState<
+    Record<string, RecurrenceRule>
+  >({});
+  const [activeTab, setActiveTab] = useState<'all' | 'recurrence' | 'trash'>(
+    'all'
+  );
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Summary Metrics
   const [metrics, setMetrics] = useState<TaskMetrics>({
     activeCount: 0,
     completedCount: 0,
     recurrenceCount: 0,
-    trashCount: 0
+    trashCount: 0,
   });
 
   // Pagination & Filter States
@@ -63,7 +67,7 @@ export const useTasks = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [dueDateFrom, setDueDateFrom] = useState<string>('');
   const [dueDateTo, setDueDateTo] = useState<string>('');
-  
+
   // Available Tags (derived from loaded tasks for filter dropdown)
   const [allTags, setAllTags] = useState<string[]>([]);
 
@@ -74,10 +78,10 @@ export const useTasks = () => {
     setError(null);
     try {
       let endpoint = `/v1/workspaces/${activeWorkspace.id}/tasks`;
-      
+
       const params: Record<string, any> = {
         page: currentPage,
-        size: 10
+        size: 10,
       };
 
       if (activeTab === 'trash') {
@@ -87,8 +91,12 @@ export const useTasks = () => {
         if (selectedPriority) params.priority = selectedPriority;
         if (selectedTag) params.tag = selectedTag;
         if (selectedStatus) params.isCompleted = selectedStatus === 'Completed';
-        if (dueDateFrom) params.dueDateFrom = new Date(dueDateFrom + 'T00:00:00').toISOString();
-        if (dueDateTo) params.dueDateTo = new Date(dueDateTo + 'T23:59:59').toISOString();
+        if (dueDateFrom)
+          params.dueDateFrom = new Date(
+            dueDateFrom + 'T00:00:00'
+          ).toISOString();
+        if (dueDateTo)
+          params.dueDateTo = new Date(dueDateTo + 'T23:59:59').toISOString();
       }
 
       const response = await apiClient.get(endpoint, { params });
@@ -102,7 +110,9 @@ export const useTasks = () => {
         await Promise.all(
           contentList.map(async (task) => {
             try {
-              const res = await apiClient.get(`/v1/workspaces/${activeWorkspace.id}/tasks/${task.taskId}/recurrence`);
+              const res = await apiClient.get(
+                `/v1/workspaces/${activeWorkspace.id}/tasks/${task.taskId}/recurrence`
+              );
               if (res.data && res.data.pattern) {
                 rulesMap[task.taskId] = res.data;
               }
@@ -111,29 +121,53 @@ export const useTasks = () => {
             }
           })
         );
-        setRecurrenceRules(prev => ({ ...prev, ...rulesMap }));
+        setRecurrenceRules((prev) => ({ ...prev, ...rulesMap }));
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.friendlyMessage || 'Failed to load tasks. Please verify workspace context.');
+      setError(
+        err.friendlyMessage ||
+          'Failed to load tasks. Please verify workspace context.'
+      );
     } finally {
       setIsLoading(false);
     }
-  }, [activeWorkspace, currentPage, searchQuery, selectedPriority, selectedTag, selectedStatus, dueDateFrom, dueDateTo, activeTab]);
+  }, [
+    activeWorkspace,
+    currentPage,
+    searchQuery,
+    selectedPriority,
+    selectedTag,
+    selectedStatus,
+    dueDateFrom,
+    dueDateTo,
+    activeTab,
+  ]);
 
   // Fetch Summary metrics (Independent counts)
   const fetchMetrics = useCallback(async () => {
     if (!activeWorkspace) return;
     try {
-      const activeRes = await apiClient.get(`/v1/workspaces/${activeWorkspace.id}/tasks`, { params: { isCompleted: false, size: 1 } });
-      const completedRes = await apiClient.get(`/v1/workspaces/${activeWorkspace.id}/tasks`, { params: { isCompleted: true, size: 1 } });
-      const trashRes = await apiClient.get(`/v1/workspaces/${activeWorkspace.id}/tasks/deleted`, { params: { size: 1 } });
+      const activeRes = await apiClient.get(
+        `/v1/workspaces/${activeWorkspace.id}/tasks`,
+        { params: { isCompleted: false, size: 1 } }
+      );
+      const completedRes = await apiClient.get(
+        `/v1/workspaces/${activeWorkspace.id}/tasks`,
+        { params: { isCompleted: true, size: 1 } }
+      );
+      const trashRes = await apiClient.get(
+        `/v1/workspaces/${activeWorkspace.id}/tasks/deleted`,
+        { params: { size: 1 } }
+      );
 
       setMetrics({
         activeCount: activeRes.data.totalElements || 0,
         completedCount: completedRes.data.totalElements || 0,
-        recurrenceCount: Object.values(recurrenceRules).filter(r => r.recurrenceStatus === 'Active').length,
-        trashCount: trashRes.data.totalElements || 0
+        recurrenceCount: Object.values(recurrenceRules).filter(
+          (r) => r.recurrenceStatus === 'Active'
+        ).length,
+        trashCount: trashRes.data.totalElements || 0,
       });
     } catch (e) {
       console.warn('Failed to load metrics summary', e);
@@ -152,15 +186,23 @@ export const useTasks = () => {
   // Derive available tags for the filter dropdown from loaded tasks + workspace tag catalog
   useEffect(() => {
     const tagsSet = new Set<string>();
-    tasks.forEach(t => t.tags?.forEach(tag => tagsSet.add(tag)));
-    workspaceTags.forEach(t => tagsSet.add(t.name));
+    tasks.forEach((t) => t.tags?.forEach((tag) => tagsSet.add(tag)));
+    workspaceTags.forEach((t) => tagsSet.add(t.name));
     setAllTags(Array.from(tagsSet));
   }, [tasks, workspaceTags]);
 
   // Reset page when tab/filters change
   useEffect(() => {
     setCurrentPage(0);
-  }, [activeTab, searchQuery, selectedPriority, selectedTag, selectedStatus, dueDateFrom, dueDateTo]);
+  }, [
+    activeTab,
+    searchQuery,
+    selectedPriority,
+    selectedTag,
+    selectedStatus,
+    dueDateFrom,
+    dueDateTo,
+  ]);
 
   // Create Task Action
   const createTask = async (
@@ -179,11 +221,13 @@ export const useTasks = () => {
         description: description.trim(),
         priority,
         dueDate: dueDate ? new Date(dueDate).toISOString() : null,
-        tags
+        tags,
       });
       fetchTasks();
     } catch (err: any) {
-      const msg = err.friendlyMessage || 'Failed to create task. Check validation invariants.';
+      const msg =
+        err.friendlyMessage ||
+        'Failed to create task. Check validation invariants.';
       setError(msg);
       throw new Error(msg);
     } finally {
@@ -206,30 +250,40 @@ export const useTasks = () => {
     setIsSaving(true);
     setError(null);
     try {
-      await apiClient.put(`/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}`, {
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
-        version
-      });
+      await apiClient.put(
+        `/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}`,
+        {
+          title: title.trim(),
+          description: description.trim(),
+          priority,
+          dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+          version,
+        }
+      );
 
       // Update tags if changed
-      const tagsToAdd = tags.filter(t => !originalTags.includes(t));
+      const tagsToAdd = tags.filter((t) => !originalTags.includes(t));
       if (tagsToAdd.length > 0) {
-        await apiClient.post(`/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}/tags`, {
-          tags: tagsToAdd
-        });
+        await apiClient.post(
+          `/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}/tags`,
+          {
+            tags: tagsToAdd,
+          }
+        );
       }
 
-      const tagsToRemove = originalTags.filter(t => !tags.includes(t));
+      const tagsToRemove = originalTags.filter((t) => !tags.includes(t));
       for (const tag of tagsToRemove) {
-        await apiClient.delete(`/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}/tags/${tag}`);
+        await apiClient.delete(
+          `/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}/tags/${tag}`
+        );
       }
 
       fetchTasks();
     } catch (err: any) {
-      const msg = err.friendlyMessage || 'Failed to update task. Optimistic lock validation failed.';
+      const msg =
+        err.friendlyMessage ||
+        'Failed to update task. Optimistic lock validation failed.';
       setError(msg);
       throw new Error(msg);
     } finally {
@@ -241,7 +295,9 @@ export const useTasks = () => {
   const softDeleteTask = async (taskId: string) => {
     if (!activeWorkspace) return;
     try {
-      await apiClient.delete(`/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}`);
+      await apiClient.delete(
+        `/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}`
+      );
       fetchTasks();
     } catch (err: any) {
       setError(err.friendlyMessage || 'Failed to soft delete task.');
@@ -252,10 +308,15 @@ export const useTasks = () => {
   const recoverTask = async (taskId: string) => {
     if (!activeWorkspace) return;
     try {
-      await apiClient.post(`/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}/recover`);
+      await apiClient.post(
+        `/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}/recover`
+      );
       fetchTasks();
     } catch (err: any) {
-      setError(err.friendlyMessage || 'Failed to recover task. The 2-hour window might have expired.');
+      setError(
+        err.friendlyMessage ||
+          'Failed to recover task. The 2-hour window might have expired.'
+      );
     }
   };
 
@@ -264,7 +325,9 @@ export const useTasks = () => {
     if (!activeWorkspace) return;
     try {
       const endpoint = task.status === 'Completed' ? 'reopen' : 'complete';
-      await apiClient.post(`/v1/workspaces/${activeWorkspace.id}/tasks/${task.taskId}/${endpoint}`);
+      await apiClient.post(
+        `/v1/workspaces/${activeWorkspace.id}/tasks/${task.taskId}/${endpoint}`
+      );
       fetchTasks();
     } catch (err: any) {
       setError(err.friendlyMessage || 'Failed to update task lifecycle.');
@@ -272,16 +335,23 @@ export const useTasks = () => {
   };
 
   // Save Recurrence Configuration
-  const saveRecurrence = async (taskId: string, pattern: 'DAILY' | 'WEEKLY' | 'MONTHLY', interval: number) => {
+  const saveRecurrence = async (
+    taskId: string,
+    pattern: 'DAILY' | 'WEEKLY' | 'MONTHLY',
+    interval: number
+  ) => {
     if (!activeWorkspace) return;
     setIsSaving(true);
     setError(null);
     try {
-      const res = await apiClient.put(`/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}/recurrence`, {
-        pattern,
-        interval
-      });
-      setRecurrenceRules(prev => ({ ...prev, [taskId]: res.data }));
+      const res = await apiClient.put(
+        `/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}/recurrence`,
+        {
+          pattern,
+          interval,
+        }
+      );
+      setRecurrenceRules((prev) => ({ ...prev, [taskId]: res.data }));
       fetchTasks();
     } catch (err: any) {
       const msg = err.friendlyMessage || 'Failed to configure recurrence.';
@@ -293,11 +363,16 @@ export const useTasks = () => {
   };
 
   // Pause / Resume / Stop Recurrence Rules
-  const recurrenceAction = async (taskId: string, action: 'pause' | 'resume' | 'stop') => {
+  const recurrenceAction = async (
+    taskId: string,
+    action: 'pause' | 'resume' | 'stop'
+  ) => {
     if (!activeWorkspace) return;
     try {
-      const res = await apiClient.post(`/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}/recurrence/${action}`);
-      setRecurrenceRules(prev => ({ ...prev, [taskId]: res.data }));
+      const res = await apiClient.post(
+        `/v1/workspaces/${activeWorkspace.id}/tasks/${taskId}/recurrence/${action}`
+      );
+      setRecurrenceRules((prev) => ({ ...prev, [taskId]: res.data }));
       fetchTasks();
     } catch (err: any) {
       setError(err.friendlyMessage || `Failed to ${action} recurrence.`);
@@ -337,6 +412,6 @@ export const useTasks = () => {
     recoverTask,
     toggleComplete,
     saveRecurrence,
-    recurrenceAction
+    recurrenceAction,
   };
 };

@@ -13,7 +13,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({
   value,
   onChange,
   availableTags,
-  placeholder = 'Search tags to add...'
+  placeholder = 'Search tags to add...',
 }) => {
   const [search, setSearch] = useState<string>('');
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -23,7 +23,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({
 
   const selectedNames = new Set(value);
   const filteredTags = availableTags.filter(
-    tag =>
+    (tag) =>
       !selectedNames.has(tag.name) &&
       (search.trim() === '' ||
         tag.name.toLowerCase().includes(search.trim().toLowerCase()))
@@ -31,7 +31,10 @@ export const TagPicker: React.FC<TagPickerProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -48,14 +51,14 @@ export const TagPicker: React.FC<TagPickerProps> = ({
 
   const toggleTag = (name: string) => {
     if (selectedNames.has(name)) {
-      onChange(value.filter(t => t !== name));
+      onChange(value.filter((t) => t !== name));
     } else {
       onChange([...value, name]);
     }
   };
 
   const removeTag = (name: string) => {
-    onChange(value.filter(t => t !== name));
+    onChange(value.filter((t) => t !== name));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -69,10 +72,12 @@ export const TagPicker: React.FC<TagPickerProps> = ({
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setHighlightedIndex(prev => Math.min(filteredTags.length - 1, prev + 1));
+      setHighlightedIndex((prev) =>
+        Math.min(filteredTags.length - 1, prev + 1)
+      );
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setHighlightedIndex(prev => Math.max(-1, prev - 1));
+      setHighlightedIndex((prev) => Math.max(-1, prev - 1));
     } else if (e.key === 'Escape') {
       setIsOpen(false);
     } else if (e.key === 'Backspace' && search === '' && value.length > 0) {
@@ -81,16 +86,19 @@ export const TagPicker: React.FC<TagPickerProps> = ({
   };
 
   const getTagColor = (name: string): string | null => {
-    const found = availableTags.find(t => t.name === name);
+    const found = availableTags.find((t) => t.name === name);
     return found?.color || null;
   };
 
   return (
-    <div ref={wrapperRef} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div
+      ref={wrapperRef}
+      style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+    >
       {/* Selected chips */}
       {value.length > 0 && (
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          {value.map(name => (
+          {value.map((name) => (
             <span
               key={name}
               className="badge"
@@ -103,7 +111,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({
                 gap: '6px',
                 color: getTagColor(name) ? '#fff' : 'var(--text-main)',
                 backgroundColor: getTagColor(name) || 'var(--border-color)',
-                border: 'none'
+                border: 'none',
               }}
             >
               {name}
@@ -117,7 +125,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({
                   cursor: 'pointer',
                   display: 'flex',
                   padding: 0,
-                  opacity: 0.7
+                  opacity: 0.7,
                 }}
                 aria-label={`Remove tag ${name}`}
               >
@@ -132,7 +140,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({
       <div style={{ position: 'relative' }}>
         <div
           onClick={() => {
-            setIsOpen(prev => !prev);
+            setIsOpen((prev) => !prev);
             if (!isOpen) setTimeout(() => inputRef.current?.focus(), 0);
           }}
           style={{
@@ -143,20 +151,23 @@ export const TagPicker: React.FC<TagPickerProps> = ({
             border: `1px solid ${isOpen ? 'var(--color-primary)' : 'var(--border-color)'}`,
             backgroundColor: 'var(--bg-app)',
             cursor: 'pointer',
-            gap: '8px'
+            gap: '8px',
           }}
         >
-          <Search size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <Search
+            size={16}
+            style={{ color: 'var(--text-muted)', flexShrink: 0 }}
+          />
           <input
             ref={inputRef}
             type="text"
             value={search}
             placeholder={placeholder}
-            onClick={e => {
+            onClick={(e) => {
               e.stopPropagation();
               setIsOpen(true);
             }}
-            onChange={e => {
+            onChange={(e) => {
               setSearch(e.target.value);
               setIsOpen(true);
               setHighlightedIndex(-1);
@@ -170,7 +181,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({
               color: 'var(--text-main)',
               fontSize: '15px',
               outline: 'none',
-              fontFamily: 'var(--font-sans)'
+              fontFamily: 'var(--font-sans)',
             }}
           />
           <ChevronDown
@@ -179,7 +190,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({
               color: 'var(--text-muted)',
               flexShrink: 0,
               transform: isOpen ? 'rotate(180deg)' : 'none',
-              transition: 'transform 0.15s ease'
+              transition: 'transform 0.15s ease',
             }}
           />
         </div>
@@ -197,11 +208,17 @@ export const TagPicker: React.FC<TagPickerProps> = ({
               boxShadow: 'var(--shadow-md)',
               maxHeight: '200px',
               overflowY: 'auto',
-              zIndex: 20
+              zIndex: 20,
             }}
           >
             {filteredTags.length === 0 ? (
-              <div style={{ padding: '12px 14px', color: 'var(--text-muted)', fontSize: '14px' }}>
+              <div
+                style={{
+                  padding: '12px 14px',
+                  color: 'var(--text-muted)',
+                  fontSize: '14px',
+                }}
+              >
                 {availableTags.length === 0
                   ? 'No workspace tags available.'
                   : 'No matching tags.'}
@@ -224,12 +241,15 @@ export const TagPicker: React.FC<TagPickerProps> = ({
                     gap: '8px',
                     width: '100%',
                     padding: '10px 14px',
-                    background: index === highlightedIndex ? 'var(--bg-hover, rgba(0,0,0,0.04))' : 'transparent',
+                    background:
+                      index === highlightedIndex
+                        ? 'var(--bg-hover, rgba(0,0,0,0.04))'
+                        : 'transparent',
                     border: 'none',
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
-                    color: 'var(--text-main)'
+                    color: 'var(--text-main)',
                   }}
                 >
                   <span
@@ -238,7 +258,7 @@ export const TagPicker: React.FC<TagPickerProps> = ({
                       height: '10px',
                       borderRadius: '50%',
                       backgroundColor: tag.color || 'var(--border-color)',
-                      flexShrink: 0
+                      flexShrink: 0,
                     }}
                   />
                   {tag.name}

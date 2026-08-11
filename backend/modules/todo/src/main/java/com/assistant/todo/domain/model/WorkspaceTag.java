@@ -12,7 +12,8 @@ public class WorkspaceTag {
   private String color; // optional hex color, e.g. "#6366f1"
   private final Instant createdAt;
 
-  public WorkspaceTag(UUID id, WorkspaceId workspaceId, String name, String color, Instant createdAt) {
+  public WorkspaceTag(
+      UUID id, WorkspaceId workspaceId, String name, String color, Instant createdAt) {
     this.id = id;
     this.workspaceId = workspaceId;
     this.name = name;
@@ -25,14 +26,29 @@ public class WorkspaceTag {
     return new WorkspaceTag(UUID.randomUUID(), workspaceId, name, color, Instant.now());
   }
 
-  public UUID getId() { return id; }
-  public WorkspaceId getWorkspaceId() { return workspaceId; }
-  public String getName() { return name; }
-  public String getColor() { return color; }
-  public Instant getCreatedAt() { return createdAt; }
+  public UUID getId() {
+    return id;
+  }
+
+  public WorkspaceId getWorkspaceId() {
+    return workspaceId;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getColor() {
+    return color;
+  }
+
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
 
   public void rename(String newName) {
-    if (newName == null || newName.isBlank()) throw new IllegalArgumentException("Tag name must not be blank");
+    if (newName == null || newName.isBlank())
+      throw new IllegalArgumentException("Tag name must not be blank");
     this.name = newName.trim();
   }
 

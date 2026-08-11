@@ -52,8 +52,7 @@ class WorkspaceTagServiceTest {
     when(tagRepository.existsByNameAndWorkspaceId("urgent", workspaceId)).thenReturn(true);
 
     assertThrows(
-        IllegalArgumentException.class,
-        () -> tagPort.createTag(workspaceId, "urgent", "#ef4444"));
+        IllegalArgumentException.class, () -> tagPort.createTag(workspaceId, "urgent", "#ef4444"));
     verify(tagRepository, never()).save(any(WorkspaceTag.class));
   }
 
@@ -66,8 +65,7 @@ class WorkspaceTagServiceTest {
   @Test
   void testUpdateTagRenamesAndRecolors() {
     UUID tagId = UUID.randomUUID();
-    WorkspaceTag existing =
-        WorkspaceTag.create(workspaceId, "old-name", "#3b82f6");
+    WorkspaceTag existing = WorkspaceTag.create(workspaceId, "old-name", "#3b82f6");
     when(tagRepository.findById(tagId, workspaceId)).thenReturn(Optional.of(existing));
     when(tagRepository.existsByNameAndWorkspaceId("new-name", workspaceId)).thenReturn(false);
 
@@ -110,8 +108,7 @@ class WorkspaceTagServiceTest {
 
   @Test
   void testListTagsReturnsRepositoryResults() {
-    List<WorkspaceTag> tags =
-        List.of(WorkspaceTag.create(workspaceId, "urgent", "#ef4444"));
+    List<WorkspaceTag> tags = List.of(WorkspaceTag.create(workspaceId, "urgent", "#ef4444"));
     when(tagRepository.findAllByWorkspaceId(workspaceId)).thenReturn(tags);
 
     List<WorkspaceTag> result = tagPort.listTags(workspaceId);

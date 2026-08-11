@@ -50,8 +50,7 @@ public class WorkspaceTagService implements WorkspaceTagPort {
       String trimmedName = name.trim();
       if (!trimmedName.equalsIgnoreCase(tag.getName())
           && tagRepository.existsByNameAndWorkspaceId(trimmedName, workspaceId)) {
-        throw new IllegalArgumentException(
-            "A tag with this name already exists in the workspace");
+        throw new IllegalArgumentException("A tag with this name already exists in the workspace");
       }
       tag.rename(trimmedName);
     }

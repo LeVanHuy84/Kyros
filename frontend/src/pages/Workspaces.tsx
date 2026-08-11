@@ -29,29 +29,57 @@ const Workspaces: React.FC = () => {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      minHeight: '100vh',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'var(--bg-app)',
-      fontFamily: 'var(--font-sans)',
-      padding: '20px'
-    }}>
-      <div className="card" style={{
-        width: '100%',
-        maxWidth: '520px',
-        padding: '40px',
+    <div
+      style={{
         display: 'flex',
-        flexDirection: 'column',
-        gap: '28px'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        minHeight: '100vh',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'var(--bg-app)',
+        fontFamily: 'var(--font-sans)',
+        padding: '20px',
+      }}
+    >
+      <div
+        className="card"
+        style={{
+          width: '100%',
+          maxWidth: '520px',
+          padding: '40px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '28px',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <div>
-            <h2 style={{ fontSize: '22px', fontWeight: '600', color: 'var(--text-main)', margin: 0 }}>Select Workspace</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '15px', margin: '6px 0 0 0' }}>Select tenant context to begin orchestrating</p>
+            <h2
+              style={{
+                fontSize: '22px',
+                fontWeight: '600',
+                color: 'var(--text-main)',
+                margin: 0,
+              }}
+            >
+              Select Workspace
+            </h2>
+            <p
+              style={{
+                color: 'var(--text-muted)',
+                fontSize: '15px',
+                margin: '6px 0 0 0',
+              }}
+            >
+              Select tenant context to begin orchestrating
+            </p>
           </div>
-          <button 
+          <button
             onClick={handleCreate}
             className="btn btn-primary"
             style={{ padding: '8px 14px', fontSize: '13px' }}
@@ -62,7 +90,7 @@ const Workspaces: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {workspaces.map(ws => (
+          {workspaces.map((ws) => (
             <button
               key={ws.id}
               onClick={() => handleSelect(ws.id)}
@@ -79,7 +107,8 @@ const Workspaces: React.FC = () => {
                 textAlign: 'left',
                 width: '100%',
                 opacity: ws.status === 'SUSPENDED' ? 0.5 : 1,
-                transition: 'border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast)'
+                transition:
+                  'border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast)',
               }}
               onMouseEnter={(e) => {
                 if (ws.status !== 'SUSPENDED') {
@@ -96,30 +125,55 @@ const Workspaces: React.FC = () => {
                 }
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: 'var(--radius-sm)',
-                  backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--color-primary)'
-                }}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '16px' }}
+              >
+                <div
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: 'var(--radius-sm)',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--color-primary)',
+                  }}
+                >
                   <Briefcase size={20} />
                 </div>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: 'var(--text-main)' }}>{ws.name}</h4>
-                  <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>ID: {ws.id}</span>
+                  <h4
+                    style={{
+                      margin: 0,
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      color: 'var(--text-main)',
+                    }}
+                  >
+                    {ws.name}
+                  </h4>
+                  <span
+                    style={{ fontSize: '13px', color: 'var(--text-muted)' }}
+                  >
+                    ID: {ws.id}
+                  </span>
                 </div>
               </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className={`badge ${ws.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '11px' }}>
+
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <span
+                  className={`badge ${ws.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}`}
+                  style={{ fontSize: '11px' }}
+                >
                   {ws.status}
                 </span>
-                <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
+                <ChevronRight
+                  size={18}
+                  style={{ color: 'var(--text-muted)' }}
+                />
               </div>
             </button>
           ))}

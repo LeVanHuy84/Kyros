@@ -22,7 +22,9 @@ export const useWorkspaceTags = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get(`/v1/workspaces/${activeWorkspace.id}/tags`);
+      const response = await apiClient.get(
+        `/v1/workspaces/${activeWorkspace.id}/tags`
+      );
       setTags(response.data || []);
     } catch (err: any) {
       setError(err.friendlyMessage || 'Failed to load workspace tags.');
@@ -38,7 +40,7 @@ export const useWorkspaceTags = () => {
       try {
         await apiClient.post(`/v1/workspaces/${activeWorkspace.id}/tags`, {
           name: name.trim(),
-          color
+          color,
         });
         await fetchTags();
       } catch (err: any) {
@@ -55,10 +57,13 @@ export const useWorkspaceTags = () => {
       if (!activeWorkspace) return;
       setError(null);
       try {
-        await apiClient.put(`/v1/workspaces/${activeWorkspace.id}/tags/${tagId}`, {
-          name: name.trim(),
-          color
-        });
+        await apiClient.put(
+          `/v1/workspaces/${activeWorkspace.id}/tags/${tagId}`,
+          {
+            name: name.trim(),
+            color,
+          }
+        );
         await fetchTags();
       } catch (err: any) {
         const msg = err.friendlyMessage || 'Failed to update tag.';
@@ -74,8 +79,10 @@ export const useWorkspaceTags = () => {
       if (!activeWorkspace) return;
       setError(null);
       try {
-        await apiClient.delete(`/v1/workspaces/${activeWorkspace.id}/tags/${tagId}`);
-        setTags(prev => prev.filter(t => t.tagId !== tagId));
+        await apiClient.delete(
+          `/v1/workspaces/${activeWorkspace.id}/tags/${tagId}`
+        );
+        setTags((prev) => prev.filter((t) => t.tagId !== tagId));
       } catch (err: any) {
         const msg = err.friendlyMessage || 'Failed to delete tag.';
         setError(msg);
@@ -97,6 +104,6 @@ export const useWorkspaceTags = () => {
     fetchTags,
     createTag,
     updateTag,
-    deleteTag
+    deleteTag,
   };
 };

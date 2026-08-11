@@ -62,7 +62,8 @@ class WorkspaceTagControllerTest {
     when(tagPort.createTag(eq(new WorkspaceId(workspaceId)), eq("design"), eq("#8b5cf6")))
         .thenReturn(tag);
 
-    String payload = """
+    String payload =
+        """
         {
           "name": "design",
           "color": "#8b5cf6"
@@ -81,7 +82,8 @@ class WorkspaceTagControllerTest {
 
   @Test
   void testCreateTagValidationFailure() throws Exception {
-    String payload = """
+    String payload =
+        """
         {
           "name": ""
         }
@@ -101,10 +103,12 @@ class WorkspaceTagControllerTest {
   void testUpdateTagSuccess() throws Exception {
     UUID tagId = UUID.randomUUID();
     WorkspaceTag updated = WorkspaceTag.create(new WorkspaceId(workspaceId), "design", "#10b981");
-    when(tagPort.updateTag(eq(tagId), eq(new WorkspaceId(workspaceId)), eq("design"), eq("#10b981")))
+    when(tagPort.updateTag(
+            eq(tagId), eq(new WorkspaceId(workspaceId)), eq("design"), eq("#10b981")))
         .thenReturn(updated);
 
-    String payload = """
+    String payload =
+        """
         {
           "name": "design",
           "color": "#10b981"
@@ -129,7 +133,6 @@ class WorkspaceTagControllerTest {
         .perform(delete("/api/v1/workspaces/{workspaceId}/tags/{tagId}", workspaceId, tagId))
         .andExpect(status().isNoContent());
 
-    verify(tagPort, org.mockito.Mockito.times(1))
-        .deleteTag(tagId, new WorkspaceId(workspaceId));
+    verify(tagPort, org.mockito.Mockito.times(1)).deleteTag(tagId, new WorkspaceId(workspaceId));
   }
 }
