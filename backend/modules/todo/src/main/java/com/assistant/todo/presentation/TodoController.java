@@ -16,6 +16,7 @@ import com.assistant.todo.presentation.dto.TaskResponse;
 import com.assistant.todo.presentation.dto.UpdateTaskRequest;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -81,6 +82,8 @@ public class TodoController {
       @RequestParam(name = "priority", required = false) String priority,
       @RequestParam(name = "tag", required = false) String tag,
       @RequestParam(name = "isCompleted", required = false) Boolean isCompleted,
+      @RequestParam(name = "dueDateFrom", required = false) Instant dueDateFrom,
+      @RequestParam(name = "dueDateTo", required = false) Instant dueDateTo,
       @RequestParam(name = "page", defaultValue = "0") int page,
       @RequestParam(name = "size", defaultValue = "50") int size) {
     validateWorkspace(workspaceId);
@@ -90,7 +93,7 @@ public class TodoController {
 
     Page<TaskResponse> tasks =
         todoPort
-            .listTasks(wsId, title, p, tag, isCompleted, pageable)
+            .listTasks(wsId, title, p, tag, isCompleted, dueDateFrom, dueDateTo, pageable)
             .map(TaskResponse::fromDomain);
     return ResponseEntity.ok(tasks);
   }

@@ -80,12 +80,17 @@ public class TodoService implements TodoPort {
       Priority priority,
       String tag,
       Boolean isCompleted,
+      Instant dueDateFrom,
+      Instant dueDateTo,
       Pageable pageable) {
     int offset = (int) pageable.getOffset();
     int limit = pageable.getPageSize();
     java.util.List<Task> content =
-        taskRepository.findAll(workspaceId, title, priority, tag, isCompleted, offset, limit);
-    long total = taskRepository.countAll(workspaceId, title, priority, tag, isCompleted);
+        taskRepository.findAll(
+            workspaceId, title, priority, tag, isCompleted, dueDateFrom, dueDateTo, offset, limit);
+    long total =
+        taskRepository.countAll(
+            workspaceId, title, priority, tag, isCompleted, dueDateFrom, dueDateTo);
     return new org.springframework.data.domain.PageImpl<>(content, pageable, total);
   }
 

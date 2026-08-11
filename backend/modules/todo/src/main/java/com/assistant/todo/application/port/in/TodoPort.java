@@ -27,6 +27,8 @@ public interface TodoPort {
       Priority priority,
       String tag,
       Boolean isCompleted,
+      Instant dueDateFrom,
+      Instant dueDateTo,
       Pageable pageable);
 
   Page<Task> listSoftDeletedTasks(WorkspaceId workspaceId, Pageable pageable);

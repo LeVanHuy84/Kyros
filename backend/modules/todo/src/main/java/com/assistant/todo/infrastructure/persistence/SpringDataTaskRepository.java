@@ -36,16 +36,20 @@ public interface SpringDataTaskRepository extends JpaRepository<TaskJpaEntity, U
       "SELECT DISTINCT t FROM TaskJpaEntity t LEFT JOIN t.tags tag "
           + "WHERE t.workspaceId = :workspaceId "
           + "AND t.deletedAt IS NULL "
-          + "AND (:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :title, '%'))) "
-          + "AND (:priority IS NULL OR t.priority = :priority) "
-          + "AND (:tag IS NULL OR tag.name = :tag) "
-          + "AND (:status IS NULL OR t.status = :status)")
+          + "AND (:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', CAST(:title AS string), '%'))) "
+          + "AND (:priority IS NULL OR t.priority = CAST(:priority AS string)) "
+          + "AND (:tag IS NULL OR tag.name = CAST(:tag AS string)) "
+          + "AND (:status IS NULL OR t.status = CAST(:status AS string)) "
+          + "AND (CAST(:dueDateFrom AS timestamp) IS NULL OR t.dueDate >= :dueDateFrom) "
+          + "AND (CAST(:dueDateTo AS timestamp) IS NULL OR t.dueDate <= :dueDateTo)")
   Page<TaskJpaEntity> findAllTasksFiltered(
       @Param("workspaceId") UUID workspaceId,
       @Param("title") String title,
       @Param("priority") String priority,
       @Param("tag") String tag,
       @Param("status") String status,
+      @Param("dueDateFrom") Instant dueDateFrom,
+      @Param("dueDateTo") Instant dueDateTo,
       Pageable pageable);
 
   @Query(
@@ -58,16 +62,20 @@ public interface SpringDataTaskRepository extends JpaRepository<TaskJpaEntity, U
       "SELECT COUNT(DISTINCT t) FROM TaskJpaEntity t LEFT JOIN t.tags tag "
           + "WHERE t.workspaceId = :workspaceId "
           + "AND t.deletedAt IS NULL "
-          + "AND (:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :title, '%'))) "
-          + "AND (:priority IS NULL OR t.priority = :priority) "
-          + "AND (:tag IS NULL OR tag.name = :tag) "
-          + "AND (:status IS NULL OR t.status = :status)")
+          + "AND (:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', CAST(:title AS string), '%'))) "
+          + "AND (:priority IS NULL OR t.priority = CAST(:priority AS string)) "
+          + "AND (:tag IS NULL OR tag.name = CAST(:tag AS string)) "
+          + "AND (:status IS NULL OR t.status = CAST(:status AS string)) "
+          + "AND (CAST(:dueDateFrom AS timestamp) IS NULL OR t.dueDate >= :dueDateFrom) "
+          + "AND (CAST(:dueDateTo AS timestamp) IS NULL OR t.dueDate <= :dueDateTo)")
   long countAllTasksFiltered(
       @Param("workspaceId") UUID workspaceId,
       @Param("title") String title,
       @Param("priority") String priority,
       @Param("tag") String tag,
-      @Param("status") String status);
+      @Param("status") String status,
+      @Param("dueDateFrom") Instant dueDateFrom,
+      @Param("dueDateTo") Instant dueDateTo);
 
   @Query(
       "SELECT COUNT(t) FROM TaskJpaEntity t WHERE t.workspaceId = :workspaceId AND t.deletedAt IS"

@@ -29,11 +29,19 @@ public interface TaskRepository {
       Priority priority,
       String tag,
       Boolean isCompleted,
+      Instant dueDateFrom,
+      Instant dueDateTo,
       int offset,
       int limit);
 
   long countAll(
-      WorkspaceId workspaceId, String title, Priority priority, String tag, Boolean isCompleted);
+      WorkspaceId workspaceId,
+      String title,
+      Priority priority,
+      String tag,
+      Boolean isCompleted,
+      Instant dueDateFrom,
+      Instant dueDateTo);
 
   List<Task> findSoftDeleted(WorkspaceId workspaceId, int offset, int limit);
 

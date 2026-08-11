@@ -74,6 +74,8 @@ public class TaskRepositoryAdapter implements TaskRepository {
       Priority priority,
       String tag,
       Boolean isCompleted,
+      Instant dueDateFrom,
+      Instant dueDateTo,
       int offset,
       int limit) {
     String priorityStr = priority != null ? priority.name() : null;
@@ -87,7 +89,15 @@ public class TaskRepositoryAdapter implements TaskRepository {
         org.springframework.data.domain.PageRequest.of(page, limit > 0 ? limit : 50);
 
     return repository
-        .findAllTasksFiltered(workspaceId.value(), title, priorityStr, tag, statusStr, pageable)
+        .findAllTasksFiltered(
+            workspaceId.value(),
+            title,
+            priorityStr,
+            tag,
+            statusStr,
+            dueDateFrom,
+            dueDateTo,
+            pageable)
         .getContent()
         .stream()
         .map(this::toDomain)
@@ -96,14 +106,20 @@ public class TaskRepositoryAdapter implements TaskRepository {
 
   @Override
   public long countAll(
-      WorkspaceId workspaceId, String title, Priority priority, String tag, Boolean isCompleted) {
+      WorkspaceId workspaceId,
+      String title,
+      Priority priority,
+      String tag,
+      Boolean isCompleted,
+      Instant dueDateFrom,
+      Instant dueDateTo) {
     String priorityStr = priority != null ? priority.name() : null;
     String statusStr = null;
     if (isCompleted != null) {
       statusStr = isCompleted ? "Completed" : "Active";
     }
     return repository.countAllTasksFiltered(
-        workspaceId.value(), title, priorityStr, tag, statusStr);
+        workspaceId.value(), title, priorityStr, tag, statusStr, dueDateFrom, dueDateTo);
   }
 
   @Override
@@ -232,19 +248,25 @@ public class TaskRepositoryAdapter implements TaskRepository {
     jpa.setUpdatedAt(domain.getUpdatedAt());
     jpa.setVersion(domain.getVersion());
 
-    // Map tags
-    jpa.getTags().clear();
+    // Map tags, reusing existing rows to avoid unique constraint (task_id, name) violations
+    java.util.Map<String, TagJpaEntity> existingByName =
+        jpa.getTags().stream()
+            .collect(Collectors.toMap(TagJpaEntity::getName, t -> t, (a, b) -> a));
     List<TagJpaEntity> tags =
         domain.getTags().stream()
             .map(
                 t -> {
-                  TagJpaEntity tagJpa = new TagJpaEntity();
-                  tagJpa.setId(UUID.randomUUID());
-                  tagJpa.setName(t.name());
-                  tagJpa.setTask(jpa);
+                  TagJpaEntity tagJpa = existingByName.get(t.name());
+                  if (tagJpa == null) {
+                    tagJpa = new TagJpaEntity();
+                    tagJpa.setId(UUID.randomUUID());
+                    tagJpa.setName(t.name());
+                    tagJpa.setTask(jpa);
+                  }
                   return tagJpa;
                 })
             .collect(Collectors.toList());
+    jpa.getTags().clear();
     jpa.getTags().addAll(tags);
 
     return jpa;
