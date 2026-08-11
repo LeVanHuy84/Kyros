@@ -180,6 +180,7 @@
 | CalendarEventRescheduled | CalendarEvent | Notification, Connector, Agent |
 | CalendarEventDeleted | CalendarEvent | Notification, Connector, Agent |
 | CalendarEventConflictDetected | CalendarEvent / domain service | Notification, Agent |
+| AvailabilityQueried | AvailabilityQueryService | AI Agent (request-response via port; no event needed for query) |
 | ReminderTriggered | Dispatch orchestrator | Notification |
 | ReminderSnoozed | CalendarEvent | Notification, Re-scheduler |
 | ReminderDismissed | CalendarEvent | Notification, Scheduler |

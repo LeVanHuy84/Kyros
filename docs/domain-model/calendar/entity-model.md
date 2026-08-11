@@ -17,6 +17,7 @@ Single aggregate: **CalendarEvent**, with **Reminder** entities inside the event
 - Recalculates reminder trigger times when schedule is rescheduled.
 - Cancels reminders on event deletion.
 - Accepts **OverlapPolicyContext** (from Memory/preferences) when creating or rescheduling; rejects overlaps when prevention is enabled (via collaborating domain service + repository reads).
+- Provides scheduling primitives: overlap detection, availability window computation, and time-slot discovery for AI Agent orchestration. Calendar does **not** make planning decisions; it only exposes available time ranges.
 
 #### Identity
 
@@ -38,6 +39,7 @@ Single aggregate: **CalendarEvent**, with **Reminder** entities inside the event
 - Delete event (terminal).
 - Mark reminder snoozed or dismissed (via **Reminder** entity behaviors invoked on root).
 - Expose scheduled reminder trigger times for dispatch orchestration (application/Notification port).
+- Query availability windows and discover available time slots for a given duration and constraints (read-only; no aggregate mutation).
 
 ---
 

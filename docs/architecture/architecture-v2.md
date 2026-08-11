@@ -252,7 +252,7 @@ Why it fits:
 | **Auth** | Registration, credential policy, JWT session, RBAC claims | Workspace, Shared Kernel |
 | **Workspace** | Tenant boundary, membership, security context | Shared Kernel |
 | **Todo** | Task CRUD, priority, tags, filter/sort, soft-delete/recovery; recurrence (TODO-003, post-MVP) | Workspace, Shared Kernel |
-| **Calendar** | Event CRUD, overlap preference, reminder lead-time scheduling signals | Workspace, Shared Kernel |
+| **Calendar** | Event CRUD, overlap preference, reminder lead-time scheduling signals, availability querying, slot discovery | Workspace, Shared Kernel |
 | **Notes** | *(Reserved)* Document CRUD + indexing for RAG — **no implementation until Notes stories exist** | Workspace, Shared Kernel; `SemanticSearchPort` when activated |
 | **Workflow** | Rules, cron/event triggers, circular-path prevention, run history (post-MVP) | Workspace, Shared Kernel; **ports**: Todo, Calendar, Notification |
 | **Notification** | Template/format, urgency + channel routing, in-app delivery; channel adapters (email/Slack) | Workspace, Shared Kernel; **ports** to channel adapters |

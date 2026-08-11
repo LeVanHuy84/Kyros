@@ -140,3 +140,4 @@ Stores alert settings and trigger times for calendar events.
 ## 9. Future Evolution
 
 - **Calendar Event Partitioning**: High-frequency corporate accounts with large booking volumes are partitioned using range-based partitioning on the `start_time` column (e.g. monthly partitions).
+- **Availability Computation**: Availability windows and time slots are computed at query time from active events. No availability tables or cached state are introduced. The `CalendarEventRepository` provides the event list; the application layer computes gaps and filters by `SchedulingConstraint`.

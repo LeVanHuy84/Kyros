@@ -106,6 +106,24 @@
 
 ---
 
+### INV-CAL-11 — Availability Is Derived, Not Stored
+
+| Aspect | Detail |
+| --- | --- |
+| **Rule** | Calendar availability windows and time slots are computed from existing active events in a workspace. They are never persisted as duplicated state. |
+| **Enforcement** | `AvailabilityQueryService` queries `CalendarEventRepository` for active events and computes gaps in memory. No availability tables or cached rows are written by the Calendar domain. |
+
+---
+
+### INV-CAL-12 — Scheduling Constraints Are Enforced at Query Time
+
+| Aspect | Detail |
+| --- | --- |
+| **Rule** | When computing slots, working-hour bounds and minimum-notice constraints from `SchedulingConstraint` must be respected. Slots that fall outside working hours or violate minimum notice are excluded. |
+| **Enforcement** | `AvailabilityQueryService` filters candidate windows against `SchedulingConstraint` before returning `TimeSlot` results. |
+
+---
+
 ## Invariant Summary
 
 | ID | Category | Rule Summary |
@@ -120,3 +138,5 @@
 | INV-CAL-08 | Consistency | All reminders cancelled when event deleted |
 | INV-CAL-09 | Consistency | Reminder triggers recalculated on reschedule |
 | INV-CAL-10 | Consistency | Dismissed reminder is terminal |
+| INV-CAL-11 | Consistency | Availability is derived from events, not stored |
+| INV-CAL-12 | Consistency | Scheduling constraints enforced during slot discovery |

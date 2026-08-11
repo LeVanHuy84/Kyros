@@ -173,7 +173,7 @@ The table below outlines the relationship type for every pair of bounded context
 - **Relationship Type**: Open Host Service (Calendar is Upstream OHS, AI Agent is Downstream Conformist via Tool Registry).
 - **Why It Exists**: Allows the AI Agent to perform calendar actions (CRUD events) on behalf of the user.
 - **Dependency Direction**: AI Agent $\rightarrow$ Calendar.
-- **Ownership**: Calendar owns `CalendarPort` and the Event aggregate; AI Agent owns local tool adapters.
+- **Ownership**: Calendar owns `CalendarPort` and the `CalendarEvent` aggregate; AI Agent owns local tool adapters.
 - **Communication Mechanism**: In-process port calls from tool adapters.
 - **Port Interactions**: AI Agent tool adapters call `CalendarPort` methods.
 - **Domain Event Interactions**: None.

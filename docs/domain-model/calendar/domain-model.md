@@ -190,6 +190,16 @@ The primary and only aggregate root in this bounded context is the **Calendar Ev
   - Returns `true` if valid (or policy is disabled), and `false` if a collision occurs.
   - If a collision occurs and validation fails, it may publish `CalendarEventConflictDetected` domain event.
 
+#### `AvailabilityQueryService`
+- **Purpose**: Computes free time windows and candidate slots from active events in a workspace. Calendar exposes scheduling primitives; it does **not** make planning decisions.
+- **Necessity**: Availability is a cross-aggregate query requiring scanning all active events and computing gaps. A single `CalendarEvent` cannot perform this without violating aggregate isolation.
+- **Responsibilities**:
+  - Accepts a `WorkspaceId`, a time `range`, and optional `SchedulingConstraint` preferences.
+  - Queries `CalendarEventRepository` for active events in the range.
+  - Computes `AvailabilityWindow` values (gaps between consecutive events).
+  - Produces `TimeSlot` candidates of a requested `desiredDuration` that fit within availability windows, respecting working-hour bounds and minimum-notice constraints.
+  - Returns an ordered list of slots; empty if no slot is available.
+
 ### Factories
 
 #### `CalendarEventFactory`
@@ -220,7 +230,8 @@ The primary and only aggregate root in this bounded context is the **Calendar Ev
   - `findOverlappingEvents(WorkspaceId workspaceId, EventTimeRange range, EventId excludeEventId)`: Returns active events in the workspace that overlap the range.
   - `findEventsInWindow(WorkspaceId workspaceId, EventTimeRange range)`: Queries events within a time range for rendering/visualization.
   - `findEventsWithDueReminders(Instant now)`: Loads events containing reminders with `status = Scheduled` or `Snoozed` and `triggerTime <= now`.
-- **Out of Scope**: Direct notification routing, persistence of user settings/preferences, and external sync connector logic.
+  - `findActiveEvents(WorkspaceId workspaceId, Instant rangeStart, Instant rangeEnd)`: Returns active, non-deleted events in the workspace within the given time range, sorted by start time. Used by `AvailabilityQueryService` for availability and slot discovery.
+- **Out of Scope**: Direct notification routing, persistence of user settings/preferences, and external sync connector logic. Availability windows and slots are computed at query time; no availability tables are persisted.
 
 ---
 
@@ -358,6 +369,14 @@ All domain events (except conflict alerts when operations are aborted) are publi
 ### INV-CAL-10: Dismissed Reminder Terminal State
 - **Rule**: A reminder in `Dismissed` state is terminal and cannot transition to any other state.
 - **Enforcement**: Evaluated inside the `Reminder` entity state machine.
+
+### INV-CAL-11: Availability Is Derived, Not Stored
+- **Rule**: Calendar availability windows and time slots are computed from existing active events in a workspace. They are never persisted as duplicated state.
+- **Enforcement**: `AvailabilityQueryService` queries `CalendarEventRepository` for active events and computes gaps in memory. No availability tables or cached rows are written by the Calendar domain.
+
+### INV-CAL-12: Scheduling Constraints Are Enforced at Query Time
+- **Rule**: When computing slots, working-hour bounds and minimum-notice constraints from `SchedulingConstraint` must be respected. Slots that fall outside working hours or violate minimum notice are excluded.
+- **Enforcement**: `AvailabilityQueryService` filters candidate windows against `SchedulingConstraint` before returning `TimeSlot` results.
 
 ---
 

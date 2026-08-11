@@ -19,6 +19,25 @@ Invariant #5 requires comparing the candidate event against **other** aggregates
 
 ---
 
+## AvailabilityQueryService
+
+### Purpose
+
+Compute free time windows and candidate slots for the AI Agent or other downstream consumers. Calendar exposes scheduling primitives; it does **not** make planning decisions.
+
+### Why not inside CalendarEvent
+
+Availability is a cross-aggregate query: it requires scanning all active events in a workspace and computing gaps. A single **CalendarEvent** cannot perform this without violating aggregate isolation.
+
+### Responsibilities
+
+- Given a **WorkspaceId**, a time **range**, and optional **SchedulingConstraint** preferences, query **CalendarEventRepository** for active events in the range.
+- Compute **AvailabilityWindow** values (gaps between consecutive events).
+- Produce **TimeSlot** candidates of a requested **desiredDuration** that fit within availability windows, respecting working-hour bounds and minimum-notice constraints.
+- Return an ordered list of slots; empty if no slot is available.
+
+---
+
 ## ReminderDispatchSchedulingService (domain coordination)
 
 ### Purpose

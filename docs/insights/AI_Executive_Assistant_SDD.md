@@ -226,9 +226,9 @@ Streaming bằng SSE.
 
 # 8. Event
 
-- TodoCreated
-- TodoCompleted
-- EventCreated
+- TaskCreated
+- TaskCompleted
+- CalendarEventCreated
 - WorkflowExecuted
 - MemoryUpdated
 
