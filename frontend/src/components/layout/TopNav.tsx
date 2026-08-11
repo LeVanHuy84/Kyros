@@ -1,6 +1,13 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, History, PlayCircle, ClipboardCheck, Sun, Moon } from 'lucide-react';
+import {
+  Bell,
+  History,
+  PlayCircle,
+  ClipboardCheck,
+  Sun,
+  Moon,
+} from 'lucide-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -15,12 +22,17 @@ export const TopNav: React.FC = () => {
     } else if (theme === 'light') {
       setTheme('dark');
     } else {
-      const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isSystemDark = window.matchMedia(
+        '(prefers-color-scheme: dark)'
+      ).matches;
       setTheme(isSystemDark ? 'light' : 'dark');
     }
   };
 
-  const isDarkActive = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const isDarkActive =
+    theme === 'dark' ||
+    (theme === 'system' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   // Determine Title and Description based on the current path
   const getPageMeta = () => {
@@ -28,42 +40,48 @@ export const TopNav: React.FC = () => {
     if (path.startsWith('/agent')) {
       return {
         title: 'Cognitive Agent Orchestration',
-        description: 'Manage autonomous execution sequences and tool approval checkpoints.'
+        description:
+          'Manage autonomous execution sequences and tool approval checkpoints.',
       };
     }
     if (path.startsWith('/todo')) {
       return {
         title: 'Task Bounded Context',
-        description: 'Track workspace assignments with safe soft-delete recovery bounds.'
+        description:
+          'Track workspace assignments with safe soft-delete recovery bounds.',
       };
     }
     if (path.startsWith('/calendar')) {
       return {
         title: 'Schedule Bounded Context',
-        description: 'Analyze timeline intervals to intercept scheduling collisions.'
+        description:
+          'Analyze timeline intervals to intercept scheduling collisions.',
       };
     }
     if (path.startsWith('/integrations')) {
       return {
         title: 'Connector Integrations Hub',
-        description: 'Register and manage external system adapters and OAuth bindings.'
+        description:
+          'Register and manage external system adapters and OAuth bindings.',
       };
     }
     if (path.startsWith('/settings')) {
       return {
         title: 'Settings Hub',
-        description: 'Configure your preferences, notification rules, and memory vault.'
+        description:
+          'Configure your preferences, notification rules, and memory vault.',
       };
     }
     if (path.startsWith('/admin')) {
       return {
         title: 'System Operator Console',
-        description: 'Manage platform tenant workspaces, user accounts, and rate limit tiers.'
+        description:
+          'Manage platform tenant workspaces, user accounts, and rate limit tiers.',
       };
     }
     return {
       title: 'AI Executive Assistant',
-      description: 'Your intelligent coordinate platform.'
+      description: 'Your intelligent coordinate platform.',
     };
   };
 
@@ -86,8 +104,8 @@ export const TopNav: React.FC = () => {
         {/* Global Action Icons */}
         <div className="header-actions">
           {/* Theme Toggle Switch */}
-          <button 
-            className="action-btn" 
+          <button
+            className="action-btn"
             title={`Toggle Theme (Current: ${theme})`}
             onClick={handleThemeToggle}
             aria-label="Toggle Theme"
@@ -96,8 +114,8 @@ export const TopNav: React.FC = () => {
           </button>
 
           {/* Pending Approvals Queue [Q] */}
-          <button 
-            className="action-btn" 
+          <button
+            className="action-btn"
             title="Pending Approvals Queue [Q]"
             onClick={() => alert('Opening Pending Approvals Queue (Screen 27)')}
           >
@@ -106,29 +124,40 @@ export const TopNav: React.FC = () => {
           </button>
 
           {/* Session History [L] */}
-          <button 
-            className="action-btn" 
+          <button
+            className="action-btn"
             title="Session History [L]"
-            onClick={() => alert('Opening Session History Directory (Screen 26)')}
+            onClick={() =>
+              alert('Opening Session History Directory (Screen 26)')
+            }
           >
             <History size={18} />
           </button>
 
           {/* Active Session Tracker Toggle [P|] */}
-          <button 
-            className="action-btn" 
+          <button
+            className="action-btn"
             title="Active Session Tracker [P|]"
-            onClick={() => alert('Toggling Plan Execution Tracker Drawer (Screen 24)')}
+            onClick={() =>
+              alert('Toggling Plan Execution Tracker Drawer (Screen 24)')
+            }
           >
             <PlayCircle size={18} style={{ color: 'var(--color-secondary)' }} />
-            <span className="action-badge" style={{ backgroundColor: 'var(--color-secondary)' }}>●</span>
+            <span
+              className="action-badge"
+              style={{ backgroundColor: 'var(--color-secondary)' }}
+            >
+              ●
+            </span>
           </button>
 
           {/* Notification Bell [Bell] */}
-          <button 
-            className="action-btn" 
+          <button
+            className="action-btn"
             title="Notifications [Bell]"
-            onClick={() => alert('Opening Notifications Dropdown Panel (Screen 18)')}
+            onClick={() =>
+              alert('Opening Notifications Dropdown Panel (Screen 18)')
+            }
           >
             <Bell size={18} />
             <span className="action-badge">5</span>

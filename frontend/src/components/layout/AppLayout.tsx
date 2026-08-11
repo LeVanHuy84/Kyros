@@ -11,16 +11,20 @@ export const AppLayout: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div style={{
-        display: 'flex',
-        height: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'var(--bg-app)',
-        color: 'var(--text-main)',
-        fontFamily: 'var(--font-sans)'
-      }}>
-        <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Loading authentication...</span>
+      <div
+        style={{
+          display: 'flex',
+          height: '100vh',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'var(--bg-app)',
+          color: 'var(--text-main)',
+          fontFamily: 'var(--font-sans)',
+        }}
+      >
+        <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+          Loading authentication...
+        </span>
       </div>
     );
   }
@@ -32,25 +36,38 @@ export const AppLayout: React.FC = () => {
 
   if (wsLoading) {
     return (
-      <div style={{
-        display: 'flex',
-        height: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'var(--bg-app)',
-        color: 'var(--text-main)',
-        fontFamily: 'var(--font-sans)'
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
-            border: '3px solid var(--border-color)',
-            borderTopColor: 'var(--color-primary)',
-            animation: 'spin 1s linear infinite'
-          }} />
-          <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Loading Workspace...</span>
+      <div
+        style={{
+          display: 'flex',
+          height: '100vh',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'var(--bg-app)',
+          color: 'var(--text-main)',
+          fontFamily: 'var(--font-sans)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px',
+          }}
+        >
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              border: '3px solid var(--border-color)',
+              borderTopColor: 'var(--color-primary)',
+              animation: 'spin 1s linear infinite',
+            }}
+          />
+          <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+            Loading Workspace...
+          </span>
           <style>{`
             @keyframes spin {
               to { transform: rotate(360deg); }

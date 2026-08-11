@@ -39,7 +39,9 @@ const decodeJwt = (token: string) => {
   }
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    
+
     // Ensure we have a valid 3-part JWT, discarding legacy mock credentials
     if (storedToken && storedToken.split('.').length === 3 && storedUser) {
       setToken(storedToken);
@@ -67,22 +69,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     const response = await apiClient.post('/auth/login', { email, password });
     const { accessToken } = response.data;
-    
+
     const claims = decodeJwt(accessToken);
     if (!claims) {
       throw new Error('Invalid token claims structure');
     }
-    
+
     const parsedUser: User = {
       id: claims.sub,
       email: claims.email,
       name: claims.email.split('@')[0] || 'User',
-      roles: claims.roles ? claims.roles.split(',').map((r: string) => r.trim()) : ['USER'],
+      roles: claims.roles
+        ? claims.roles.split(',').map((r: string) => r.trim())
+        : ['USER'],
     };
-    
+
     localStorage.setItem('token', accessToken);
     localStorage.setItem('user', JSON.stringify(parsedUser));
-    
+
     setToken(accessToken);
     setUser(parsedUser);
   };
@@ -113,7 +117,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAuthenticated = !!token;
 
   return (
-    <AuthContext.Provider value={{ token, user, isAuthenticated, login, register, logout, isLoading }}>
+    <AuthContext.Provider
+      value={{
+        token,
+        user,
+        isAuthenticated,
+        login,
+        register,
+        logout,
+        isLoading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

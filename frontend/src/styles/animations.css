@@ -14,7 +14,9 @@
 }
 
 .interactive-card {
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
 }
 
 .interactive-card:hover {

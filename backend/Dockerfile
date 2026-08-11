@@ -27,5 +27,6 @@ COPY --from=build /app/modules/bootstrap/build/libs/*.jar app.jar
 # Expose the backend port
 EXPOSE 8080
 
-# Execute the application under JRE 25 runtime
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Execute the application under JRE 25 runtime with tuned memory for container platforms
+ENV JAVA_OPTS="-Xmx350m -Xss256k -XX:+UseContainerSupport"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

@@ -1,19 +1,31 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Bot, ListTodo, Calendar, Settings, Link2, ShieldAlert } from 'lucide-react';
+import {
+  Bot,
+  ListTodo,
+  Calendar,
+  Settings,
+  Link2,
+  ShieldAlert,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { TenantSelector } from './TenantSelector';
 
 export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
-  
+
   const isSystemOperator = user?.roles.includes('SYSTEM_OPERATOR') || false;
 
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-brand">
-          <img src="/favicon.svg" alt="Kyros Logo" style={{ width: '24px', height: '24px' }} aria-hidden="true" />
+          <img
+            src="/favicon.svg"
+            alt="Kyros Logo"
+            style={{ width: '24px', height: '24px' }}
+            aria-hidden="true"
+          />
           <h1>Kyros</h1>
         </div>
         <p className="sidebar-sub">Tenant Workspace v2.0</p>
@@ -27,12 +39,12 @@ export const Sidebar: React.FC = () => {
           <Bot size={18} aria-hidden="true" />
           <span>Agent Coordinator</span>
         </NavLink>
-        
+
         <NavLink to="/todo" className="nav-link">
           <ListTodo size={18} aria-hidden="true" />
           <span>Task Management</span>
         </NavLink>
-        
+
         <NavLink to="/calendar" className="nav-link">
           <Calendar size={18} aria-hidden="true" />
           <span>Schedule Overlaps</span>
@@ -50,10 +62,14 @@ export const Sidebar: React.FC = () => {
 
         {isSystemOperator && (
           <>
-            <div style={{ height: '1px', backgroundColor: 'rgba(255, 255, 255, 0.1)', margin: '20px 0 10px 0' }} />
-            <div className="sidebar-section-title">
-              Admin Console
-            </div>
+            <div
+              style={{
+                height: '1px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                margin: '20px 0 10px 0',
+              }}
+            />
+            <div className="sidebar-section-title">Admin Console</div>
             <NavLink to="/admin/users" className="nav-link">
               <ShieldAlert size={18} aria-hidden="true" />
               <span>User Admin</span>
@@ -65,7 +81,7 @@ export const Sidebar: React.FC = () => {
           </>
         )}
       </nav>
- 
+
       <div className="profile-card">
         <div className="profile-info">
           <span className="profile-name">{user?.name || 'Jane Doe'}</span>

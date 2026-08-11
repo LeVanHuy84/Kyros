@@ -16,12 +16,18 @@ interface WorkspaceContextType {
   isLoading: boolean;
 }
 
-const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
+const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
+  undefined
+);
 
-export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { isAuthenticated } = useAuth();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
+  const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchWorkspaces = async () => {
@@ -32,7 +38,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const wsList: Workspace[] = response.data.map((w: any) => ({
         id: w.id,
         name: w.name,
-        status: w.status
+        status: w.status,
       }));
       setWorkspaces(wsList);
 
@@ -40,7 +46,9 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         try {
           // Attempt to retrieve primary workspace configuration
           const primaryResponse = await apiClient.get('/workspaces/primary');
-          const primaryWs = wsList.find(w => w.id === primaryResponse.data.id);
+          const primaryWs = wsList.find(
+            (w) => w.id === primaryResponse.data.id
+          );
           if (primaryWs && primaryWs.status === 'ACTIVE') {
             setActiveWorkspace(primaryWs);
             localStorage.setItem('active_workspace_id', primaryWs.id);
@@ -66,12 +74,13 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const fallbackSelect = (wsList: Workspace[]) => {
     const storedWorkspaceId = localStorage.getItem('active_workspace_id');
-    const storedWs = wsList.find(w => w.id === storedWorkspaceId);
-    
+    const storedWs = wsList.find((w) => w.id === storedWorkspaceId);
+
     if (storedWs && storedWs.status === 'ACTIVE') {
       setActiveWorkspace(storedWs);
     } else {
-      const firstActive = wsList.find(w => w.status === 'ACTIVE') || wsList[0];
+      const firstActive =
+        wsList.find((w) => w.status === 'ACTIVE') || wsList[0];
       setActiveWorkspace(firstActive || null);
       if (firstActive) {
         localStorage.setItem('active_workspace_id', firstActive.id);
@@ -91,7 +100,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [isAuthenticated]);
 
   const selectWorkspace = async (id: string) => {
-    const target = workspaces.find(w => w.id === id);
+    const target = workspaces.find((w) => w.id === id);
     if (target && target.status === 'ACTIVE') {
       setActiveWorkspace(target);
       localStorage.setItem('active_workspace_id', id);
@@ -109,25 +118,33 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const newWs: Workspace = {
       id: response.data.id,
       name: response.data.name,
-      status: response.data.status
+      status: response.data.status,
     };
-    
-    setWorkspaces(prev => [...prev, newWs]);
+
+    setWorkspaces((prev) => [...prev, newWs]);
     setActiveWorkspace(newWs);
     localStorage.setItem('active_workspace_id', newWs.id);
-    
+
     try {
       // Auto-set as primary
       await apiClient.post(`/workspaces/primary/${newWs.id}`);
     } catch (e) {
       console.warn('Failed to set newly created workspace as primary', e);
     }
-    
+
     return newWs;
   };
 
   return (
-    <WorkspaceContext.Provider value={{ workspaces, activeWorkspace, selectWorkspace, createWorkspace, isLoading }}>
+    <WorkspaceContext.Provider
+      value={{
+        workspaces,
+        activeWorkspace,
+        selectWorkspace,
+        createWorkspace,
+        isLoading,
+      }}
+    >
       {children}
     </WorkspaceContext.Provider>
   );
