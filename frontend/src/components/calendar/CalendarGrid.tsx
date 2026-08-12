@@ -62,10 +62,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     return (
       <div
         style={{
-          padding: '64px',
+          padding: 'var(--space-10)',
           textAlign: 'center',
           color: 'var(--text-muted)',
-          fontSize: '15px',
+          fontSize: 'var(--font-size-sm)',
         }}
       >
         Loading schedule timelines...

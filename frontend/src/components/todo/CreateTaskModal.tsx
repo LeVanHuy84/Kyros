@@ -82,8 +82,8 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         style={{
           width: '100%',
           maxWidth: '520px',
-          padding: '36px',
-          gap: '24px',
+          padding: 'var(--space-6)',
+          gap: 'var(--space-4)',
           boxShadow: 'var(--shadow-lg)',
           backgroundColor: 'var(--bg-card)',
         }}

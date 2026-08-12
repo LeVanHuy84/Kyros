@@ -436,7 +436,7 @@ export const ScheduleOverlaps: React.FC = () => {
             <CalendarIcon size={20} style={{ color: 'var(--color-primary)' }} />
           </div>
           <div>
-            <h2 style={{ fontSize: '22px', fontWeight: '700', margin: 0 }}>
+            <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: '700', margin: 0 }}>
               Schedule & Planning Board
             </h2>
             <p
