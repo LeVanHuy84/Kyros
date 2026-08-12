@@ -136,4 +136,3 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
     </WorkspaceContext.Provider>
   );
 };
-

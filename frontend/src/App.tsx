@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { WorkspaceProvider } from './context/WorkspaceContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { useBackendKeepAlive } from './hooks/useBackendKeepAlive';
 import { AppLayout } from './components/layout/AppLayout';
 
 // Lazy load pages for optimal initial bundle sizes (Best Practices)
@@ -36,6 +37,8 @@ const PageLoader = () => (
 );
 
 function App() {
+  useBackendKeepAlive();
+
   return (
     <ThemeProvider>
       <AuthProvider>
