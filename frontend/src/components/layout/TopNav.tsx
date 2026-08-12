@@ -8,8 +8,8 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
-import { useWorkspace } from '../../context/WorkspaceContext';
-import { useTheme } from '../../context/ThemeContext';
+import { useWorkspace } from '../../hooks/useWorkspace';
+import { useTheme } from '../../hooks/useTheme';
 
 export const TopNav: React.FC = () => {
   const { activeWorkspace } = useWorkspace();

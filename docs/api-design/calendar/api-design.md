@@ -29,6 +29,8 @@ URIs follow a hierarchical structure rooted in a workspace to guarantee tenant i
 | `DELETE`| `/api/v1/workspaces/{workspaceId}/calendar/events/{eventId}/reminders/{reminderId}` | Remove a reminder | UC-CAL-007 |
 | `POST` | `/api/v1/workspaces/{workspaceId}/calendar/events/{eventId}/reminders/{reminderId}/snooze` | Snooze a triggered reminder | UC-CAL-004 |
 | `POST` | `/api/v1/workspaces/{workspaceId}/calendar/events/{eventId}/reminders/{reminderId}/dismiss` | Dismiss a reminder | UC-CAL-004 |
+| `GET` | `/api/v1/workspaces/{workspaceId}/calendar/availability` | Query availability windows in a time range | UC-CAL-010 |
+| `GET` | `/api/v1/workspaces/{workspaceId}/calendar/availability/slots` | Discover available time slots of a given duration | UC-CAL-011 |
 
 # Request Models
 
@@ -37,6 +39,7 @@ URIs follow a hierarchical structure rooted in a workspace to guarantee tenant i
 {
   "title": "string (required)",
   "description": "string (optional)",
+  "taskId": "string (UUID, optional)",
   "startTime": "string (ISO-8601 date-time, required)",
   "endTime": "string (ISO-8601 date-time, required)",
   "reminderOffsets": ["integer (minutes, optional)"]
@@ -66,6 +69,33 @@ URIs follow a hierarchical structure rooted in a workspace to guarantee tenant i
 }
 ```
 
+### QueryAvailabilityRequest
+```json
+{
+  "rangeStart": "string (ISO-8601 date-time, required)",
+  "rangeEnd": "string (ISO-8601 date-time, required)",
+  "constraints": {
+    "workingHoursStart": "string (ISO-8601 time-of-day, optional)",
+    "workingHoursEnd": "string (ISO-8601 time-of-day, optional)",
+    "minimumNoticeMinutes": "integer (positive, optional)"
+  }
+}
+```
+
+### DiscoverSlotsRequest
+```json
+{
+  "rangeStart": "string (ISO-8601 date-time, required)",
+  "rangeEnd": "string (ISO-8601 date-time, required)",
+  "desiredDurationMinutes": "integer (positive, required)",
+  "constraints": {
+    "workingHoursStart": "string (ISO-8601 time-of-day, optional)",
+    "workingHoursEnd": "string (ISO-8601 time-of-day, optional)",
+    "minimumNoticeMinutes": "integer (positive, optional)"
+  }
+}
+```
+
 ### SnoozeReminderRequest
 ```json
 {
@@ -81,6 +111,7 @@ URIs follow a hierarchical structure rooted in a workspace to guarantee tenant i
   "eventId": "string (UUID)",
   "workspaceId": "string (UUID)",
   "userId": "string (UUID)",
+  "taskId": "string (UUID, optional)",
   "title": "string",
   "description": "string",
   "startTime": "string (ISO-8601 date-time)",
@@ -105,6 +136,39 @@ URIs follow a hierarchical structure rooted in a workspace to guarantee tenant i
 }
 ```
 
+### AvailabilityWindowResponse
+```json
+{
+  "startTime": "string (ISO-8601 date-time)",
+  "endTime": "string (ISO-8601 date-time)"
+}
+```
+
+### AvailabilityListResponse
+```json
+{
+  "items": ["AvailabilityWindowResponse"],
+  "total": "integer"
+}
+```
+
+### TimeSlotResponse
+```json
+{
+  "startTime": "string (ISO-8601 date-time)",
+  "endTime": "string (ISO-8601 date-time)",
+  "durationMinutes": "integer"
+}
+```
+
+### SlotListResponse
+```json
+{
+  "items": ["TimeSlotResponse"],
+  "total": "integer"
+}
+```
+
 # Validation Rules
 
 1. **Path Parameters**: `workspaceId`, `eventId`, and `reminderId` must be valid UUID formats.
@@ -113,6 +177,8 @@ URIs follow a hierarchical structure rooted in a workspace to guarantee tenant i
 4. **Reminders**: `leadTimeMinutes` and `snoozeMinutes` must be strictly positive integers.
 5. **Overlap Policy**: If the user's `preventCalendarOverlap` preference is true, event creation and rescheduling will fail if the time range overlaps with active events in the workspace.
 6. **Deletion**: Deleting an already deleted event returns 204 or 404 (idempotent operation).
+7. **Availability Queries**: `rangeEnd` must be strictly after `rangeStart`. `desiredDurationMinutes` must be positive.
+8. **Constraints**: `workingHoursEnd` must be after `workingHoursStart` when both are provided. `minimumNoticeMinutes` must be non-negative.
 
 # Error Model
 
@@ -169,6 +235,7 @@ Authorization: Bearer <token>
 {
   "title": "Q3 Planning",
   "description": "Quarterly planning session with the team.",
+  "taskId": "t-111",
   "startTime": "2026-10-15T14:00:00Z",
   "endTime": "2026-10-15T16:00:00Z",
   "reminderOffsets": [15, 60]
@@ -187,6 +254,18 @@ DELETE /api/v1/workspaces/w-123/calendar/events/e-456 HTTP/1.1
 Authorization: Bearer <token>
 ```
 
+### Query Availability
+```http
+GET /api/v1/workspaces/w-123/calendar/availability?rangeStart=2026-10-15T00:00:00Z&rangeEnd=2026-10-16T00:00:00Z&workingHoursStart=09:00:00Z&workingHoursEnd=18:00:00Z HTTP/1.1
+Authorization: Bearer <token>
+```
+
+### Discover Slots
+```http
+GET /api/v1/workspaces/w-123/calendar/availability/slots?rangeStart=2026-10-15T00:00:00Z&rangeEnd=2026-10-16T00:00:00Z&desiredDurationMinutes=60&workingHoursStart=09:00:00Z&workingHoursEnd=18:00:00Z&minimumNoticeMinutes=120 HTTP/1.1
+Authorization: Bearer <token>
+```
+
 # Example Responses
 
 ### 201 Created (Create Event)
@@ -199,6 +278,7 @@ Content-Type: application/json
   "eventId": "e-456",
   "workspaceId": "w-123",
   "userId": "u-999",
+  "taskId": "t-111",
   "title": "Q3 Planning",
   "description": "Quarterly planning session with the team.",
   "startTime": "2026-10-15T14:00:00Z",
@@ -232,5 +312,47 @@ Content-Type: application/problem+json
   "status": 409,
   "detail": "The requested time range overlaps with an existing active event.",
   "instance": "/api/v1/workspaces/w-123/calendar/events"
+}
+```
+
+### 200 OK (Query Availability)
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "startTime": "2026-10-15T09:00:00Z",
+      "endTime": "2026-10-15T10:00:00Z"
+    },
+    {
+      "startTime": "2026-10-15T11:30:00Z",
+      "endTime": "2026-10-15T12:30:00Z"
+    }
+  ],
+  "total": 2
+}
+```
+
+### 200 OK (Discover Slots)
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "startTime": "2026-10-15T09:00:00Z",
+      "endTime": "2026-10-15T10:00:00Z",
+      "durationMinutes": 60
+    },
+    {
+      "startTime": "2026-10-15T11:30:00Z",
+      "endTime": "2026-10-15T12:30:00Z",
+      "durationMinutes": 60
+    }
+  ],
+  "total": 2
 }
 ```

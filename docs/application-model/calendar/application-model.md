@@ -163,10 +163,40 @@ This document outlines the **Application Layer** for the Calendar context. It co
 - **Post-conditions**:
   - Event is created with reminder(s) calculated from the user's default lead-time preference.
 - **Normal Flow**:
-  1. During UC-CAL-001, if `reminderOffsets` is empty/absent in the command:
-     - The application fetches `PreferencesDTO` via `MemoryStorePort.getUserPreferences(workspaceId, userId)`.
-     - Uses `defaultLeadTimeMinutes` as the reminder offset.
-  2. The event is created with the bootstrapped reminder configuration.
+   1. During UC-CAL-001, if `reminderOffsets` is empty/absent in the command:
+      - The application fetches `PreferencesDTO` via `MemoryStorePort.getUserPreferences(workspaceId, userId)`.
+      - Uses `defaultLeadTimeMinutes` as the reminder offset.
+   2. The event is created with the bootstrapped reminder configuration.
+
+### UC-CAL-010: Query Availability Windows
+- **ID**: `UC-CAL-010`
+- **Actor**: AI Agent / User
+- **Trigger**: Request to find free time windows in a date range.
+- **Pre-conditions**:
+  - Valid `WorkspaceId` context.
+- **Post-conditions**:
+  - A list of **AvailabilityWindow** values is returned.
+- **Normal Flow**:
+  1. The application receives a `QueryAvailabilityCommand` containing `rangeStart`, `rangeEnd`, and optional `SchedulingConstraint`.
+  2. The application calls `AvailabilityQueryService.computeAvailability(workspaceId, rangeStart, rangeEnd, constraints)`.
+  3. The service queries `CalendarEventRepository` for active events in the range, computes gaps between consecutive events, and filters against working-hour bounds and minimum-notice constraints.
+  4. The application returns the ordered list of availability windows.
+
+### UC-CAL-011: Discover Available Time Slots
+- **ID**: `UC-CAL-011`
+- **Actor**: AI Agent
+- **Trigger**: Request to find concrete meeting slots of a specific duration.
+- **Pre-conditions**:
+  - Valid `WorkspaceId` context.
+  - `desiredDuration` is a positive duration.
+- **Post-conditions**:
+  - A list of **TimeSlot** candidates is returned.
+- **Normal Flow**:
+  1. The application receives a `DiscoverSlotsCommand` containing `rangeStart`, `rangeEnd`, `desiredDuration`, and optional `SchedulingConstraint`.
+  2. The application calls `AvailabilityQueryService.discoverSlots(workspaceId, rangeStart, rangeEnd, desiredDuration, constraints)`.
+  3. The service first computes availability windows (reusing UC-CAL-010 logic), then subdivides each window into candidate slots of the requested duration, respecting working hours and minimum notice.
+  4. The application returns the ordered list of candidate slots.
+  5. **Important**: Calendar returns candidate slots only. The AI Agent makes the final scheduling decision and invokes `CalendarPort.createEvent` if a slot is chosen.
 
 ---
 
@@ -257,6 +287,35 @@ interface TriggerDueRemindersCommand {
 }
 ```
 
+### QueryAvailabilityCommand
+```typescript
+interface QueryAvailabilityCommand {
+  workspaceId: string;
+  rangeStart: string; // ISO date-time
+  rangeEnd: string;   // ISO date-time
+  constraints?: {
+    workingHoursStart?: string; // ISO date-time (time-of-day)
+    workingHoursEnd?: string;   // ISO date-time (time-of-day)
+    minimumNoticeMinutes?: number;
+  };
+}
+```
+
+### DiscoverSlotsCommand
+```typescript
+interface DiscoverSlotsCommand {
+  workspaceId: string;
+  rangeStart: string; // ISO date-time
+  rangeEnd: string;   // ISO date-time
+  desiredDurationMinutes: number;
+  constraints?: {
+    workingHoursStart?: string;
+    workingHoursEnd?: string;
+    minimumNoticeMinutes?: number;
+  };
+}
+```
+
 ---
 
 ## 4. Query Catalog
@@ -268,6 +327,36 @@ interface TriggerDueRemindersCommand {
 ### ListEventsQuery
 - **Parameters**: `workspaceId: string`, `startTime: string`, `endTime: string`
 - **Return Type**: `List<EventDTO>`
+
+### QueryAvailabilityQuery
+- **Parameters**: `workspaceId: string`, `rangeStart: string`, `rangeEnd: string`, `constraints?: SchedulingConstraintDTO`
+- **Return Type**: `List<AvailabilityWindowDTO>`
+  ```typescript
+  interface AvailabilityWindowDTO {
+    startTime: string;
+    endTime: string;
+  }
+  ```
+
+### DiscoverSlotsQuery
+- **Parameters**: `workspaceId: string`, `rangeStart: string`, `rangeEnd: string`, `desiredDurationMinutes: number`, `constraints?: SchedulingConstraintDTO`
+- **Return Type**: `List<TimeSlotDTO>`
+  ```typescript
+  interface TimeSlotDTO {
+    startTime: string;
+    endTime: string;
+    durationMinutes: number;
+  }
+  ```
+
+### SchedulingConstraintDTO
+```typescript
+interface SchedulingConstraintDTO {
+  workingHoursStart?: string; // ISO date-time time-of-day
+  workingHoursEnd?: string;   // ISO date-time time-of-day
+  minimumNoticeMinutes?: number;
+}
+```
 
 ---
 
@@ -295,6 +384,8 @@ public interface CalendarPort {
     // --- Read operations ---
     EventDTO getEvent(WorkspaceId workspaceId, EventId eventId);
     List<EventDTO> listEvents(ListEventsQuery query);
+    List<AvailabilityWindowDTO> queryAvailability(QueryAvailabilityCommand command);
+    List<TimeSlotDTO> discoverSlots(DiscoverSlotsCommand command);
 }
 ```
 
@@ -329,6 +420,8 @@ public interface CalendarEventRepository {
 
 ---
 
+## 8. Dependency Diagram
+
 ## 7. Dependency Diagram
 
 ```mermaid
@@ -353,11 +446,13 @@ classDiagram
         +createEvent()
         +rescheduleEvent()
         +deleteEvent()
+        +updateEventMetadata()
         +snoozeReminder()
         +dismissReminder()
         +addReminder()
         +removeReminder()
-        +updateEventMetadata()
+        +queryAvailability()
+        +discoverSlots()
     }
     class CalendarApplicationService {
         +createEvent()

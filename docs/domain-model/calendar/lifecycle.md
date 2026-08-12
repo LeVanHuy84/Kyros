@@ -18,6 +18,7 @@
 | **Scheduled** / **Rescheduled** | _(no change)_ | `removeReminder(reminderId)` | Reminder exists and not yet triggered |
 | **Scheduled** / **Rescheduled** | _(no change)_ | `snoozeReminder(reminderId, offset)` | Reminder in Triggered state |
 | **Scheduled** / **Rescheduled** | _(no change)_ | `dismissReminder(reminderId)` | Reminder in Triggered or Snoozed state |
+| **Scheduled** / **Rescheduled** | _(no change)_ | `queryAvailability(rangeStart, rangeEnd, constraints?)` | Returns availability windows and candidate slots (read-only; no state mutation) |
 
 ### Business Operations
 
@@ -31,6 +32,7 @@
 | `removeReminder(reminderId)` | Reminder exists | Reminder removed | _(none)_ |
 | `snoozeReminder(reminderId, offset)` | Reminder triggered | Reminder re-enters Scheduled with new trigger time | `ReminderSnoozed` |
 | `dismissReminder(reminderId)` | Reminder triggered or snoozed | Reminder Dismissed (terminal) | `ReminderDismissed` |
+| `queryAvailability(rangeStart, rangeEnd, constraints?)` | Range valid; workspace active | Read-only availability windows and candidate slots returned | _(none — query operation)_ |
 
 ---
 

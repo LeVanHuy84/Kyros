@@ -8,7 +8,7 @@ import {
   Link2,
   ShieldAlert,
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { TenantSelector } from './TenantSelector';
 
 export const Sidebar: React.FC = () => {

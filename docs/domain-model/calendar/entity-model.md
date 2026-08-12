@@ -11,12 +11,13 @@ Single aggregate: **CalendarEvent**, with **Reminder** entities inside the event
 #### Responsibilities
 
 - Consistency boundary for a scheduled time block within one **WorkspaceId**.
-- Encapsulates title, description, start/end times, and owning **UserId** reference.
+- Encapsulates title, description, start/end times, owning **UserId** reference, and optional **TaskId** reference.
 - Owns zero or more **Reminder** entities; all reminder changes go through the event root.
 - Enforces chronological validity (end strictly after start), mandatory title and start time.
 - Recalculates reminder trigger times when schedule is rescheduled.
 - Cancels reminders on event deletion.
 - Accepts **OverlapPolicyContext** (from Memory/preferences) when creating or rescheduling; rejects overlaps when prevention is enabled (via collaborating domain service + repository reads).
+- Provides scheduling primitives: overlap detection, availability window computation, and time-slot discovery for AI Agent orchestration. Calendar does **not** make planning decisions; it only exposes available time ranges.
 
 #### Identity
 
@@ -32,12 +33,13 @@ Single aggregate: **CalendarEvent**, with **Reminder** entities inside the event
 
 #### Public behaviors
 
-- Create with title, time range, optional description, optional reminders.
+- Create with title, time range, optional description, optional reminders, and optional **TaskId** reference.
 - Update title, description, start/end (reschedule).
 - Add, update, or remove **Reminder** configurations.
 - Delete event (terminal).
 - Mark reminder snoozed or dismissed (via **Reminder** entity behaviors invoked on root).
 - Expose scheduled reminder trigger times for dispatch orchestration (application/Notification port).
+- Query availability windows and discover available time slots for a given duration and constraints (read-only; no aggregate mutation).
 
 ---
 

@@ -130,14 +130,14 @@ This document does **not** perform domain modeling, define aggregates/entities/r
 | --- | --- |
 | **Context Name** | Calendar |
 | **Classification** | Supporting |
-| **Responsibility** | System of record for scheduled time blocks: event CRUD, optional overlap prevention, reminder lead-time signals that dispatch via Notification. |
-| **Business Capabilities Owned** | Event create/view/update/delete with workspace scope (CAL-001); reminders with lead time, dismiss/snooze, dispatch through Notification (CAL-002). |
-| **Explicitly Not Owned** | External calendar sync (Connector CON-002); notification channel routing/urgency policy (Notification); task recurrence (Todo); calendar event recurrence (no approved story — not owned). |
-| **Upstream Contexts** | Workspace; Notification (reminder delivery via `NotificationDispatchPort`). |
+| **Responsibility** | System of record for scheduled time blocks: event CRUD, optional overlap prevention, reminder lead-time signals that dispatch via Notification, availability window computation, and candidate time-slot discovery for AI Agent scheduling. |
+| **Business Capabilities Owned** | Event create/view/update/delete with workspace scope (CAL-001); reminders with lead time, dismiss/snooze, dispatch through Notification (CAL-002); availability window computation; time-slot discovery respecting user constraints. |
+| **Explicitly Not Owned** | External calendar sync (Connector CON-002); notification channel routing/urgency policy (Notification); task recurrence (Todo); calendar event recurrence (no approved story — not owned); AI planning decisions (AI Agent). |
+| **Upstream Contexts** | Workspace; Notification (reminder delivery via `NotificationDispatchPort`); Memory (overlap preference and scheduling constraints). |
 | **Downstream Contexts** | AI Agent (tools); Workflow (post-MVP); Connector (calendar sync, post-MVP); Notification as reminder/event consumer. |
 | **Public Interfaces** | `CalendarPort`; domain events `CalendarEventCreated`, `CalendarEventUpdated`, `CalendarEventConflictDetected`. |
-| **Internal Concepts** | Calendar Event; Scheduling Collision; Reminder Schedule (lead time relative to event). |
-| **Future Evolution** | Remains CRUD + reminders + overlap preference. Recurrence VO may be reused later only if requirements add Calendar recurrence. |
+| **Internal Concepts** | Calendar Event; Scheduling Collision; Reminder Schedule (lead time relative to event); Availability Window; Time Slot; Scheduling Constraint. |
+| **Future Evolution** | Availability querying and slot discovery (read-only primitives for AI Agent). Recurrence VO may be reused later only if requirements add Calendar recurrence. |
 
 ---
 

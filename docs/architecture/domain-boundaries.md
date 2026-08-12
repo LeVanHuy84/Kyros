@@ -441,7 +441,7 @@ Anti-Corruption Layers are essential to protect the internal domain models from 
 
 ### 1. External Integration ACL (Connector Hub Adapters)
 - **External System**: Third-party APIs (Google Calendar, Outlook, Jira, TickTick, Slack, GitHub, Notion).
-- **Implementation**: The Connector context implements the `ExternalProviderPort` interface. Inside each provider implementation (e.g., `GoogleCalendarAdapter`), incoming payloads (such as Google calendar sync JSONs) are parsed, validated, and translated into internal domain models (like `Event` or `TaskCreated` events). Internal domains never import external provider library classes.
+- **Implementation**: The Connector context implements the `ExternalProviderPort` interface. Inside each provider implementation (e.g., `GoogleCalendarAdapter`), incoming payloads (such as Google calendar sync JSONs) are parsed, validated, and translated into internal domain models (like `CalendarEvent` or `TaskCreated` events). Internal domains never import external provider library classes.
 
 ### 2. Cognitive Language ACL (LLM Adapter)
 - **External System**: Third-party Large Language Model APIs (Gemini, OpenAI, Claude).

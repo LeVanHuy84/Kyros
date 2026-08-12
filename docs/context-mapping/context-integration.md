@@ -96,16 +96,16 @@ For every bounded context, the following dimensions are identified: Inbound Port
 
 | Dimension | Detail |
 | --- | --- |
-| **Inbound Ports** | `CalendarPort` (event CRUD, overlap preference, reminder lead-time scheduling) |
+| **Inbound Ports** | `CalendarPort` (event CRUD, overlap preference, reminder lead-time scheduling, availability querying, slot discovery) |
 | **Outbound Ports** | `NotificationDispatchPort` (trigger immediate alerts for reminders) |
 | **Published Domain Events** | `CalendarEventCreated`; `CalendarEventUpdated`; `CalendarEventConflictDetected` |
 | **Consumed Domain Events** | None |
 | **Synchronous interactions** | Agent tool adapters call `CalendarPort` methods synchronously; Workflow calls `CalendarPort` (post-MVP); Connector calls `CalendarPort` (post-MVP); Calendar calls `NotificationDispatchPort` synchronously for immediate reminder dispatch |
 | **Asynchronous interactions** | Publishes `CalendarEventCreated`, `CalendarEventUpdated`, `CalendarEventConflictDetected` to in-process event bus; downstream consumers (Notification, Connector, Workflow) handle these asynchronously after commit |
-| **ACL boundaries** | None (Calendar is internal; reminder dispatch goes through Notification's `NotificationDispatchPort`) |
-| **Tool Registry interactions** | `CalendarPort` is wrapped by a Tool Registry tool adapter for Agent access; the tool declares calendar-management schema and permissions |
+| **ACL boundaries** | None (Calendar is internal; reminder dispatch goes through Notification's `NotificationDispatchPort`); external calendar providers accessed through Connector, never directly |
+| **Tool Registry interactions** | `CalendarPort` is wrapped by a Tool Registry tool adapter for Agent access; the tool declares calendar-management schema and permissions, including availability and slot queries |
 | **Connector interactions** | Connector invokes `CalendarPort` for calendar sync (post-MVP, CON-002); consumes `CalendarEventCreated`, `CalendarEventUpdated`, `CalendarEventConflictDetected` to sync outwards |
-| **Memory interactions** | None |
+| **Memory interactions** | Queries `MemoryStorePort` for `preventCalendarOverlap` preference and scheduling constraints (working hours, minimum notice) during availability/slot computation |
 | **Approval interactions** | None directly; Agent may require approval before creating calendar events via Tool Registry (AI-001) |
 
 ### 1.7 Notes (Reserved / Inactive)

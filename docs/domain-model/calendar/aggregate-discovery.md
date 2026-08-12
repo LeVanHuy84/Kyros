@@ -12,6 +12,7 @@ The Calendar bounded context is responsible for the following business capabilit
 - **Overlap Constraint Enforcement**: Checking for time collisions and enforcing scheduling rules based on user preferences.
 - **Reminder Configuration & Scheduling**: Configuring advanced notifications (lead times) for events, and handling user responses such as snoozing or dismissing alerts.
 - **Schedule Query & Visualization**: Listing, filtering, and querying calendar timelines for specific time windows.
+- **Availability & Slot Discovery**: Computing free windows between events and returning candidate time slots for a requested duration, enabling the AI Agent to schedule tasks without making planning decisions.
 
 ---
 
@@ -24,7 +25,7 @@ The primary and only aggregate within the Calendar Bounded Context is the **Cale
   A Calendar Event has a distinct identity (`EventId`), a clean lifecycle, and must enforce internal and external constraints (such as chronological validity and reminder constraints) in a consistent manner. It acts as the container and boundary for associated reminders.
 - **Responsibilities**:
   - Encapsulates event properties: Title, Description, Start Time, End Time, and WorkspaceId.
-  - Manages associated **Reminders** (which are Value Objects or Entities inside the Event aggregate since they are lifecycle-bound to the event, have no meaning outside it, and are always updated through the event).
+  - Manages associated **Reminders** (which are Value Objects or Entities inside the CalendarEvent aggregate since they are lifecycle-bound to the event, have no meaning outside it, and are always updated through the event).
   - Enforces internal invariants (e.g. End Time must be chronologically after Start Time, Title presence).
   - Schedules and manages reminder triggers based on Lead Time.
 - **Consistency Boundary**:
@@ -70,6 +71,7 @@ Business invariants are rules that must remain true at all times within the Cale
 - Managing reminder status (scheduled, snooze offset, dismissal).
 - Emitting events (`CalendarEventCreated`, `CalendarEventUpdated`, `CalendarEventConflictDetected`) to notify the platform of scheduling state changes.
 - Restricting all operations within the workspace security boundary.
+- Computing availability windows and candidate time slots from existing events (read-only queries; no planning decisions).
 
 ### What the Calendar Context DOES NOT Own
 - **User Authentication and Identity**: Managed by the `Auth` context.

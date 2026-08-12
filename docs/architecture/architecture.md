@@ -38,7 +38,7 @@ Why this style fits the system:
 | **Auth** | User registration, credential verification, password policy enforcement, JWT issuance/refresh, RBAC authorization, workspace mapping. | Workspace/Shared Kernel, Security (Spring Security) |
 | **Workspace** | Defines the tenant boundary, owns workspace lifecycle and membership; exposes the security context used by every other module. | Shared Kernel |
 | **Todo** | Task CRUD, priority, tags, filtering, soft-delete/recovery, recurring intervals (RFC 5545). | Workspace, Shared Kernel |
-| **Calendar** | Event scheduling, overlap prevention, recurrence, lead-time computation for reminders, sync events. | Workspace, Shared Kernel |
+| **Calendar** | Event scheduling, overlap prevention, lead-time computation for reminders, availability querying, slot discovery, sync events. | Workspace, Shared Kernel |
 | **Notes (Knowledge)** | Markdown document CRUD, indexing, semantic retrieval for RAG grounding. | Workspace, Shared Kernel, (via port) Vector Store |
 | **Workflow** | Rule evaluation (domain events or cron triggers), action sequencing, circular-path prevention, run history. | Workspace, Todo, Calendar, Notification, Shared Kernel |
 | **Notification** | Centralized routing/formatting/delivery (in-app, email, Slack per urgency), honoring preferences. | Workspace, Shared Kernel, (via ports) Notification providers |
@@ -186,8 +186,8 @@ Modules communicate asynchronously via **domain events** published in-process (S
 | `TaskCreated` | Todo | Workflow (trigger), Notification, Connector (outbound sync) |
 | `TaskCompleted` | Todo | Workflow (trigger), Memory |
 | `TaskRecovered` | Todo | Notification, Connector (outbound sync) |
-| `EventCreated` | Calendar | Workflow (trigger), Notification (reminders), Connector (outbound sync) |
-| `EventUpdated` / `EventConflictDetected` | Calendar | Notification, Connector |
+| `CalendarEventCreated` | Calendar | Workflow (trigger), Notification (reminders), Connector (outbound sync) |
+| `CalendarEventUpdated` / `CalendarEventConflictDetected` | Calendar | Notification, Connector |
 | `NoteCreated` | Notes | Memory (indexing for RAG) |
 | `WorkflowExecuted` | Workflow | Notification, Memory |
 | `MemoryUpdated` | Memory | AI Agent (context refresh) |

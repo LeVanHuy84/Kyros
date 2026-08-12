@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import apiClient from '../services/api-client';
 import { ShieldCheck, Loader2, Eye, EyeOff } from 'lucide-react';
 

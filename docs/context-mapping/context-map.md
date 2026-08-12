@@ -128,9 +128,9 @@ To guide design priorities, resource allocation, and architectural rules, the bo
 
 ### 4.6 Calendar Bounded Context
 
-- **Responsibility**: Record, check, and trigger alerts for calendar schedules.
-- **Owned Capabilities**: Event CRUD (`CAL-001`), overlap constraint enforcement, scheduling and dispatching reminders (`CAL-002`).
-- **Explicitly Not Owned**: External Google/Outlook sync (Connector); channel routing rules; task recurrence models.
+- **Responsibility**: Record, check, and trigger alerts for calendar schedules. Compute availability windows and candidate time slots for AI Agent scheduling.
+- **Owned Capabilities**: Event CRUD (`CAL-001`), overlap constraint enforcement, scheduling and dispatching reminders (`CAL-002`), availability window computation, time-slot discovery.
+- **Explicitly Not Owned**: External Google/Outlook sync (Connector); channel routing rules; task recurrence models; AI planning decisions.
 - **Future Evolution**: Synchronization conflict resolution when calendar connectors are active.
 
 ### 4.7 Notes Bounded Context (Reserved)
@@ -310,7 +310,7 @@ Domain events are published asynchronously after transaction commit. They are de
 | `TaskRecovered`         | Todo              | Notification, Connector               | `TaskId`, `WorkspaceId`                     |
 | `CalendarEventCreated`  | Calendar          | Workflow, Notification, Connector     | `EventId`, `WorkspaceId`, `StartsAt`        |
 | `CalendarEventUpdated`  | Calendar          | Notification, Connector               | `EventId`, `WorkspaceId`                    |
-| `CalendarEventConflict` | Calendar          | Notification, Connector               | `EventId`, `ConflictEventId`, `WorkspaceId` |
+| `CalendarEventConflictDetected` | Calendar          | Notification, Connector               | `EventId`, `ConflictEventId`, `WorkspaceId` |
 | `NoteCreated`           | Notes             | Memory                                | `NoteId`, `WorkspaceId` (reserved)          |
 | `WorkflowExecuted`      | Workflow          | Notification, Memory                  | `WorkflowId`, `WorkspaceId`, `Status`       |
 | `MemoryUpdated`         | Memory            | AI Agent                              | `UserId`, `WorkspaceId`, `UpdateType`       |

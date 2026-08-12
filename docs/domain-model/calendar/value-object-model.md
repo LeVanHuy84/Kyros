@@ -119,3 +119,43 @@
 | **Fields** | Absolute date-time when reminder should fire. |
 | **Immutability** | Recalculated on reschedule or snooze. |
 | **Validation** | Must align with **LeadTime** and current **EventTimeRange** unless snoozed. |
+
+---
+
+## AvailabilityWindow
+
+| Aspect | Description |
+| --- | --- |
+| **Fields** | `startTime: Instant`, `endTime: Instant` representing a continuous free period. |
+| **Immutability** | Immutable once computed. |
+| **Validation** | `endTime` must be strictly after `startTime`. Derived from gaps between active events in a workspace. |
+
+---
+
+## TimeSlot
+
+| Aspect | Description |
+| --- | --- |
+| **Fields** | `startTime: Instant`, `endTime: Instant`, `duration: Duration`. |
+| **Immutability** | Immutable once computed. |
+| **Validation** | Must fit within an **AvailabilityWindow**; `endTime` strictly after `startTime`. |
+
+---
+
+## SchedulingConstraint
+
+| Aspect | Description |
+| --- | --- |
+| **Fields** | `workingHoursStart: Instant?`, `workingHoursEnd: Instant?`, `minimumNotice: Duration`, `maxSlotDuration: Duration`. |
+| **Immutability** | Immutable per query. |
+| **Validation** | If present, all values must be non-negative; `workingHoursEnd` must be after `workingHoursStart`. |
+
+---
+
+## SlotQuery
+
+| Aspect | Description |
+| --- | --- |
+| **Fields** | `workspaceId: WorkspaceId`, `rangeStart: Instant`, `rangeEnd: Instant`, `desiredDuration: Duration`, `constraints: SchedulingConstraint?`. |
+| **Immutability** | Immutable per request. |
+| **Validation** | `rangeEnd` must be after `rangeStart`; `desiredDuration` must be positive. |

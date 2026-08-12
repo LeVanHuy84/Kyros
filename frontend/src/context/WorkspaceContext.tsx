@@ -1,29 +1,13 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import apiClient from '../services/api-client';
-import { useAuth } from './AuthContext';
-
-export interface Workspace {
-  id: string;
-  name: string;
-  status: 'ACTIVE' | 'SUSPENDED';
-}
-
-interface WorkspaceContextType {
-  workspaces: Workspace[];
-  activeWorkspace: Workspace | null;
-  selectWorkspace: (id: string) => void;
-  createWorkspace: (name: string) => Promise<Workspace>;
-  isLoading: boolean;
-}
-
-const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
-  undefined
-);
+import { useAuth } from '../hooks/useAuth';
+import { WorkspaceContext } from './workspace-context';
+import type { Workspace } from './workspace-context';
 
 export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(
     null
@@ -89,6 +73,9 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   useEffect(() => {
+    if (isAuthLoading) {
+      return;
+    }
     if (isAuthenticated) {
       fetchWorkspaces();
     } else {
@@ -97,7 +84,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsLoading(false);
       localStorage.removeItem('active_workspace_id');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isAuthLoading]);
 
   const selectWorkspace = async (id: string) => {
     const target = workspaces.find((w) => w.id === id);
@@ -150,10 +137,3 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useWorkspace = () => {
-  const context = useContext(WorkspaceContext);
-  if (context === undefined) {
-    throw new Error('useWorkspace must be used within a WorkspaceProvider');
-  }
-  return context;
-};

@@ -1,13 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-
-export type Theme = 'light' | 'dark' | 'system';
-
-interface ThemeContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+import React, { useState, useEffect } from 'react';
+import { ThemeContext } from './theme-context';
+import type { Theme } from './theme-context';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -42,10 +35,3 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
