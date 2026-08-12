@@ -13,11 +13,13 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import type { Task, RecurrenceRule } from '../../hooks/useTasks';
+import type { WorkspaceTag } from '../../hooks/useWorkspaceTags';
 
 interface TaskCardProps {
   task: Task;
   rule: RecurrenceRule | undefined;
   activeTab: 'all' | 'recurrence' | 'trash';
+  workspaceTags: WorkspaceTag[];
   onToggleComplete: (task: Task) => void;
   onConfigureRecurrence: (task: Task) => void;
   onEdit: (task: Task) => void;
@@ -33,6 +35,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   task,
   rule,
   activeTab,
+  workspaceTags,
   onToggleComplete,
   onConfigureRecurrence,
   onEdit,
@@ -87,25 +90,42 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     <div
       style={{
         padding: '20px 24px',
-        border: '1px solid var(--border-color)',
+        border:
+          task.status === 'Completed'
+            ? '1px solid rgba(16, 185, 129, 0.2)'
+            : '1px solid var(--border-color)',
         borderRadius: 'var(--radius-md)',
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         gap: '24px',
-        backgroundColor: 'var(--bg-app)',
+        backgroundColor:
+          task.status === 'Completed'
+            ? 'rgba(16, 185, 129, 0.02)'
+            : 'var(--bg-app)',
         boxShadow: 'var(--shadow-sm)',
-        opacity: task.status === 'SoftDeleted' ? 0.75 : 1,
+        opacity:
+          task.status === 'SoftDeleted'
+            ? 0.75
+            : task.status === 'Completed'
+              ? 0.8
+              : 1,
         transition:
           'border-color var(--transition-fast), box-shadow var(--transition-fast)',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'var(--color-primary)';
+        e.currentTarget.style.borderColor =
+          task.status === 'Completed'
+            ? 'var(--color-success)'
+            : 'var(--color-primary)';
         e.currentTarget.style.boxShadow = 'var(--shadow-md)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border-color)';
+        e.currentTarget.style.borderColor =
+          task.status === 'Completed'
+            ? 'rgba(16, 185, 129, 0.2)'
+            : 'var(--border-color)';
         e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
       }}
     >
@@ -230,6 +250,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                textDecoration:
+                  task.status === 'Completed' ? 'line-through' : 'none',
+                opacity: task.status === 'Completed' ? 0.6 : 1,
               }}
             >
               {task.description}
@@ -282,23 +305,46 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             {/* Tags list */}
             {task.tags && task.tags.length > 0 && (
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {task.tags.map((t) => (
-                  <span
-                    key={t}
-                    className="badge badge-muted"
-                    style={{
-                      fontSize: '11px',
-                      padding: '2px 8px',
-                      borderRadius: '6px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    <TagIcon size={10} />
-                    {t}
-                  </span>
-                ))}
+                {task.tags.map((t) => {
+                  const wt = workspaceTags.find((w) => w.name === t);
+                  const color = wt?.color ?? null;
+                  return color ? (
+                    <span
+                      key={t}
+                      style={{
+                        fontSize: '11px',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        backgroundColor: `${color}26`,
+                        border: `1px solid ${color}66`,
+                        color: color,
+                        fontWeight: 500,
+                      }}
+                    >
+                      <TagIcon size={10} />
+                      {t}
+                    </span>
+                  ) : (
+                    <span
+                      key={t}
+                      className="badge badge-muted"
+                      style={{
+                        fontSize: '11px',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <TagIcon size={10} />
+                      {t}
+                    </span>
+                  );
+                })}
               </div>
             )}
           </div>

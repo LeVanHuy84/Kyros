@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWorkspace } from '../context/WorkspaceContext';
-import { useAuth } from '../context/AuthContext';
+import { useWorkspace } from '../hooks/useWorkspace';
+import { useAuth } from '../hooks/useAuth';
 import { Briefcase, ChevronRight, Plus } from 'lucide-react';
 
 const Workspaces: React.FC = () => {

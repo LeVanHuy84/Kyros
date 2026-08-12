@@ -1,24 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import apiClient from '../services/api-client';
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  roles: string[];
-}
-
-interface AuthContextType {
-  token: string | null;
-  user: User | null;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isLoading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from './auth-context';
+import type { User } from './auth-context';
 
 // Helper to decode JWT claims in pure client-side JS
 const decodeJwt = (token: string) => {
@@ -133,10 +116,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};

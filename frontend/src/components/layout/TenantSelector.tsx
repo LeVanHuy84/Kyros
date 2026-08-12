@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Plus } from 'lucide-react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '../../hooks/useWorkspace';
 
 export const TenantSelector: React.FC = () => {
   const { workspaces, activeWorkspace, selectWorkspace, createWorkspace } =

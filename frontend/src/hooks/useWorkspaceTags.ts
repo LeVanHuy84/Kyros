@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useWorkspace } from '../context/WorkspaceContext';
+import { useWorkspace } from './useWorkspace';
 import apiClient from '../services/api-client';
 
 export interface WorkspaceTag {

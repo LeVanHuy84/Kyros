@@ -6,7 +6,7 @@ import {
   BellRing,
   Briefcase,
 } from 'lucide-react';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../hooks/useTheme';
 
 const Settings: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<

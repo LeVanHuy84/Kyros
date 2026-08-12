@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useWorkspace } from '../context/WorkspaceContext';
+import { useWorkspace } from './useWorkspace';
 import { useWorkspaceTags } from './useWorkspaceTags';
 import apiClient from '../services/api-client';
 
@@ -64,7 +64,7 @@ export const useTasks = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string>('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('Active');
   const [dueDateFrom, setDueDateFrom] = useState<string>('');
   const [dueDateTo, setDueDateTo] = useState<string>('');
 
@@ -100,7 +100,12 @@ export const useTasks = () => {
       }
 
       const response = await apiClient.get(endpoint, { params });
-      const contentList: Task[] = response.data.content || [];
+      const contentList: Task[] = (response.data.content || []).map(
+        (t: any) => ({
+          ...t,
+          status: t.lifecycleStatus,
+        })
+      );
       setTasks(contentList);
       setTotalPages(response.data.totalPages || 0);
 
@@ -394,6 +399,7 @@ export const useTasks = () => {
     selectedTag,
     selectedStatus,
     allTags,
+    workspaceTags,
     dueDateFrom,
     dueDateTo,
     setActiveTab,

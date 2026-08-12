@@ -9,7 +9,7 @@ import {
   RefreshCw,
   Tags,
 } from 'lucide-react';
-import { useWorkspace } from '../context/WorkspaceContext';
+import { useWorkspace } from '../hooks/useWorkspace';
 import { useTasks } from '../hooks/useTasks';
 import type { Task } from '../hooks/useTasks';
 
@@ -30,6 +30,7 @@ const TaskManagement: React.FC = () => {
     tasks,
     recurrenceRules,
     metrics,
+    workspaceTags,
     isLoading,
     isSaving,
     error,
@@ -321,6 +322,7 @@ const TaskManagement: React.FC = () => {
                 task={task}
                 rule={recurrenceRules[task.taskId]}
                 activeTab={activeTab}
+                workspaceTags={workspaceTags}
                 onToggleComplete={toggleComplete}
                 onConfigureRecurrence={(t) => {
                   setSelectedTask(t);

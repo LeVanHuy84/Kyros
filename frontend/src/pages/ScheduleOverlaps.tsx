@@ -1,704 +1,630 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Calendar as CalendarIcon,
-  AlertTriangle,
-  CheckCircle,
   Plus,
-  ShieldAlert,
-  Clock,
-  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle,
 } from 'lucide-react';
+import apiClient from '../services/api-client';
+import { useWorkspace } from '../hooks/useWorkspace';
+import { useAuth } from '../hooks/useAuth';
 
-interface CalendarEvent {
-  id: string;
-  title: string;
-  start: string; // HH:MM
-  end: string; // HH:MM
-  type: 'system' | 'user';
-}
+// Import subcomponents
+import type { CalendarEvent } from '../components/calendar/types';
+import { CalendarGrid } from '../components/calendar/CalendarGrid';
+import { EventDetailsDrawer } from '../components/calendar/EventDetailsDrawer';
+import { EventEditorModal } from '../components/calendar/EventEditorModal';
+import { ReminderToasts } from '../components/calendar/ReminderToasts';
 
-interface CollisionLog {
-  id: string;
-  time: string;
-  requestedEvent: string;
-  conflictingEvent: string;
-  status: 'blocked' | 'resolved';
-}
+export const ScheduleOverlaps: React.FC = () => {
+  const { activeWorkspace } = useWorkspace();
+  const { user } = useAuth();
 
-const ScheduleOverlaps: React.FC = () => {
-  // Preset calendar events
-  const [events, setEvents] = useState<CalendarEvent[]>([
+  // Calendar view states
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>('');
+
+  // Selected event & Drawer states
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null
+  );
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+
+  // Modal / Editor states
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [prefilledStart, setPrefilledStart] = useState<Date | null>(null);
+
+  // Active Reminder Toast Alert State
+  const [activeReminders, setActiveReminders] = useState<
     {
-      id: '1',
-      title: 'Q3 Planning Strategy Session',
-      start: '09:00',
-      end: '11:00',
-      type: 'system',
-    },
-    {
-      id: '2',
-      title: 'Executive Sync Bounded Block',
-      start: '11:30',
-      end: '13:00',
-      type: 'system',
-    },
-    {
-      id: '3',
-      title: 'Team Architecture Standup',
-      start: '14:00',
-      end: '15:30',
-      type: 'system',
-    },
-    {
-      id: '4',
-      title: 'Technical Stack Refactoring',
-      start: '16:00',
-      end: '17:30',
-      type: 'user',
-    },
-  ]);
+      eventId: string;
+      eventTitle: string;
+      reminderId: string;
+      leadTime: number;
+    }[]
+  >([]);
 
-  // Intercepted collision log
-  const [collisionLogs, setCollisionLogs] = useState<CollisionLog[]>([
-    {
-      id: 'c1',
-      time: '14:02',
-      requestedEvent: 'Client Pitch Meeting',
-      conflictingEvent: 'Team Architecture Standup',
-      status: 'blocked',
-    },
-    {
-      id: 'c2',
-      time: '09:30',
-      requestedEvent: 'Urgent Ops Sync',
-      conflictingEvent: 'Q3 Planning Strategy Session',
-      status: 'blocked',
-    },
-  ]);
+  // Fetch events for current view
+  const fetchEvents = useCallback(async () => {
+    if (!activeWorkspace) return [];
+    setIsLoading(true);
+    setErrorMsg('');
 
-  // Form states
-  const [newEventTitle, setNewEventTitle] = useState('');
-  const [newEventStart, setNewEventStart] = useState('10:00');
-  const [newEventEnd, setNewEventEnd] = useState('11:30');
-  const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState('');
-
-  // Convert HH:MM to total minutes
-  const timeToMinutes = (timeStr: string): number => {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * 60 + minutes;
-  };
-
-  // Check if two intervals overlap
-  const isOverlapping = (
-    start1: string,
-    end1: string,
-    start2: string,
-    end2: string
-  ): boolean => {
-    const s1 = timeToMinutes(start1);
-    const e1 = timeToMinutes(end1);
-    const s2 = timeToMinutes(start2);
-    const e2 = timeToMinutes(end2);
-    return s1 < e2 && s2 < e1;
-  };
-
-  const handleScheduleTest = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    setFormSuccess('');
-
-    if (!newEventTitle.trim()) {
-      setFormError('Please enter a valid event name.');
-      return;
-    }
-
-    if (timeToMinutes(newEventStart) >= timeToMinutes(newEventEnd)) {
-      setFormError('End time must be after the start time.');
-      return;
-    }
-
-    // Check overlaps
-    const collision = events.find((event) =>
-      isOverlapping(newEventStart, newEventEnd, event.start, event.end)
-    );
-
-    if (collision) {
-      // Log blocked event
-      const logEntry: CollisionLog = {
-        id: 'c_' + Date.now(),
-        time: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        }),
-        requestedEvent: newEventTitle,
-        conflictingEvent: collision.title,
-        status: 'blocked',
-      };
-      setCollisionLogs((prev) => [logEntry, ...prev]);
-      setFormError(
-        `Collision Prevented! Unable to schedule "${newEventTitle}" because it conflicts with "${collision.title}" (${collision.start} - ${collision.end}).`
+    try {
+      const start = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() - 1,
+        1
       );
+      const end = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 2,
+        0
+      );
+
+      const response = await apiClient.get(
+        `/v1/workspaces/${activeWorkspace.id}/calendar/events`,
+        {
+          params: {
+            startTime: start.toISOString(),
+            endTime: end.toISOString(),
+          },
+        }
+      );
+
+      const activeEvents = (response.data || []).filter(
+        (e: CalendarEvent) => e.status !== 'Deleted'
+      );
+      setEvents(activeEvents);
+      return activeEvents;
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.friendlyMessage || 'Failed to fetch calendar events.');
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeWorkspace, currentDate]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  // Periodic polling for active triggered reminders
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date().getTime();
+      const triggeredList: typeof activeReminders = [];
+
+      events.forEach((event) => {
+        event.reminders.forEach((reminder) => {
+          if (reminder.status === 'Scheduled') {
+            const triggerTime = new Date(reminder.triggerTime).getTime();
+            if (triggerTime <= now) {
+              triggeredList.push({
+                eventId: event.eventId,
+                eventTitle: event.title,
+                reminderId: reminder.reminderId,
+                leadTime: reminder.leadTimeMinutes,
+              });
+            }
+          }
+        });
+      });
+
+      if (triggeredList.length > 0) {
+        setActiveReminders((prev) => {
+          const ids = prev.map((r) => r.reminderId);
+          const newAlerts = triggeredList.filter(
+            (r) => !ids.includes(r.reminderId)
+          );
+          return [...prev, ...newAlerts];
+        });
+      }
+    };
+
+    const interval = setInterval(checkReminders, 5000);
+    return () => clearInterval(interval);
+  }, [events]);
+
+  // Check event overlaps locally for UI highlighting
+  const checkConflicts = useCallback(
+    (event: CalendarEvent) => {
+      const start = new Date(event.startTime).getTime();
+      const end = new Date(event.endTime).getTime();
+
+      return events.filter((e) => {
+        if (e.eventId === event.eventId) return false;
+        const eStart = new Date(e.startTime).getTime();
+        const eEnd = new Date(e.endTime).getTime();
+        return start < eEnd && eStart < end;
+      });
+    },
+    [events]
+  );
+
+  // Navigate calendar dates
+  const handlePrev = () => {
+    const nextDate = new Date(currentDate);
+    if (viewMode === 'month') {
+      nextDate.setMonth(currentDate.getMonth() - 1);
+    } else if (viewMode === 'week') {
+      nextDate.setDate(currentDate.getDate() - 7);
     } else {
-      // Add scheduled event
-      const addedEvent: CalendarEvent = {
-        id: 'e_' + Date.now(),
-        title: newEventTitle,
-        start: newEventStart,
-        end: newEventEnd,
-        type: 'user',
-      };
-      setEvents((prev) =>
-        [...prev, addedEvent].sort(
-          (a, b) => timeToMinutes(a.start) - timeToMinutes(b.start)
-        )
+      nextDate.setDate(currentDate.getDate() - 1);
+    }
+    setCurrentDate(nextDate);
+  };
+
+  const handleNext = () => {
+    const nextDate = new Date(currentDate);
+    if (viewMode === 'month') {
+      nextDate.setMonth(currentDate.getMonth() + 1);
+    } else if (viewMode === 'week') {
+      nextDate.setDate(currentDate.getDate() + 7);
+    } else {
+      nextDate.setDate(currentDate.getDate() + 1);
+    }
+    setCurrentDate(nextDate);
+  };
+
+  const handleToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  // Open creation modal
+  const openCreateModal = (prefilledDate?: Date) => {
+    setIsEditing(false);
+    setPrefilledStart(prefilledDate || null);
+    setIsModalOpen(true);
+  };
+
+  // Open editor modal filled with existing data
+  const openEditModal = (_event: CalendarEvent) => {
+    setIsEditing(true);
+    setIsModalOpen(true);
+  };
+
+  // Save new / edited event details
+  const handleSaveEvent = async (
+    title: string,
+    desc: string,
+    taskId: string,
+    start: string,
+    end: string,
+    reminders: number[]
+  ) => {
+    if (!activeWorkspace) return;
+
+    const startInstant = new Date(start).toISOString();
+    const endInstant = new Date(end).toISOString();
+
+    if (isEditing && selectedEvent) {
+      // Edit title & description metadata
+      await apiClient.patch(
+        `/v1/workspaces/${activeWorkspace.id}/calendar/events/${selectedEvent.eventId}`,
+        { title, description: desc }
       );
-      setFormSuccess(
-        `Successfully Scheduled! "${newEventTitle}" has been booked without any collisions.`
+
+      // Also check if time range has changed. If so, reschedule.
+      if (
+        new Date(selectedEvent.startTime).getTime() !==
+          new Date(start).getTime() ||
+        new Date(selectedEvent.endTime).getTime() !== new Date(end).getTime()
+      ) {
+        await apiClient.post(
+          `/v1/workspaces/${activeWorkspace.id}/calendar/events/${selectedEvent.eventId}/reschedule`,
+          { startTime: startInstant, endTime: endInstant }
+        );
+      }
+    } else {
+      // Create new calendar event
+      await apiClient.post(
+        `/v1/workspaces/${activeWorkspace.id}/calendar/events`,
+        {
+          userId: user?.id || '00000000-0000-0000-0000-000000000000',
+          taskId: taskId || null,
+          title,
+          description: desc,
+          startTime: startInstant,
+          endTime: endInstant,
+          reminderOffsetsMinutes: reminders,
+        }
       );
-      setNewEventTitle('');
+    }
+
+    setIsModalOpen(false);
+    const updatedEvents = await fetchEvents();
+    if (isEditing && selectedEvent) {
+      const updated = updatedEvents.find(
+        (e: CalendarEvent) => e.eventId === selectedEvent.eventId
+      );
+      if (updated) setSelectedEvent(updated);
     }
   };
 
-  const handleDeleteEvent = (id: string) => {
-    setEvents((prev) => prev.filter((ev) => ev.id !== id));
+  // Delete event
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!activeWorkspace) return;
+    if (!window.confirm('Are you sure you want to cancel this event?')) return;
+
+    try {
+      await apiClient.delete(
+        `/v1/workspaces/${activeWorkspace.id}/calendar/events/${eventId}`
+      );
+      setIsDrawerOpen(false);
+      setSelectedEvent(null);
+      fetchEvents();
+    } catch (err: any) {
+      alert(err.friendlyMessage || 'Failed to delete event.');
+    }
   };
 
-  const handleClearLogs = () => {
-    setCollisionLogs([]);
+  // Reschedule time inside Drawer
+  const handleReschedule = async (
+    eventId: string,
+    start: string,
+    end: string
+  ) => {
+    if (!activeWorkspace) return;
+    await apiClient.post(
+      `/v1/workspaces/${activeWorkspace.id}/calendar/events/${eventId}/reschedule`,
+      {
+        startTime: new Date(start).toISOString(),
+        endTime: new Date(end).toISOString(),
+      }
+    );
+    const updatedEvents = await fetchEvents();
+    const updated = updatedEvents.find(
+      (e: CalendarEvent) => e.eventId === eventId
+    );
+    if (updated) setSelectedEvent(updated);
+  };
+
+  // Add a reminder offset in details drawer
+  const handleAddReminder = async (offsetMinutes: number) => {
+    if (!activeWorkspace || !selectedEvent) return;
+    await apiClient.post(
+      `/v1/workspaces/${activeWorkspace.id}/calendar/events/${selectedEvent.eventId}/reminders`,
+      null,
+      {
+        params: { leadTimeMinutes: offsetMinutes },
+      }
+    );
+    const updatedEvents = await fetchEvents();
+    const updated = updatedEvents.find(
+      (e: CalendarEvent) => e.eventId === selectedEvent.eventId
+    );
+    if (updated) setSelectedEvent(updated);
+  };
+
+  // Remove a reminder in details drawer
+  const handleRemoveReminder = async (reminderId: string) => {
+    if (!activeWorkspace || !selectedEvent) return;
+    await apiClient.delete(
+      `/v1/workspaces/${activeWorkspace.id}/calendar/events/${selectedEvent.eventId}/reminders/${reminderId}`
+    );
+    const updatedEvents = await fetchEvents();
+    const updated = updatedEvents.find(
+      (e: CalendarEvent) => e.eventId === selectedEvent.eventId
+    );
+    if (updated) setSelectedEvent(updated);
+  };
+
+  // Snooze active reminder from Toast
+  const handleSnoozeReminder = async (
+    eventId: string,
+    reminderId: string,
+    minutes: number
+  ) => {
+    if (!activeWorkspace) return;
+    await apiClient.post(
+      `/v1/workspaces/${activeWorkspace.id}/calendar/events/${eventId}/reminders/${reminderId}/snooze`,
+      null,
+      {
+        params: { snoozeMinutes: minutes },
+      }
+    );
+    setActiveReminders((prev) =>
+      prev.filter((r) => r.reminderId !== reminderId)
+    );
+    fetchEvents();
+  };
+
+  // Dismiss active reminder from Toast
+  const handleDismissReminder = async (eventId: string, reminderId: string) => {
+    if (!activeWorkspace) return;
+    await apiClient.post(
+      `/v1/workspaces/${activeWorkspace.id}/calendar/events/${eventId}/reminders/${reminderId}/dismiss`
+    );
+    setActiveReminders((prev) =>
+      prev.filter((r) => r.reminderId !== reminderId)
+    );
+    fetchEvents();
+  };
+
+  // Open Drawer with detailed view
+  const openEventDrawer = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setIsDrawerOpen(true);
+  };
+
+  const formatDateLabel = () => {
+    if (viewMode === 'month') {
+      return currentDate.toLocaleString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      });
+    } else if (viewMode === 'week') {
+      const getWeekDays = (date: Date) => {
+        const current = new Date(date);
+        const day = current.getDay();
+        const diff = current.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(current.setDate(diff));
+
+        const weekDays = [];
+        for (let i = 0; i < 7; i++) {
+          weekDays.push(new Date(monday.getTime() + i * 24 * 60 * 60 * 1000));
+        }
+        return weekDays;
+      };
+      const days = getWeekDays(currentDate);
+      const start = days[0].toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+      const end = days[6].toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      return `${start} - ${end}`;
+    } else {
+      return currentDate.toLocaleString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-      {/* Overview Block */}
-      <div className="card interactive-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <CalendarIcon
-            size={24}
-            style={{ color: 'var(--color-primary)' }}
-            aria-hidden="true"
-          />
-          <h3 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
-            Collision Detection System
-          </h3>
-        </div>
-        <p
-          style={{
-            color: 'var(--text-muted)',
-            fontSize: '15px',
-            margin: 0,
-            lineHeight: '1.6',
-          }}
-        >
-          Kyros automatically monitors timelines using a strict bounded-interval
-          model. If an incoming event overlaps with an existing block assigned
-          within the same tenant context, the scheduler intercepts the operation
-          to protect operational stability.
-        </p>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px',
+        position: 'relative',
+      }}
+    >
+      {/* Toast Reminder Notifications */}
+      <ReminderToasts
+        activeReminders={activeReminders}
+        onSnooze={handleSnoozeReminder}
+        onDismiss={handleDismissReminder}
+      />
 
-        <div
-          style={{
-            backgroundColor: 'rgba(16, 185, 129, 0.06)',
-            border: '1px solid rgba(16, 185, 129, 0.15)',
-            borderRadius: 'var(--radius-md)',
-            padding: '18px 24px',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '14px',
-            boxShadow: 'var(--shadow-sm)',
-          }}
-        >
-          <ShieldAlert
-            size={22}
-            style={{
-              color: 'var(--color-success)',
-              flexShrink: 0,
-              marginTop: '2px',
-            }}
-            aria-hidden="true"
-          />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span
-              style={{
-                fontSize: '15px',
-                color: 'var(--text-main)',
-                fontWeight: '600',
-              }}
-            >
-              Active Overlap Guard Enabled
-            </span>
-            <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-              Scheduler is enforcing interval boundaries. All conflicting
-              operations will be logged and blocked.
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Grid Section */}
+      {/* Main Calendar Header */}
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-          gap: '28px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px',
         }}
       >
-        {/* Left Column - Sandbox Input */}
-        <div className="card">
-          <h3
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div
             style={{
-              fontSize: '20px',
-              fontWeight: '600',
-              margin: 0,
-              borderBottom: '1px solid var(--border-color)',
-              paddingBottom: '12px',
+              width: '40px',
+              height: '40px',
+              backgroundColor:
+                'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.1)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            Schedule Tester Sandbox
-          </h3>
-          <p
-            style={{
-              color: 'var(--text-muted)',
-              fontSize: '15px',
-              margin: 0,
-              lineHeight: '1.5',
-            }}
-          >
-            Enter event details below to test the active overlap prevention
-            engine in real time.
-          </p>
-
-          <form
-            onSubmit={handleScheduleTest}
-            style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}
-          >
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-            >
-              <label
-                style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: 'var(--text-muted)',
-                }}
-              >
-                Event Title
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., Q3 Operations Briefing"
-                value={newEventTitle}
-                onChange={(e) => setNewEventTitle(e.target.value)}
-                style={{
-                  height: '48px',
-                  padding: '0 16px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
-                  backgroundColor: 'var(--bg-app)',
-                  color: 'var(--text-main)',
-                  outline: 'none',
-                  fontSize: '15px',
-                  transition: 'border-color var(--transition-fast)',
-                }}
-              />
-            </div>
-
-            <div
+            <CalendarIcon size={20} style={{ color: 'var(--color-primary)' }} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '22px', fontWeight: '700', margin: 0 }}>
+              Schedule & Planning Board
+            </h2>
+            <p
               style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '16px',
+                margin: 0,
+                fontSize: '14px',
+                color: 'var(--text-muted)',
               }}
             >
-              <div
-                style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-              >
-                <label
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  Start Time
-                </label>
-                <input
-                  type="time"
-                  value={newEventStart}
-                  onChange={(e) => setNewEventStart(e.target.value)}
-                  style={{
-                    height: '48px',
-                    padding: '0 16px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--bg-app)',
-                    color: 'var(--text-main)',
-                    outline: 'none',
-                    fontSize: '15px',
-                    cursor: 'pointer',
-                    transition: 'border-color var(--transition-fast)',
-                  }}
-                />
-              </div>
-
-              <div
-                style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-              >
-                <label
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  End Time
-                </label>
-                <input
-                  type="time"
-                  value={newEventEnd}
-                  onChange={(e) => setNewEventEnd(e.target.value)}
-                  style={{
-                    height: '48px',
-                    padding: '0 16px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--bg-app)',
-                    color: 'var(--text-main)',
-                    outline: 'none',
-                    fontSize: '15px',
-                    cursor: 'pointer',
-                    transition: 'border-color var(--transition-fast)',
-                  }}
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              style={{ height: '48px', fontSize: '15px', width: '100%' }}
-            >
-              <Plus size={18} />
-              <span>Test Event Scheduling</span>
-            </button>
-          </form>
-
-          {/* Feedback states */}
-          {formError && (
-            <div
-              style={{
-                backgroundColor: 'rgba(239, 68, 68, 0.06)',
-                border: '1px solid var(--color-danger)',
-                color: 'var(--color-danger)',
-                padding: '18px 20px',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '15px',
-                lineHeight: '1.5',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '12px',
-              }}
-            >
-              <AlertTriangle
-                size={20}
-                style={{ flexShrink: 0, marginTop: '2px' }}
-              />
-              <span>{formError}</span>
-            </div>
-          )}
-
-          {formSuccess && (
-            <div
-              style={{
-                backgroundColor: 'rgba(16, 185, 129, 0.06)',
-                border: '1px solid var(--color-success)',
-                color: 'var(--color-success)',
-                padding: '18px 20px',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '15px',
-                lineHeight: '1.5',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '12px',
-              }}
-            >
-              <CheckCircle
-                size={20}
-                style={{ flexShrink: 0, marginTop: '2px' }}
-              />
-              <span>{formSuccess}</span>
-            </div>
-          )}
+              Manage appointments, tasks, and system blocks within workspace
+              boundaries.
+            </p>
+          </div>
         </div>
 
-        {/* Right Column - Timeline List & Interceptions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          {/* Active Timeline */}
-          <div className="card">
-            <h3
-              style={{
-                fontSize: '20px',
-                fontWeight: '600',
-                margin: 0,
-                borderBottom: '1px solid var(--border-color)',
-                paddingBottom: '12px',
-              }}
-            >
-              Active Timeline Blocks
-            </h3>
+        <button onClick={() => openCreateModal()} className="btn btn-primary">
+          <Plus size={18} />
+          <span>New Event</span>
+        </button>
+      </div>
 
-            <div
+      {/* Navigation and View Selectors toolbar */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 18px',
+          flexWrap: 'wrap',
+          gap: '16px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={handleToday}
+            style={{
+              padding: '8px 14px',
+              backgroundColor: 'var(--bg-app)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-main)',
+              borderRadius: 'var(--radius-sm)',
+              fontWeight: '600',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            Today
+          </button>
+          <div
+            style={{
+              display: 'flex',
+              borderRadius: 'var(--radius-sm)',
+              overflow: 'hidden',
+            }}
+          >
+            <button
+              onClick={handlePrev}
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px',
-                maxHeight: '360px',
-                overflowY: 'auto',
+                padding: '8px 12px',
+                backgroundColor: 'var(--bg-app)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-main)',
+                cursor: 'pointer',
               }}
+              aria-label="Previous date range"
             >
-              {events.length === 0 ? (
-                <p
-                  style={{
-                    color: 'var(--text-muted)',
-                    fontSize: '15px',
-                    textAlign: 'center',
-                    padding: '24px 0',
-                  }}
-                >
-                  No scheduled blocks. Bounded timeline context is clear.
-                </p>
-              ) : (
-                events.map((event) => (
-                  <div
-                    key={event.id}
-                    style={{
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
-                      padding: '16px 20px',
-                      backgroundColor: 'var(--bg-app)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '16px',
-                      boxShadow: 'var(--shadow-sm)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '8px',
-                          height: '40px',
-                          borderRadius: '4px',
-                          backgroundColor:
-                            event.type === 'system'
-                              ? 'var(--color-primary)'
-                              : 'var(--color-secondary)',
-                        }}
-                      />
-                      <div>
-                        <h4
-                          style={{
-                            margin: 0,
-                            fontSize: '16px',
-                            fontWeight: '600',
-                            color: 'var(--text-main)',
-                          }}
-                        >
-                          {event.title}
-                        </h4>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            marginTop: '6px',
-                            color: 'var(--text-muted)',
-                            fontSize: '13px',
-                          }}
-                        >
-                          <Clock size={14} />
-                          <span>
-                            {event.start} - {event.end}
-                          </span>
-                          <span
-                            className={`badge ${event.type === 'system' ? 'badge-low' : 'badge-medium'}`}
-                            style={{ fontSize: '11px', marginLeft: '8px' }}
-                          >
-                            {event.type}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteEvent(event.id)}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'var(--text-muted)',
-                        cursor: 'pointer',
-                        padding: '8px',
-                        borderRadius: '50%',
-                        transition: 'background-color var(--transition-fast)',
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.backgroundColor =
-                          'rgba(239, 68, 68, 0.08)')
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.backgroundColor = 'transparent')
-                      }
-                      title="Remove event"
-                    >
-                      <Trash2
-                        size={18}
-                        style={{ color: 'var(--color-danger)' }}
-                      />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={handleNext}
+              style={{
+                padding: '8px 12px',
+                backgroundColor: 'var(--bg-app)',
+                border: '1px solid var(--border-color)',
+                borderLeft: 'none',
+                color: 'var(--text-main)',
+                cursor: 'pointer',
+              }}
+              aria-label="Next date range"
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
+          <span
+            style={{
+              fontSize: '18px',
+              fontWeight: '700',
+              marginLeft: '12px',
+              color: 'var(--text-main)',
+            }}
+          >
+            {formatDateLabel()}
+          </span>
+        </div>
 
-          {/* Interception Logs */}
-          <div className="card">
-            <div
+        {/* View mode switcher */}
+        <div
+          style={{
+            display: 'flex',
+            backgroundColor: 'var(--bg-app)',
+            border: '1px solid var(--border-color)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '2px',
+          }}
+        >
+          {(['month', 'week', 'day'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderBottom: '1px solid var(--border-color)',
-                paddingBottom: '12px',
+                padding: '6px 14px',
+                textTransform: 'capitalize',
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: viewMode === mode ? '600' : '500',
+                backgroundColor:
+                  viewMode === mode ? 'var(--bg-card)' : 'transparent',
+                color:
+                  viewMode === mode
+                    ? 'var(--color-primary)'
+                    : 'var(--text-muted)',
+                boxShadow: viewMode === mode ? 'var(--shadow-sm)' : 'none',
+                transition: 'all var(--transition-fast)',
               }}
             >
-              <h3 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
-                Interception Log
-              </h3>
-              {collisionLogs.length > 0 && (
-                <button
-                  onClick={handleClearLogs}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    color: 'var(--color-danger)',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Clear History
-                </button>
-              )}
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px',
-                maxHeight: '300px',
-                overflowY: 'auto',
-              }}
-            >
-              {collisionLogs.length === 0 ? (
-                <p
-                  style={{
-                    color: 'var(--text-muted)',
-                    fontSize: '15px',
-                    textAlign: 'center',
-                    padding: '16px 0',
-                  }}
-                >
-                  No recent schedule collisions detected.
-                </p>
-              ) : (
-                collisionLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    style={{
-                      border: '1px solid rgba(239, 68, 68, 0.15)',
-                      borderRadius: 'var(--radius-md)',
-                      padding: '16px 20px',
-                      backgroundColor: 'rgba(239, 68, 68, 0.02)',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '14px',
-                      boxShadow: 'var(--shadow-sm)',
-                    }}
-                  >
-                    <AlertTriangle
-                      size={18}
-                      style={{
-                        color: 'var(--color-danger)',
-                        marginTop: '2px',
-                        flexShrink: 0,
-                      }}
-                    />
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                        }}
-                      >
-                        <span
-                          className="badge badge-danger"
-                          style={{ fontSize: '11px' }}
-                        >
-                          BLOCKED
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            color: 'var(--text-muted)',
-                          }}
-                        >
-                          at {log.time}
-                        </span>
-                      </div>
-                      <p
-                        style={{
-                          margin: '4px 0 0 0',
-                          fontSize: '14px',
-                          color: 'var(--text-main)',
-                          lineHeight: '1.5',
-                        }}
-                      >
-                        Rejected scheduling request for{' '}
-                        <strong>"{log.requestedEvent}"</strong>.
-                      </p>
-                      <p
-                        style={{
-                          margin: '2px 0 0 0',
-                          fontSize: '13px',
-                          color: 'var(--text-muted)',
-                        }}
-                      >
-                        Reason: Overlaps with existing block{' '}
-                        <em>"{log.conflictingEvent}"</em>.
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+              {mode}
+            </button>
+          ))}
         </div>
       </div>
+
+      {errorMsg && (
+        <div
+          style={{
+            backgroundColor: 'rgba(239, 68, 68, 0.06)',
+            border: '1px solid var(--color-danger)',
+            color: 'var(--color-danger)',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '15px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}
+        >
+          <AlertTriangle size={18} />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {/* Calendar Grid */}
+      <CalendarGrid
+        currentDate={currentDate}
+        viewMode={viewMode}
+        events={events}
+        isLoading={isLoading}
+        onCellClick={openCreateModal}
+        onEventClick={openEventDrawer}
+        checkConflicts={checkConflicts}
+      />
+
+      {/* Right Details Drawer */}
+      <EventDetailsDrawer
+        selectedEvent={selectedEvent}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onDelete={handleDeleteEvent}
+        onReschedule={handleReschedule}
+        onAddReminder={handleAddReminder}
+        onRemoveReminder={handleRemoveReminder}
+        onEditClick={openEditModal}
+        conflictingEvents={selectedEvent ? checkConflicts(selectedEvent) : []}
+      />
+
+      {/* Event Editor Modal */}
+      <EventEditorModal
+        isOpen={isModalOpen}
+        isEditing={isEditing}
+        selectedEvent={selectedEvent}
+        prefilledStart={prefilledStart}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveEvent}
+      />
     </div>
   );
 };
