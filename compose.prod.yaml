@@ -15,6 +15,16 @@ services:
       SPRING_REDIS_URL: ${SPRING_REDIS_URL}
       # JWT Secrets, Groq API keys, etc. can be configured here via environment variables
       JWT_SECRET: ${JWT_SECRET}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:${PORT:-8080}/actuator/health/readiness || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     depends_on:
       postgres:
         condition: service_healthy
