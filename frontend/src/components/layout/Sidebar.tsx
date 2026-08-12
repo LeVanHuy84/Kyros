@@ -11,13 +11,20 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { TenantSelector } from './TenantSelector';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
   const { user, logout } = useAuth();
 
   const isSystemOperator = user?.roles.includes('SYSTEM_OPERATOR') || false;
 
+  const handleNavigate = () => onClose();
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${open ? 'open' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-brand">
           <img
@@ -35,27 +42,31 @@ export const Sidebar: React.FC = () => {
       <TenantSelector />
 
       <nav className="sidebar-nav" aria-label="Main Navigation">
-        <NavLink to="/agent" className="nav-link">
+        <NavLink to="/agent" className="nav-link" onClick={handleNavigate}>
           <Bot size={18} aria-hidden="true" />
           <span>Agent Coordinator</span>
         </NavLink>
 
-        <NavLink to="/todo" className="nav-link">
+        <NavLink to="/todo" className="nav-link" onClick={handleNavigate}>
           <ListTodo size={18} aria-hidden="true" />
           <span>Task Management</span>
         </NavLink>
 
-        <NavLink to="/calendar" className="nav-link">
+        <NavLink to="/calendar" className="nav-link" onClick={handleNavigate}>
           <Calendar size={18} aria-hidden="true" />
           <span>Schedule Overlaps</span>
         </NavLink>
 
-        <NavLink to="/integrations" className="nav-link">
+        <NavLink
+          to="/integrations"
+          className="nav-link"
+          onClick={handleNavigate}
+        >
           <Link2 size={18} aria-hidden="true" />
           <span>Integrations</span>
         </NavLink>
 
-        <NavLink to="/settings" className="nav-link">
+        <NavLink to="/settings" className="nav-link" onClick={handleNavigate}>
           <Settings size={18} aria-hidden="true" />
           <span>Settings</span>
         </NavLink>
@@ -70,11 +81,19 @@ export const Sidebar: React.FC = () => {
               }}
             />
             <div className="sidebar-section-title">Admin Console</div>
-            <NavLink to="/admin/users" className="nav-link">
+            <NavLink
+              to="/admin/users"
+              className="nav-link"
+              onClick={handleNavigate}
+            >
               <ShieldAlert size={18} aria-hidden="true" />
               <span>User Admin</span>
             </NavLink>
-            <NavLink to="/admin/workspaces" className="nav-link">
+            <NavLink
+              to="/admin/workspaces"
+              className="nav-link"
+              onClick={handleNavigate}
+            >
               <ShieldAlert size={18} aria-hidden="true" />
               <span>Workspace Admin</span>
             </NavLink>
@@ -89,7 +108,14 @@ export const Sidebar: React.FC = () => {
             {user?.email || 'jane.doe@example.com'}
           </span>
         </div>
-        <button onClick={logout} className="logout-btn" aria-label="Log out">
+        <button
+          onClick={() => {
+            logout();
+            onClose();
+          }}
+          className="logout-btn"
+          aria-label="Log out"
+        >
           Logout
         </button>
       </div>

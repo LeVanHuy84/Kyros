@@ -88,7 +88,7 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({
       }}
     >
       <div
-        className="card"
+        className="card tags-modal"
         style={{
           width: '100%',
           maxWidth: '640px',
@@ -164,7 +164,12 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({
         {/* Add new tag */}
         <form
           onSubmit={handleAdd}
-          style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}
+          style={{
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'flex-end',
+            flexWrap: 'wrap',
+          }}
         >
           <div
             style={{
@@ -267,7 +272,10 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({
             No workspace tags yet. Add your first tag above.
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table
+            className="tags-table"
+            style={{ width: '100%', borderCollapse: 'collapse' }}
+          >
             <thead>
               <tr
                 style={{

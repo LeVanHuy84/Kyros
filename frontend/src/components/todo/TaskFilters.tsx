@@ -34,6 +34,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
 }) => {
   return (
     <div
+      className="task-filters"
       style={{
         display: 'flex',
         gap: '16px',
@@ -42,7 +43,10 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
       }}
     >
       {/* Search Input */}
-      <div style={{ position: 'relative', flexGrow: 1, minWidth: '240px' }}>
+      <div
+        className="task-filters-search"
+        style={{ position: 'relative', flexGrow: 1, minWidth: '240px' }}
+      >
         <Search
           size={18}
           style={{
@@ -77,7 +81,10 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
       </div>
 
       {/* Filter Priority */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div
+        className="task-filters-field task-filters-field--inline"
+        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+      >
         <Filter size={15} style={{ color: 'var(--text-muted)' }} />
         <select
           value={selectedPriority}
@@ -101,30 +108,10 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
       </div>
 
       {/* Filter Status */}
-      <select
-        value={selectedStatus}
-        onChange={(e) => setSelectedStatus(e.target.value)}
-        style={{
-          padding: '11px 16px',
-          borderRadius: 'var(--radius-sm)',
-          border: '1px solid var(--border-color)',
-          backgroundColor: 'var(--bg-app)',
-          color: 'var(--text-main)',
-          fontSize: '15px',
-          outline: 'none',
-          cursor: 'pointer',
-        }}
-      >
-        <option value="">All Statuses</option>
-        <option value="Active">Active</option>
-        <option value="Completed">Completed</option>
-      </select>
-
-      {/* Filter Tag */}
-      {allTags.length > 0 && (
+      <div className="task-filters-field">
         <select
-          value={selectedTag}
-          onChange={(e) => setSelectedTag(e.target.value)}
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
           style={{
             padding: '11px 16px',
             borderRadius: 'var(--radius-sm)',
@@ -136,53 +123,90 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
             cursor: 'pointer',
           }}
         >
-          <option value="">All Tags</option>
-          {allTags.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
+          <option value="">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Completed">Completed</option>
         </select>
+      </div>
+
+      {/* Filter Tag */}
+      {allTags.length > 0 && (
+        <div className="task-filters-field">
+          <select
+            value={selectedTag}
+            onChange={(e) => setSelectedTag(e.target.value)}
+            style={{
+              padding: '11px 16px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-color)',
+              backgroundColor: 'var(--bg-app)',
+              color: 'var(--text-main)',
+              fontSize: '15px',
+              outline: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <option value="">All Tags</option>
+            {allTags.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
       )}
 
       {/* Filter Due Date Range */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div
+        className="task-filters-date task-filters-field"
+        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+      >
         <CalendarRange size={15} style={{ color: 'var(--text-muted)' }} />
-        <input
-          type="date"
-          value={dueDateFrom}
-          onChange={(e) => setDueDateFrom(e.target.value)}
-          title="Due date from"
-          style={{
-            padding: '10px 12px',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border-color)',
-            backgroundColor: 'var(--bg-app)',
-            color: 'var(--text-main)',
-            fontSize: '15px',
-            outline: 'none',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-sans)',
-          }}
-        />
-        <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>–</span>
-        <input
-          type="date"
-          value={dueDateTo}
-          onChange={(e) => setDueDateTo(e.target.value)}
-          title="Due date to"
-          style={{
-            padding: '10px 12px',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border-color)',
-            backgroundColor: 'var(--bg-app)',
-            color: 'var(--text-main)',
-            fontSize: '15px',
-            outline: 'none',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-sans)',
-          }}
-        />
+        <div
+          className="task-filters-date-range"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <input
+            type="date"
+            value={dueDateFrom}
+            onChange={(e) => setDueDateFrom(e.target.value)}
+            title="Due date from"
+            style={{
+              padding: '10px 12px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-color)',
+              backgroundColor: 'var(--bg-app)',
+              color: 'var(--text-main)',
+              fontSize: '15px',
+              outline: 'none',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-sans)',
+            }}
+          />
+          <span
+            className="task-filters-date-separator"
+            style={{ color: 'var(--text-muted)', fontSize: '14px' }}
+          >
+            –
+          </span>
+          <input
+            type="date"
+            value={dueDateTo}
+            onChange={(e) => setDueDateTo(e.target.value)}
+            title="Due date to"
+            style={{
+              padding: '10px 12px',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-color)',
+              backgroundColor: 'var(--bg-app)',
+              color: 'var(--text-main)',
+              fontSize: '15px',
+              outline: 'none',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-sans)',
+            }}
+          />
+        </div>
       </div>
     </div>
   );

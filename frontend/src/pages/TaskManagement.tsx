@@ -195,6 +195,7 @@ const TaskManagement: React.FC = () => {
         <div
           style={{
             display: 'flex',
+            flexWrap: 'wrap',
             borderBottom: '1px solid var(--border-color)',
             gap: '24px',
             paddingBottom: '2px',

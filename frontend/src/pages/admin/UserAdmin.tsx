@@ -31,6 +31,7 @@ const UserAdmin: React.FC = () => {
         </p>
 
         <div
+          className="table-scroll"
           style={{
             border: '1px solid var(--border-color)',
             borderRadius: 'var(--radius-md)',

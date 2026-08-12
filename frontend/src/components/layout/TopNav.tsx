@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
+  Menu,
   Bell,
   History,
   PlayCircle,
@@ -11,7 +12,11 @@ import {
 import { useWorkspace } from '../../hooks/useWorkspace';
 import { useTheme } from '../../hooks/useTheme';
 
-export const TopNav: React.FC = () => {
+interface TopNavProps {
+  onToggleSidebar: () => void;
+}
+
+export const TopNav: React.FC<TopNavProps> = ({ onToggleSidebar }) => {
   const { activeWorkspace } = useWorkspace();
   const location = useLocation();
   const { theme, setTheme } = useTheme();
@@ -89,6 +94,14 @@ export const TopNav: React.FC = () => {
 
   return (
     <header className="header-bar">
+      <button
+        className="hamburger-btn"
+        onClick={onToggleSidebar}
+        aria-label="Open navigation menu"
+      >
+        <Menu size={20} />
+      </button>
+
       <div className="header-title-section">
         <h2>{meta.title}</h2>
         <p>{meta.description}</p>

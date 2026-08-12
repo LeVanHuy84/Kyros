@@ -12,6 +12,7 @@ import {
   Trash2,
   RotateCcw,
 } from 'lucide-react';
+
 import type { Task, RecurrenceRule } from '../../hooks/useTasks';
 import type { WorkspaceTag } from '../../hooks/useWorkspaceTags';
 
@@ -20,11 +21,13 @@ interface TaskCardProps {
   rule: RecurrenceRule | undefined;
   activeTab: 'all' | 'recurrence' | 'trash';
   workspaceTags: WorkspaceTag[];
+
   onToggleComplete: (task: Task) => void;
   onConfigureRecurrence: (task: Task) => void;
   onEdit: (task: Task) => void;
   onSoftDelete: (taskId: string) => void;
   onRecover: (taskId: string) => void;
+
   onRecurrenceAction: (
     taskId: string,
     action: 'pause' | 'resume' | 'stop'
@@ -45,18 +48,21 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 }) => {
   const [now, setNow] = useState<number>(Date.now());
 
-  // Set interval for trash item timer
   useEffect(() => {
     if (task.status === 'SoftDeleted') {
-      const interval = setInterval(() => setNow(Date.now()), 15000);
+      const interval = setInterval(() => {
+        setNow(Date.now());
+      }, 15000);
+
       return () => clearInterval(interval);
     }
   }, [task.status]);
 
-  // Helper: Format Dates cleanly
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '';
+
     const date = new Date(dateStr);
+
     return date.toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
@@ -64,21 +70,24 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     });
   };
 
-  // Helper: Calculate Remaining Soft Delete Window (2 hours max)
   const getRemainingTrashTime = (deletedAtStr: string | null) => {
     if (!deletedAtStr) return '';
+
     const deletedTime = new Date(deletedAtStr).getTime();
-    const expiryTime = deletedTime + 7200000; // 2 hours
+    const expiryTime = deletedTime + 7200000;
     const diff = expiryTime - now;
 
     if (diff <= 0) return 'Purging...';
 
     const mins = Math.floor(diff / 60000);
+
     if (mins > 60) {
       const hrs = Math.floor(mins / 60);
       const remainingMins = mins % 60;
+
       return `${hrs}h ${remainingMins}m left`;
     }
+
     return `${mins}m left`;
   };
 
@@ -88,6 +97,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
   return (
     <div
+      className="task-card"
+      data-task-tab={activeTab}
       style={{
         padding: '20px 24px',
         border:
@@ -119,6 +130,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           task.status === 'Completed'
             ? 'var(--color-success)'
             : 'var(--color-primary)';
+
         e.currentTarget.style.boxShadow = 'var(--shadow-md)';
       }}
       onMouseLeave={(e) => {
@@ -126,24 +138,34 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           task.status === 'Completed'
             ? 'rgba(16, 185, 129, 0.2)'
             : 'var(--border-color)';
+
         e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
       }}
     >
-      {/* Left: Task Content details */}
+      {/* ============================================================
+          Main task content
+          Desktop: horizontal
+          Mobile: checkbox + content
+          ============================================================ */}
       <div
+        className="task-card-main"
         style={{
           display: 'flex',
-          gap: '16px',
           alignItems: 'flex-start',
-          flexGrow: 1,
+          gap: '16px',
+          flex: '1 1 auto',
           minWidth: 0,
         }}
       >
-        {/* Completion Checkbox */}
+        {/* Completion checkbox */}
         {task.status !== 'SoftDeleted' && (
           <button
             onClick={() => onToggleComplete(task)}
+            aria-label={
+              task.status === 'Completed' ? 'Mark active' : 'Complete task'
+            }
             style={{
+              flex: '0 0 auto',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
@@ -155,9 +177,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               marginTop: '2px',
               transition: 'color var(--transition-fast)',
             }}
-            aria-label={
-              task.status === 'Completed' ? 'Mark active' : 'Complete task'
-            }
           >
             <CheckCircle2
               size={22}
@@ -170,29 +189,37 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </button>
         )}
 
-        {/* Task texts */}
+        {/* ============================================================
+            Task body
+            ============================================================ */}
         <div
+          className="task-card-texts"
           style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
+            flex: '1 1 auto',
             minWidth: 0,
-            width: '100%',
           }}
         >
-          {/* Title & Priority */}
+          {/* Title + priority + recurrence */}
           <div
+            className="task-card-title-row"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
               flexWrap: 'wrap',
+              minWidth: 0,
             }}
           >
             <span
+              className="task-card-title"
               style={{
+                minWidth: 0,
                 fontWeight: '600',
                 fontSize: '16px',
+                lineHeight: '1.4',
                 color: 'var(--text-main)',
                 textDecoration:
                   task.status === 'Completed' ? 'line-through' : 'none',
@@ -210,11 +237,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     ? 'badge-medium'
                     : 'badge-low'
               }`}
+              style={{
+                flex: '0 0 auto',
+                whiteSpace: 'nowrap',
+              }}
             >
               {task.priority}
             </span>
 
-            {/* Recurrence Rule Indicator */}
             {rule && rule.recurrenceStatus && (
               <span
                 className={`badge ${
@@ -226,6 +256,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
+                  flex: '0 0 auto',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 <RefreshCw
@@ -242,6 +274,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           {/* Description */}
           {task.description && (
             <p
+              className="task-card-description"
               style={{
                 margin: 0,
                 fontSize: '14px',
@@ -259,33 +292,39 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             </p>
           )}
 
-          {/* Bottom Line: Due Date & Tags */}
+          {/* ============================================================
+              Metadata
+              ============================================================ */}
           <div
+            className="task-card-meta"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '16px',
               flexWrap: 'wrap',
               marginTop: '4px',
+              minWidth: 0,
             }}
           >
-            {/* Due Date */}
             {task.dueDate && (
               <div
+                className="task-card-due-date"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
                   fontSize: '13px',
                   color: 'var(--text-muted)',
+                  flex: '0 0 auto',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 <Calendar size={14} />
+
                 <span>{formatDate(task.dueDate)}</span>
               </div>
             )}
 
-            {/* Soft Delete Countdown */}
             {task.status === 'SoftDeleted' && (
               <div
                 style={{
@@ -295,39 +334,55 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                   fontSize: '13px',
                   color: 'var(--color-danger)',
                   fontWeight: '600',
+                  flex: '0 0 auto',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 <Clock size={14} />
+
                 <span>{getRemainingTrashTime(task.deletedAt)}</span>
               </div>
             )}
 
-            {/* Tags list */}
             {task.tags && task.tags.length > 0 && (
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '6px',
+                  flexWrap: 'wrap',
+                  minWidth: 0,
+                }}
+              >
                 {task.tags.map((t) => {
                   const wt = workspaceTags.find((w) => w.name === t);
+
                   const color = wt?.color ?? null;
-                  return color ? (
-                    <span
-                      key={t}
-                      style={{
-                        fontSize: '11px',
-                        padding: '2px 8px',
-                        borderRadius: '6px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        backgroundColor: `${color}26`,
-                        border: `1px solid ${color}66`,
-                        color: color,
-                        fontWeight: 500,
-                      }}
-                    >
-                      <TagIcon size={10} />
-                      {t}
-                    </span>
-                  ) : (
+
+                  if (color) {
+                    return (
+                      <span
+                        key={t}
+                        style={{
+                          fontSize: '11px',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          backgroundColor: `${color}26`,
+                          border: `1px solid ${color}66`,
+                          color,
+                          fontWeight: 500,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        <TagIcon size={10} />
+                        {t}
+                      </span>
+                    );
+                  }
+
+                  return (
                     <span
                       key={t}
                       className="badge badge-muted"
@@ -335,9 +390,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                         fontSize: '11px',
                         padding: '2px 8px',
                         borderRadius: '6px',
-                        display: 'flex',
+                        display: 'inline-flex',
                         alignItems: 'center',
                         gap: '4px',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       <TagIcon size={10} />
@@ -351,22 +407,33 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </div>
 
-      {/* Right: Action Buttons based on Tab */}
+      {/* ================================================================
+          Actions
+          Desktop: right side
+          Mobile: own row
+          ================================================================ */}
       <div
+        className="task-card-actions"
+        data-task-tab={activeTab}
         style={{
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'flex-end',
           gap: '10px',
-          flexShrink: 0,
+          flex: '0 0 auto',
         }}
       >
-        {/* All Tasks Tab actions */}
+        {/* ALL */}
         {activeTab === 'all' && (
           <>
             <button
               onClick={() => onConfigureRecurrence(task)}
               className="btn btn-secondary"
-              style={{ padding: '8px 12px', fontSize: '13px' }}
+              style={{
+                padding: '8px 12px',
+                fontSize: '13px',
+                whiteSpace: 'nowrap',
+              }}
               title="Configure Recurrence Pattern"
             >
               <RefreshCw size={14} />
@@ -376,7 +443,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <button
               onClick={() => onEdit(task)}
               className="btn btn-secondary"
-              style={{ padding: '8px 12px', fontSize: '13px' }}
+              style={{
+                padding: '8px 12px',
+                fontSize: '13px',
+                whiteSpace: 'nowrap',
+              }}
               title="Edit Task"
             >
               <Edit3 size={14} />
@@ -385,7 +456,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <button
               onClick={() => onSoftDelete(task.taskId)}
               className="btn btn-danger"
-              style={{ padding: '8px 12px', fontSize: '13px' }}
+              style={{
+                padding: '8px 12px',
+                fontSize: '13px',
+                whiteSpace: 'nowrap',
+              }}
               title="Soft Delete"
             >
               <Trash2 size={14} />
@@ -393,19 +468,30 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </>
         )}
 
-        {/* Recurrence Template controls */}
+        {/* RECURRENCE */}
         {activeTab === 'recurrence' && rule && (
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              flexWrap: 'wrap',
+            }}
+          >
             {rule.recurrenceStatus === 'Active' && (
               <button
                 onClick={() => onRecurrenceAction(task.taskId, 'pause')}
                 className="btn btn-secondary"
-                style={{ padding: '8px 12px', fontSize: '13px' }}
+                style={{
+                  padding: '8px 12px',
+                  fontSize: '13px',
+                  whiteSpace: 'nowrap',
+                }}
               >
                 <Pause size={14} />
                 <span>Pause</span>
               </button>
             )}
+
             {rule.recurrenceStatus === 'Paused' && (
               <button
                 onClick={() => onRecurrenceAction(task.taskId, 'resume')}
@@ -414,17 +500,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                   padding: '8px 12px',
                   fontSize: '13px',
                   backgroundColor: 'var(--color-success)',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 <Play size={14} />
                 <span>Resume</span>
               </button>
             )}
+
             {rule.recurrenceStatus !== 'Stopped' && (
               <button
                 onClick={() => onRecurrenceAction(task.taskId, 'stop')}
                 className="btn btn-danger"
-                style={{ padding: '8px 12px', fontSize: '13px' }}
+                style={{
+                  padding: '8px 12px',
+                  fontSize: '13px',
+                  whiteSpace: 'nowrap',
+                }}
               >
                 <StopCircle size={14} />
                 <span>Stop</span>
@@ -433,12 +525,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         )}
 
-        {/* Trash Tab actions */}
+        {/* TRASH */}
         {activeTab === 'trash' && (
           <button
             onClick={() => onRecover(task.taskId)}
             className="btn btn-success"
-            style={{ padding: '8px 14px', fontSize: '13px' }}
+            style={{
+              padding: '8px 14px',
+              fontSize: '13px',
+              whiteSpace: 'nowrap',
+            }}
             disabled={isPurging}
           >
             <RotateCcw size={14} />

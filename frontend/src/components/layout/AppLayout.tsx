@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useWorkspace } from '../../hooks/useWorkspace';
@@ -8,6 +8,24 @@ import { TopNav } from './TopNav';
 export const AppLayout: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { activeWorkspace, isLoading: wsLoading } = useWorkspace();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const closeSidebar = () => setSidebarOpen(false);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeSidebar();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = sidebarOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
 
   if (authLoading) {
     return (
@@ -85,9 +103,16 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="app-container">
-      <Sidebar />
+      <Sidebar open={sidebarOpen} onClose={closeSidebar} />
+      {sidebarOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
+      )}
       <div className="main-content">
-        <TopNav />
+        <TopNav onToggleSidebar={() => setSidebarOpen(true)} />
         <main className="content-body fade-in-slide-up">
           <Outlet />
         </main>

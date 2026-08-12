@@ -185,6 +185,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
           {/* Row: Priority & Due Date */}
           <div
+            className="form-row-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',

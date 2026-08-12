@@ -53,7 +53,14 @@ const AgentCoordinator: React.FC = () => {
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '16px',
+            marginTop: '12px',
+          }}
+        >
           <button
             className="btn btn-primary"
             onClick={() =>

@@ -29,6 +29,7 @@ const Settings: React.FC = () => {
         <div
           style={{
             display: 'flex',
+            flexWrap: 'wrap',
             borderBottom: '1px solid var(--border-color)',
             backgroundColor: 'var(--bg-app)',
             padding: '0 16px',

@@ -75,7 +75,7 @@ const Verify: React.FC = () => {
       }}
     >
       <div
-        className="card fade-in-slide-up"
+        className="card fade-in-slide-up auth-card"
         style={{
           maxWidth: '440px',
           width: '100%',
