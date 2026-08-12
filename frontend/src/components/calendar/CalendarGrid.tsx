@@ -75,6 +75,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   return (
     <div
+      className="calendar-shell"
       style={{
         backgroundColor: 'var(--bg-card)',
         border: '1px solid var(--border-color)',
@@ -87,6 +88,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       {viewMode === 'month' && (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div
+            className="calendar-month-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(7, 1fr)',
@@ -109,6 +111,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           </div>
 
           <div
+            className="calendar-month-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(7, 1fr)',
@@ -268,6 +271,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
       {viewMode === 'week' && (
         <div
+          className="calendar-week-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(7, 1fr)',
@@ -369,7 +373,17 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                           gap: '4px',
                         }}
                       >
-                        <span style={{ fontWeight: '700' }}>{event.title}</span>
+                        <span
+                          style={{
+                            fontWeight: '700',
+                            minWidth: 0,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {event.title}
+                        </span>
                         <span
                           style={{
                             fontSize: '11px',

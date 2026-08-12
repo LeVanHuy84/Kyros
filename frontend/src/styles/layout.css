@@ -18,7 +18,33 @@
   gap: var(--space-8);
   border-right: 1px solid var(--border-color);
   flex-shrink: 0;
-  transition: width var(--transition-normal);
+  transition:
+    width var(--transition-normal),
+    transform var(--transition-normal);
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+.hamburger-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.hamburger-btn:hover {
+  background-color: var(--bg-app);
+  color: var(--text-main);
 }
 
 .sidebar-header {
@@ -399,6 +425,7 @@
     border-color var(--transition-fast),
     transform var(--transition-fast),
     box-shadow var(--transition-fast);
+  white-space: nowrap;
 }
 
 .btn:hover {
@@ -472,6 +499,8 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   width: fit-content;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .badge-high {

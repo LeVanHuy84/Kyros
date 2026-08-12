@@ -27,13 +27,13 @@ export const ReminderToasts: React.FC<ReminderToastsProps> = ({
     <div
       style={{
         position: 'fixed',
-        bottom: '24px',
-        right: '24px',
+        bottom: '16px',
+        right: '16px',
         zIndex: 1000,
         display: 'flex',
         flexDirection: 'column',
         gap: '12px',
-        maxWidth: '380px',
+        maxWidth: 'min(380px, calc(100vw - 32px))',
         width: '100%',
       }}
     >
@@ -104,6 +104,7 @@ export const ReminderToasts: React.FC<ReminderToastsProps> = ({
               gap: '8px',
               alignItems: 'center',
               marginTop: '4px',
+              flexWrap: 'wrap',
             }}
           >
             <select

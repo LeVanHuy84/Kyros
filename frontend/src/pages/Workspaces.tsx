@@ -41,7 +41,7 @@ const Workspaces: React.FC = () => {
       }}
     >
       <div
-        className="card"
+        className="card auth-card"
         style={{
           width: '100%',
           maxWidth: '520px',
@@ -126,7 +126,12 @@ const Workspaces: React.FC = () => {
               }}
             >
               <div
-                style={{ display: 'flex', alignItems: 'center', gap: '16px' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  minWidth: 0,
+                }}
               >
                 <div
                   style={{
@@ -138,17 +143,21 @@ const Workspaces: React.FC = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: 'var(--color-primary)',
+                    flexShrink: 0,
                   }}
                 >
                   <Briefcase size={20} />
                 </div>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <h4
                     style={{
                       margin: 0,
                       fontSize: '16px',
                       fontWeight: '600',
                       color: 'var(--text-main)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {ws.name}

@@ -197,6 +197,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 
           {/* Row: Priority & Due Date */}
           <div
+            className="form-row-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',

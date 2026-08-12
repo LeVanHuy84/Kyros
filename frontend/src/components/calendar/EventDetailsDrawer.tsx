@@ -73,6 +73,7 @@ export const EventDetailsDrawer: React.FC<EventDetailsDrawerProps> = ({
 
   return (
     <div
+      className="details-drawer"
       style={{
         position: 'fixed',
         top: 0,

@@ -281,6 +281,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({
           </div>
 
           <div
+            className="form-row-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',

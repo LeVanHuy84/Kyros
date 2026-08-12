@@ -30,7 +30,7 @@ const NotFound: React.FC = () => {
       }}
     >
       <div
-        className="card fade-in-slide-up"
+        className="card fade-in-slide-up auth-card"
         style={{
           maxWidth: '480px',
           width: '100%',
@@ -61,7 +61,7 @@ const NotFound: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <h1
             style={{
-              fontSize: '72px',
+              fontSize: 'clamp(48px, 14vw, 72px)',
               fontWeight: '800',
               margin: 0,
               lineHeight: 1,
