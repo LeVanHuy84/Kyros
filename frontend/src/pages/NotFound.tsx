@@ -35,8 +35,8 @@ const NotFound: React.FC = () => {
           maxWidth: '480px',
           width: '100%',
           alignItems: 'center',
-          padding: '48px',
-          gap: '28px',
+          padding: 'var(--space-10)',
+          gap: 'var(--space-7)',
         }}
       >
         {/* Glow Icon Ring */}
@@ -76,7 +76,7 @@ const NotFound: React.FC = () => {
           </h1>
           <h2
             style={{
-              fontSize: '22px',
+              fontSize: 'var(--font-size-xl)',
               fontWeight: '600',
               color: 'var(--text-main)',
               margin: '8px 0 0 0',

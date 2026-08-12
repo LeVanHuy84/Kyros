@@ -92,8 +92,8 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({
         style={{
           width: '100%',
           maxWidth: '640px',
-          padding: '36px',
-          gap: '24px',
+          padding: 'var(--space-6)',
+          gap: 'var(--space-4)',
           boxShadow: 'var(--shadow-lg)',
           backgroundColor: 'var(--bg-card)',
           maxHeight: '80vh',

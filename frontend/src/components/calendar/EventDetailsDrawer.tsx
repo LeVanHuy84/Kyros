@@ -83,10 +83,10 @@ export const EventDetailsDrawer: React.FC<EventDetailsDrawerProps> = ({
         boxShadow: 'var(--shadow-lg)',
         borderLeft: '1px solid var(--border-color)',
         zIndex: 100,
-        padding: '32px',
+        padding: 'var(--space-6)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '24px',
+        gap: 'var(--space-4)',
         overflowY: 'auto',
       }}
     >
@@ -125,7 +125,7 @@ export const EventDetailsDrawer: React.FC<EventDetailsDrawerProps> = ({
       <div>
         <h3
           style={{
-            fontSize: '22px',
+            fontSize: 'var(--font-size-xl)',
             fontWeight: '700',
             margin: '0 0 6px 0',
             color: 'var(--text-main)',

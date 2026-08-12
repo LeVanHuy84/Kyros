@@ -113,7 +113,7 @@ const TaskManagement: React.FC = () => {
         <div>
           <h2
             style={{
-              fontSize: '26px',
+              fontSize: 'var(--font-size-2xl)',
               fontWeight: '600',
               color: 'var(--text-main)',
               margin: '0 0 8px 0',

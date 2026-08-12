@@ -141,7 +141,7 @@ const Verify: React.FC = () => {
             >
               <h2
                 style={{
-                  fontSize: '22px',
+                  fontSize: 'var(--font-size-xl)',
                   fontWeight: '600',
                   color: 'var(--text-main)',
                   margin: 0,
@@ -197,7 +197,7 @@ const Verify: React.FC = () => {
             >
               <h2
                 style={{
-                  fontSize: '22px',
+                  fontSize: 'var(--font-size-xl)',
                   fontWeight: '600',
                   color: 'var(--text-main)',
                   margin: 0,

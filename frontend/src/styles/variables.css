@@ -44,13 +44,41 @@
     0 4px 8px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   --shadow-lg:
     0 12px 20px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 24px;
+
+  /* Radius scale (ui-ux-pro-max/design-system: 2 / 4 / 6 / 8 / 12 / 16 / 24px) */
+  --radius-sm: 6px; /* controls: buttons, inputs, chips */
+  --radius-md: 8px; /* cards */
+  --radius-lg: 12px; /* dialogs, login card */
 
   /* Font Styles */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-size-base: 17px;
+  --font-size-base: 16px;
+
+  /* Spacing scale - 4px base (ui-ux-pro-max/design-system) */
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-2-5: 10px;
+  --space-3: 12px;
+  --space-3-5: 14px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Typography scale (ui-ux-pro-max/design-system: 12/14/16/18/20/24/30px) */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
 
   /* Transition Speeds */
   --transition-fast: 0.15s ease;
