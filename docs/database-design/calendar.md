@@ -26,6 +26,7 @@ The Calendar context is the system of record for schedule blocks and alert times
 | `EventId` (Value Object) | `id` (UUID) | Primary Key Column |
 | `WorkspaceId` (Value Object) | `workspace_id` (UUID) | Logical Reference Column |
 | `UserId` (Value Object) | `owner_id` (UUID) | Logical Reference Column |
+| `TaskId` (Value Object) | `task_id` (UUID) | Logical Reference Column (Nullable) |
 | `EventTitle` (Value Object) | `title` (VARCHAR) | Column |
 | `EventDescription` (Value Object) | `description` (TEXT) | Column |
 | `EventTimeRange` (Value Object) | `start_time`, `end_time` (TIMESTAMPTZ) | Columns |
@@ -55,6 +56,7 @@ Stores user scheduled events and time allocations.
 | `owner_id` | `UUID` | `NOT NULL` | *None* | *None* | Logical ref to the event owner identity. |
 | `title` | `VARCHAR(255)` | `NOT NULL` | *None* | `CHECK (length(trim(title)) > 0)` | Event subject. |
 | `description` | `TEXT` | `NULLABLE` | `NULL` | *None* | Optional details. |
+| `task_id` | `UUID` | `NULLABLE` | `NULL` | *None* | Optional logical reference to the associated task (todo context). |
 | `start_time` | `TIMESTAMPTZ` | `NOT NULL` | *None* | *None* | Event start instant. |
 | `end_time` | `TIMESTAMPTZ` | `NOT NULL` | *None* | `CHECK (end_time > start_time)` | Event end instant. Chronology enforced. |
 | `status` | `VARCHAR(50)` | `NOT NULL` | `'Scheduled'` | `CHECK (status IN ('Scheduled', 'Deleted'))` | Event lifecycle state (`CAL-003` delete transitions to `Deleted`). |
@@ -92,6 +94,7 @@ Stores alert settings and trigger times for calendar events.
 - **Reference by ID**:
   - `workspace_id` is a logical reference to `workspace.workspaces.id`.
   - `owner_id`, `created_by`, and `updated_by` reference `auth.user_identities.id` logically.
+  - `task_id` is a logical reference to `todo.tasks.id` (nullable).
 
 ---
 

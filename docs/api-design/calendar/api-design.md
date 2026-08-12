@@ -39,6 +39,7 @@ URIs follow a hierarchical structure rooted in a workspace to guarantee tenant i
 {
   "title": "string (required)",
   "description": "string (optional)",
+  "taskId": "string (UUID, optional)",
   "startTime": "string (ISO-8601 date-time, required)",
   "endTime": "string (ISO-8601 date-time, required)",
   "reminderOffsets": ["integer (minutes, optional)"]
@@ -110,6 +111,7 @@ URIs follow a hierarchical structure rooted in a workspace to guarantee tenant i
   "eventId": "string (UUID)",
   "workspaceId": "string (UUID)",
   "userId": "string (UUID)",
+  "taskId": "string (UUID, optional)",
   "title": "string",
   "description": "string",
   "startTime": "string (ISO-8601 date-time)",
@@ -233,6 +235,7 @@ Authorization: Bearer <token>
 {
   "title": "Q3 Planning",
   "description": "Quarterly planning session with the team.",
+  "taskId": "t-111",
   "startTime": "2026-10-15T14:00:00Z",
   "endTime": "2026-10-15T16:00:00Z",
   "reminderOffsets": [15, 60]
@@ -275,6 +278,7 @@ Content-Type: application/json
   "eventId": "e-456",
   "workspaceId": "w-123",
   "userId": "u-999",
+  "taskId": "t-111",
   "title": "Q3 Planning",
   "description": "Quarterly planning session with the team.",
   "startTime": "2026-10-15T14:00:00Z",

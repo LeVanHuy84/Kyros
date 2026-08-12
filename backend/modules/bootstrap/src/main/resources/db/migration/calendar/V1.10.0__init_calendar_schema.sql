@@ -1,4 +1,4 @@
-﻿CREATE SCHEMA IF NOT EXISTS calendar;
+CREATE SCHEMA IF NOT EXISTS calendar;
 
 CREATE TABLE IF NOT EXISTS calendar.calendar_events (
     id UUID NOT NULL PRIMARY KEY,

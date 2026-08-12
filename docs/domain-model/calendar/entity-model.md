@@ -11,7 +11,7 @@ Single aggregate: **CalendarEvent**, with **Reminder** entities inside the event
 #### Responsibilities
 
 - Consistency boundary for a scheduled time block within one **WorkspaceId**.
-- Encapsulates title, description, start/end times, and owning **UserId** reference.
+- Encapsulates title, description, start/end times, owning **UserId** reference, and optional **TaskId** reference.
 - Owns zero or more **Reminder** entities; all reminder changes go through the event root.
 - Enforces chronological validity (end strictly after start), mandatory title and start time.
 - Recalculates reminder trigger times when schedule is rescheduled.
@@ -33,7 +33,7 @@ Single aggregate: **CalendarEvent**, with **Reminder** entities inside the event
 
 #### Public behaviors
 
-- Create with title, time range, optional description, optional reminders.
+- Create with title, time range, optional description, optional reminders, and optional **TaskId** reference.
 - Update title, description, start/end (reschedule).
 - Add, update, or remove **Reminder** configurations.
 - Delete event (terminal).
