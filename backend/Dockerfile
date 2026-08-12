@@ -12,7 +12,7 @@ WORKDIR /app
 COPY . .
 
 # Run the local Gradle wrapper to compile and build the jar
-RUN ./gradlew :modules:bootstrap:bootJar --no-daemon -x test
+RUN chmod +x gradlew && ./gradlew :modules:bootstrap:bootJar --no-daemon -x test
 
 # ==========================================
 # Stage 2: Minimal runtime image for JRE 25
