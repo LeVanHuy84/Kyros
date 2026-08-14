@@ -28,5 +28,5 @@ COPY --from=build /app/modules/bootstrap/build/libs/*.jar app.jar
 EXPOSE 8080
 
 # Execute the application under JRE 25 runtime with tuned memory for container platforms
-ENV JAVA_OPTS="-Xmx350m -Xss256k -XX:+UseContainerSupport"
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=70.0 -XX:MinRAMPercentage=50.0 -Xss256k -XX:+UseContainerSupport"
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
