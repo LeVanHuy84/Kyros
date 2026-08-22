@@ -17,9 +17,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final String frontendUrl;
 
-  public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+  public SecurityConfig(
+      JwtAuthenticationFilter jwtAuthenticationFilter,
+      @org.springframework.beans.factory.annotation.Value("${app.frontend-url}") String frontendUrl) {
     this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    this.frontendUrl = frontendUrl;
   }
 
   @Bean
@@ -35,6 +39,7 @@ public class SecurityConfig {
                         "/api/auth/login",
                         "/api/auth/verify",
                         "/api/auth/resend-verification",
+                        "/api/auth/refresh",
                         "/actuator/health",
                         "/actuator/health/**",
                         "/v3/api-docs",
@@ -52,10 +57,10 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(java.util.List.of("*"));
+    configuration.setAllowedOrigins(java.util.List.of(frontendUrl));
     configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-    configuration.setAllowedHeaders(java.util.List.of("*"));
-    configuration.setAllowCredentials(false);
+    configuration.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "X-Workspace-Id", "Cache-Control"));
+    configuration.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/api/**", configuration);
