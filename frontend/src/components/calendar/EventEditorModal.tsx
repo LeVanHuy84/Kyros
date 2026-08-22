@@ -63,11 +63,12 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({
         const endDay = new Date(startDay.getTime() + 60 * 60 * 1000);
         setStart(formatLocal(startDay));
         setEnd(formatLocal(endDay));
-        
+
         // Fetch preferences for default reminder lead time
         const workspaceId = localStorage.getItem('active_workspace_id');
         if (workspaceId) {
-          apiClient.get(`/v1/workspaces/${workspaceId}/preferences`)
+          apiClient
+            .get(`/v1/workspaces/${workspaceId}/preferences`)
             .then((res) => {
               if (res.data && res.data.leadTimeMinutes !== undefined) {
                 setReminders([res.data.leadTimeMinutes]);

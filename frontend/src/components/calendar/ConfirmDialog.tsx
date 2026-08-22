@@ -69,7 +69,10 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {isDanger && (
-              <AlertTriangle size={20} style={{ color: 'var(--color-danger)' }} />
+              <AlertTriangle
+                size={20}
+                style={{ color: 'var(--color-danger)' }}
+              />
             )}
             <h3
               style={{

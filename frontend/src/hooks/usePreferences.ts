@@ -20,7 +20,9 @@ export const usePreferences = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get(`/v1/workspaces/${activeWorkspace.id}/preferences`);
+      const res = await apiClient.get(
+        `/v1/workspaces/${activeWorkspace.id}/preferences`
+      );
       setPref({
         timezone: res.data.timezone || 'UTC',
         defaultPriority: res.data.defaultPriority || 'Medium',
@@ -39,7 +41,10 @@ export const usePreferences = () => {
     setIsSaving(true);
     setError(null);
     try {
-      await apiClient.put(`/v1/workspaces/${activeWorkspace.id}/preferences`, updatedPref);
+      await apiClient.put(
+        `/v1/workspaces/${activeWorkspace.id}/preferences`,
+        updatedPref
+      );
       setPref(updatedPref);
       return true;
     } catch (err: any) {
@@ -55,7 +60,9 @@ export const usePreferences = () => {
     setIsSaving(true);
     setError(null);
     try {
-      await apiClient.post(`/v1/workspaces/${activeWorkspace.id}/preferences/reset`);
+      await apiClient.post(
+        `/v1/workspaces/${activeWorkspace.id}/preferences/reset`
+      );
       await fetchPreferences();
       return true;
     } catch (err: any) {

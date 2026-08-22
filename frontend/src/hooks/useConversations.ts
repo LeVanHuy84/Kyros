@@ -18,7 +18,10 @@ export const useConversations = () => {
     setError(null);
     try {
       const params = { page, size: 10 };
-      const res = await apiClient.get(`/v1/workspaces/${activeWorkspace.id}/conversations`, { params });
+      const res = await apiClient.get(
+        `/v1/workspaces/${activeWorkspace.id}/conversations`,
+        { params }
+      );
       setConversations(res.data.data || []);
       setTotalPages(res.data.meta?.totalPages || 1);
     } catch (err: any) {
@@ -33,7 +36,9 @@ export const useConversations = () => {
     setIsSaving(true);
     setError(null);
     try {
-      await apiClient.post(`/v1/workspaces/${activeWorkspace.id}/conversations/${id}/clear`);
+      await apiClient.post(
+        `/v1/workspaces/${activeWorkspace.id}/conversations/${id}/clear`
+      );
       await fetchConversations();
       return true;
     } catch (err: any) {
@@ -44,10 +49,14 @@ export const useConversations = () => {
     }
   };
 
-  const getConversationTurns = async (id: string): Promise<ConversationTurn[]> => {
+  const getConversationTurns = async (
+    id: string
+  ): Promise<ConversationTurn[]> => {
     if (!activeWorkspace) return [];
     try {
-      const res = await apiClient.get(`/v1/workspaces/${activeWorkspace.id}/conversations/${id}/turns`);
+      const res = await apiClient.get(
+        `/v1/workspaces/${activeWorkspace.id}/conversations/${id}/turns`
+      );
       return res.data || [];
     } catch (err: any) {
       setError(err.friendlyMessage || 'Failed to load conversation turns');

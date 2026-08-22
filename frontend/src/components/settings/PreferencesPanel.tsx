@@ -22,11 +22,13 @@ const COMMON_TIMEZONES = [
   'Australia/Sydney',
 ];
 
-export const PreferencesPanel: React.FC<PreferencesPanelProps> = ({ onSuccess, onError }) => {
+export const PreferencesPanel: React.FC<PreferencesPanelProps> = ({
+  onSuccess,
+  onError,
+}) => {
   const { theme, setTheme } = useTheme();
   const {
     pref,
-    setPref,
     isLoading,
     isSaving,
     error,
@@ -35,8 +37,11 @@ export const PreferencesPanel: React.FC<PreferencesPanelProps> = ({ onSuccess, o
   } = usePreferences();
 
   const [timezone, setTimezone] = useState<string>('UTC');
-  const [defaultPriority, setDefaultPriority] = useState<'High' | 'Medium' | 'Low'>('Medium');
-  const [preventCalendarOverlap, setPreventCalendarOverlap] = useState<boolean>(false);
+  const [defaultPriority, setDefaultPriority] = useState<
+    'High' | 'Medium' | 'Low'
+  >('Medium');
+  const [preventCalendarOverlap, setPreventCalendarOverlap] =
+    useState<boolean>(false);
   const [leadTimeMinutes, setLeadTimeMinutes] = useState<number>(15);
 
   useEffect(() => {
@@ -76,7 +81,14 @@ export const PreferencesPanel: React.FC<PreferencesPanelProps> = ({ onSuccess, o
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px',
+        position: 'relative',
+      }}
+    >
       {isLoading && (
         <div
           style={{
@@ -92,20 +104,48 @@ export const PreferencesPanel: React.FC<PreferencesPanelProps> = ({ onSuccess, o
             zIndex: 10,
           }}
         >
-          <Loader2 className="animate-spin" size={24} style={{ color: 'var(--color-primary)' }} />
+          <Loader2
+            className="animate-spin"
+            size={24}
+            style={{ color: 'var(--color-primary)' }}
+          />
         </div>
       )}
 
       <div>
-        <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>User Preferences</h4>
-        <p style={{ fontSize: '15px', color: 'var(--text-muted)', margin: '4px 0 0 0', lineHeight: '1.6' }}>
-          Adjust interface parameters, toggle dark/light theme, or select default coordinator triggers.
+        <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+          User Preferences
+        </h4>
+        <p
+          style={{
+            fontSize: '15px',
+            color: 'var(--text-muted)',
+            margin: '4px 0 0 0',
+            lineHeight: '1.6',
+          }}
+        >
+          Adjust interface parameters, toggle dark/light theme, or select
+          default coordinator triggers.
         </p>
       </div>
 
       {/* Theme Settings */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '350px' }}>
-        <label htmlFor="theme-select" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          maxWidth: '350px',
+        }}
+      >
+        <label
+          htmlFor="theme-select"
+          style={{
+            fontSize: '14px',
+            fontWeight: '600',
+            color: 'var(--text-muted)',
+          }}
+        >
           Interface Theme Mode
         </label>
         <select
@@ -129,13 +169,29 @@ export const PreferencesPanel: React.FC<PreferencesPanelProps> = ({ onSuccess, o
         </select>
       </div>
 
-      <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)' }} />
+      <hr
+        style={{ border: 'none', borderTop: '1px solid var(--border-color)' }}
+      />
 
       {/* Backend Preferences Form */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '500px' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+          maxWidth: '500px',
+        }}
+      >
         {/* Timezone */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <label htmlFor="timezone-select" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)' }}>
+          <label
+            htmlFor="timezone-select"
+            style={{
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'var(--text-muted)',
+            }}
+          >
             Preferred Timezone (IANA)
           </label>
           <select
@@ -163,10 +219,27 @@ export const PreferencesPanel: React.FC<PreferencesPanelProps> = ({ onSuccess, o
 
         {/* Default Priority */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)' }}>Default Task Priority</span>
+          <span
+            style={{
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'var(--text-muted)',
+            }}
+          >
+            Default Task Priority
+          </span>
           <div style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
             {['Low', 'Medium', 'High'].map((pri) => (
-              <label key={pri} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '15px' }}>
+              <label
+                key={pri}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                }}
+              >
                 <input
                   type="radio"
                   name="priority"
@@ -182,7 +255,14 @@ export const PreferencesPanel: React.FC<PreferencesPanelProps> = ({ onSuccess, o
         </div>
 
         {/* Prevent Overlaps Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginTop: '4px',
+          }}
+        >
           <input
             type="checkbox"
             id="prevent-overlap"
@@ -195,14 +275,24 @@ export const PreferencesPanel: React.FC<PreferencesPanelProps> = ({ onSuccess, o
               cursor: 'pointer',
             }}
           />
-          <label htmlFor="prevent-overlap" style={{ fontSize: '15px', fontWeight: '500', cursor: 'pointer' }}>
+          <label
+            htmlFor="prevent-overlap"
+            style={{ fontSize: '15px', fontWeight: '500', cursor: 'pointer' }}
+          >
             Prevent Calendar Event Overlaps
           </label>
         </div>
 
         {/* Lead Time */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <label htmlFor="lead-time" style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)' }}>
+          <label
+            htmlFor="lead-time"
+            style={{
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'var(--text-muted)',
+            }}
+          >
             Default Reminder Lead Time (Minutes)
           </label>
           <input
@@ -211,7 +301,9 @@ export const PreferencesPanel: React.FC<PreferencesPanelProps> = ({ onSuccess, o
             min="1"
             max="10080"
             value={leadTimeMinutes}
-            onChange={(e) => setLeadTimeMinutes(Math.max(1, parseInt(e.target.value) || 1))}
+            onChange={(e) =>
+              setLeadTimeMinutes(Math.max(1, parseInt(e.target.value) || 1))
+            }
             style={{
               width: '100%',
               padding: '12px 16px',

@@ -8,7 +8,11 @@ interface TurnsModalProps {
   onClose: () => void;
 }
 
-export const TurnsModal: React.FC<TurnsModalProps> = ({ title, turns, onClose }) => {
+export const TurnsModal: React.FC<TurnsModalProps> = ({
+  title,
+  turns,
+  onClose,
+}) => {
   return (
     <div
       style={{
@@ -47,10 +51,17 @@ export const TurnsModal: React.FC<TurnsModalProps> = ({ title, turns, onClose })
             borderBottom: '1px solid var(--border-color)',
           }}
         >
-          <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Turns: "{title}"</h4>
+          <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>
+            Turns: "{title}"
+          </h4>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+            }}
           >
             <X size={20} />
           </button>
@@ -69,7 +80,13 @@ export const TurnsModal: React.FC<TurnsModalProps> = ({ title, turns, onClose })
           }}
         >
           {turns.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px' }}>
+            <div
+              style={{
+                textAlign: 'center',
+                color: 'var(--text-muted)',
+                padding: '24px',
+              }}
+            >
               No messages recorded in this thread history.
             </div>
           ) : (
@@ -89,9 +106,15 @@ export const TurnsModal: React.FC<TurnsModalProps> = ({ title, turns, onClose })
                     borderRadius: 'var(--radius-md)',
                     fontSize: '14px',
                     lineHeight: '1.5',
-                    backgroundColor: turn.role === 'User' ? 'var(--color-primary)' : 'var(--bg-card)',
+                    backgroundColor:
+                      turn.role === 'User'
+                        ? 'var(--color-primary)'
+                        : 'var(--bg-card)',
                     color: turn.role === 'User' ? 'white' : 'var(--text-main)',
-                    border: turn.role === 'User' ? 'none' : '1px solid var(--border-color)',
+                    border:
+                      turn.role === 'User'
+                        ? 'none'
+                        : '1px solid var(--border-color)',
                     boxShadow: 'var(--shadow-sm)',
                   }}
                 >

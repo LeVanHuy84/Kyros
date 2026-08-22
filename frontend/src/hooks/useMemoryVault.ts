@@ -25,7 +25,10 @@ export const useMemoryVault = () => {
       if (searchQuery.trim()) {
         params.query = searchQuery.trim();
       }
-      const res = await apiClient.get(`/v1/workspaces/${activeWorkspace.id}/memory-entries`, { params });
+      const res = await apiClient.get(
+        `/v1/workspaces/${activeWorkspace.id}/memory-entries`,
+        { params }
+      );
       setMemories(res.data.data || []);
       setTotalPages(res.data.meta?.totalPages || 1);
     } catch (err: any) {
@@ -35,15 +38,22 @@ export const useMemoryVault = () => {
     }
   }, [activeWorkspace, searchQuery, page]);
 
-  const updateMemory = async (id: string, content: string, confidenceScore: number) => {
+  const updateMemory = async (
+    id: string,
+    content: string,
+    confidenceScore: number
+  ) => {
     if (!activeWorkspace) return false;
     setIsSaving(true);
     setError(null);
     try {
-      await apiClient.put(`/v1/workspaces/${activeWorkspace.id}/memory-entries/${id}`, {
-        content,
-        confidenceScore,
-      });
+      await apiClient.put(
+        `/v1/workspaces/${activeWorkspace.id}/memory-entries/${id}`,
+        {
+          content,
+          confidenceScore,
+        }
+      );
       await fetchMemories();
       return true;
     } catch (err: any) {
@@ -59,7 +69,9 @@ export const useMemoryVault = () => {
     setIsSaving(true);
     setError(null);
     try {
-      await apiClient.delete(`/v1/workspaces/${activeWorkspace.id}/memory-entries/${id}`);
+      await apiClient.delete(
+        `/v1/workspaces/${activeWorkspace.id}/memory-entries/${id}`
+      );
       await fetchMemories();
       return true;
     } catch (err: any) {
