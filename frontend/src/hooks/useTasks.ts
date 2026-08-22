@@ -36,7 +36,8 @@ export interface TaskMetrics {
 
 export const useTasks = () => {
   const { activeWorkspace } = useWorkspace();
-  const { tags: workspaceTags } = useWorkspaceTags();
+  const { tags: workspaceTags, fetchTags: refreshWorkspaceTags } =
+    useWorkspaceTags();
 
   // Data State
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -419,5 +420,6 @@ export const useTasks = () => {
     toggleComplete,
     saveRecurrence,
     recurrenceAction,
+    refreshWorkspaceTags,
   };
 };

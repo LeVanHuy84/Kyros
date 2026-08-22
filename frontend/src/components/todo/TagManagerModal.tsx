@@ -18,11 +18,13 @@ const TAG_COLORS = [
 interface TagManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onTagsChange?: () => void;
 }
 
 export const TagManagerModal: React.FC<TagManagerModalProps> = ({
   isOpen,
   onClose,
+  onTagsChange,
 }) => {
   const { tags, isLoading, error, setError, createTag, updateTag, deleteTag } =
     useWorkspaceTags();
@@ -42,6 +44,7 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({
       await createTag(newName, newColor);
       setNewName('');
       setNewColor(TAG_COLORS[0]);
+      onTagsChange?.();
     } catch {
       // error handled by hook
     }
@@ -58,6 +61,7 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({
     try {
       await updateTag(editingId, editName, editColor);
       setEditingId(null);
+      onTagsChange?.();
     } catch {
       // error handled by hook
     }
@@ -66,6 +70,7 @@ export const TagManagerModal: React.FC<TagManagerModalProps> = ({
   const handleDelete = async (id: string) => {
     try {
       await deleteTag(id);
+      onTagsChange?.();
     } catch {
       // error handled by hook
     }

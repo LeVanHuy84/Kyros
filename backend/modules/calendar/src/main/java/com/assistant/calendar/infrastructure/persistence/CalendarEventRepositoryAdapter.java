@@ -95,6 +95,7 @@ public class CalendarEventRepositoryAdapter implements CalendarEventRepository {
             ? new com.assistant.calendar.domain.model.EventDescription(jpa.getDescription())
             : null,
         new EventTimeRange(jpa.getStartTime(), jpa.getEndTime()),
+        com.assistant.calendar.domain.model.EventStatus.valueOf(jpa.getStatus()),
         reminders,
         jpa.getCreatedAt(),
         jpa.getUpdatedAt(),

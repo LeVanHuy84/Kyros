@@ -28,7 +28,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   onSave,
   isSaving,
 }) => {
-  const { tags: workspaceTags } = useWorkspaceTags();
+  const { tags: workspaceTags, fetchTags } = useWorkspaceTags();
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -48,6 +48,12 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
       });
     }
   }, [task]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchTags();
+    }
+  }, [isOpen, fetchTags]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { TagPicker } from './TagPicker';
 import { useWorkspaceTags } from '../../hooks/useWorkspaceTags';
@@ -22,7 +22,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   onSave,
   isSaving,
 }) => {
-  const { tags: workspaceTags } = useWorkspaceTags();
+  const { tags: workspaceTags, fetchTags } = useWorkspaceTags();
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -30,6 +30,12 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     dueDate: '',
     tags: [] as string[],
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchTags();
+    }
+  }, [isOpen, fetchTags]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

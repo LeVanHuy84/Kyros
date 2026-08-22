@@ -16,6 +16,7 @@ import { CalendarGrid } from '../components/calendar/CalendarGrid';
 import { EventDetailsDrawer } from '../components/calendar/EventDetailsDrawer';
 import { EventEditorModal } from '../components/calendar/EventEditorModal';
 import { ReminderToasts } from '../components/calendar/ReminderToasts';
+import { ConfirmDialog } from '../components/calendar/ConfirmDialog';
 
 export const ScheduleOverlaps: React.FC = () => {
   const { activeWorkspace } = useWorkspace();
@@ -38,6 +39,7 @@ export const ScheduleOverlaps: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [prefilledStart, setPrefilledStart] = useState<Date | null>(null);
+  const [deleteConfirmEventId, setDeleteConfirmEventId] = useState<string | null>(null);
 
   // Active Reminder Toast Alert State
   const [activeReminders, setActiveReminders] = useState<
@@ -249,16 +251,20 @@ export const ScheduleOverlaps: React.FC = () => {
   };
 
   // Delete event
-  const handleDeleteEvent = async (eventId: string) => {
-    if (!activeWorkspace) return;
-    if (!window.confirm('Are you sure you want to cancel this event?')) return;
+  const handleDeleteEvent = (eventId: string) => {
+    setDeleteConfirmEventId(eventId);
+  };
+
+  const executeDeleteEvent = async () => {
+    if (!activeWorkspace || !deleteConfirmEventId) return;
 
     try {
       await apiClient.delete(
-        `/v1/workspaces/${activeWorkspace.id}/calendar/events/${eventId}`
+        `/v1/workspaces/${activeWorkspace.id}/calendar/events/${deleteConfirmEventId}`
       );
       setIsDrawerOpen(false);
       setSelectedEvent(null);
+      setDeleteConfirmEventId(null);
       fetchEvents();
     } catch (err: any) {
       alert(err.friendlyMessage || 'Failed to delete event.');
@@ -630,6 +636,18 @@ export const ScheduleOverlaps: React.FC = () => {
         prefilledStart={prefilledStart}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveEvent}
+      />
+
+      {/* Custom event cancel confirmation modal */}
+      <ConfirmDialog
+        isOpen={deleteConfirmEventId !== null}
+        title="Cancel Calendar Event"
+        message="Are you sure you want to cancel this calendar event? This action cannot be undone."
+        confirmText="Cancel Event"
+        cancelText="Keep Event"
+        isDanger={true}
+        onConfirm={executeDeleteEvent}
+        onCancel={() => setDeleteConfirmEventId(null)}
       />
     </div>
   );

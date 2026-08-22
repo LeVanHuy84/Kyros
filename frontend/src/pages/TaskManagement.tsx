@@ -60,6 +60,7 @@ const TaskManagement: React.FC = () => {
     toggleComplete,
     saveRecurrence,
     recurrenceAction,
+    refreshWorkspaceTags,
   } = useTasks();
 
   // Overlay state coordinators
@@ -412,6 +413,7 @@ const TaskManagement: React.FC = () => {
       <TagManagerModal
         isOpen={showTagManagerModal}
         onClose={() => setShowTagManagerModal(false)}
+        onTagsChange={refreshWorkspaceTags}
       />
     </div>
   );
