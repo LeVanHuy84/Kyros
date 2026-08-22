@@ -1,103 +1,118 @@
-# name: Continuous Deployment
+name: Continuous Deployment (Backend)
 
-# on:
-#   push:
-#     branches: [ main, master ]
+on:
+  push:
+    branches: [main, master]
 
-# permissions:
-#   contents: read
-#   packages: write
+permissions:
+  contents: read
+  packages: write
 
-# jobs:
-#   build-and-push:
-#     name: Build & Push Docker Images
-#     runs-on: ubuntu-latest
+jobs:
+  build-and-push-backend:
+    name: Build & Push Backend Docker Image
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - name: Checkout Code
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-#       - name: Set lowercase repository name
-#         run: |
-#           echo "IMAGE_REPOSITORY=ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      - name: Set lowercase repository name
+        run: |
+          echo "IMAGE_REPOSITORY=ghcr.io/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
-#       - name: Log in to GitHub Container Registry (GHCR)
-#         uses: docker/login-action@v3
-#         with:
-#           registry: ghcr.io
-#           username: ${{ github.actor }}
-#           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-#       - name: Build and Push Backend Docker Image
-#         uses: docker/build-push-action@v5
-#         with:
-#           context: ./backend
-#           file: ./backend/Dockerfile
-#           push: true
-#           tags: |
-#             ${{ env.IMAGE_REPOSITORY }}/backend:latest
-#             ${{ env.IMAGE_REPOSITORY }}/backend:${{ github.sha }}
+      - name: Build and Push Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_REPOSITORY }}/backend:latest
+            ${{ env.IMAGE_REPOSITORY }}/backend:${{ github.sha }}
 
-#       - name: Build and Push Frontend Docker Image
-#         uses: docker/build-push-action@v5
-#         with:
-#           context: ./frontend
-#           file: ./frontend/Dockerfile
-#           push: true
-#           tags: |
-#             ${{ env.IMAGE_REPOSITORY }}/frontend:latest
-#             ${{ env.IMAGE_REPOSITORY }}/frontend:${{ github.sha }}
+  deploy-backend:
+    name: Deploy Backend to Home Linux Server
+    needs: build-and-push-backend
+    runs-on: ubuntu-latest
 
-#   deploy:
-#     name: Deploy to VPS via SSH
-#     needs: build-and-push
-#     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-#     steps:
-#       - name: Checkout Code
-#         uses: actions/checkout@v4
+      - name: Set lowercase repository name
+        run: |
+          echo "IMAGE_REPOSITORY=ghcr.io/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
-#       - name: Set lowercase repository name
-#         run: |
-#           echo "IMAGE_REPOSITORY=ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
+          tags: tag:ci
 
-#       - name: Create Target Directory and Copy compose.prod.yaml
-#         uses: appleboy/scp-action@v0.1.7
-#         with:
-#           host: ${{ secrets.VPS_HOST }}
-#           username: ${{ secrets.VPS_USERNAME }}
-#           key: ${{ secrets.VPS_SSH_KEY }}
-#           port: ${{ secrets.VPS_PORT || 22 }}
-#           source: "compose.prod.yaml"
-#           target: ${{ secrets.VPS_TARGET_DIR }}
+      - name: Verify Tailscale Connectivity
+        run: |
+          tailscale status
+          tailscale ping 100.126.114.96
 
-#       - name: Execute Remote SSH Commands
-#         uses: appleboy/ssh-action@v1.0.3
-#         with:
-#           host: ${{ secrets.VPS_HOST }}
-#           username: ${{ secrets.VPS_USERNAME }}
-#           key: ${{ secrets.VPS_SSH_KEY }}
-#           port: ${{ secrets.VPS_PORT || 22 }}
-#           script: |
-#             cd ${{ secrets.VPS_TARGET_DIR }}
+      - name: Test SSH Connection
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 100.126.114.96
+          username: huyle
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            set -e
+            echo "SSH connection successful"
+            hostname
+            docker --version
+            docker compose version
 
-#             # Rename compose.prod.yaml to compose.yaml
-#             mv -f compose.prod.yaml compose.yaml
+      - name: Copy compose.prod.yaml to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 100.126.114.96
+          username: huyle
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: 'compose.prod.yaml'
+          target: '~/apps/ai-executive-assistant'
 
-#             # Create .env file for Docker Compose variables
-#             cat <<EOF > .env
-#             IMAGE_REPOSITORY=${{ env.IMAGE_REPOSITORY }}
-#             DB_USERNAME=${{ secrets.DB_USERNAME || 'assistant_user' }}
-#             DB_PASSWORD=${{ secrets.DB_PASSWORD || 'assistant_secure_pwd' }}
-#             JWT_SECRET=${{ secrets.JWT_SECRET || 'super_secret_jwt_key_at_least_256_bits_long' }}
-#             EOF
+      - name: Execute Remote SSH Commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 100.126.114.96
+          username: huyle
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            set -e
 
-#             # Log in to GHCR on VPS to pull the new images
-#             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            cd ~/apps/ai-executive-assistant
 
-#             # Pull new images and restart services
-#             docker compose pull
-#             docker compose up -d
+            mv -f compose.prod.yaml compose.yaml
 
-#             # Clean up old unused images to save disk space
-#             docker image prune -f
+            cat <<EOF > .env
+            IMAGE_REPOSITORY=${{ env.IMAGE_REPOSITORY }}
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            EOF
+
+            echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io \
+              -u "${{ github.actor }}" \
+              --password-stdin
+
+            docker compose pull
+            docker compose up -d
+
+            docker image prune -f
