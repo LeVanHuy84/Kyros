@@ -106,6 +106,7 @@ jobs:
             DB_USERNAME=${{ secrets.DB_USERNAME }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
+            APP_FRONTEND_URL=${{ secrets.APP_FRONTEND_URL }}
             EOF
 
             echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io \

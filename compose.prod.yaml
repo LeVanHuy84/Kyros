@@ -14,8 +14,10 @@ services:
 
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      SPRING_REDIS_URL: redis://redis:6379
 
       JWT_SECRET: ${JWT_SECRET}
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL}
 
     healthcheck:
       test:
