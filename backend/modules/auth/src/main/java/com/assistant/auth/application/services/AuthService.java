@@ -2,11 +2,13 @@ package com.assistant.auth.application.services;
 
 import com.assistant.auth.application.ports.in.AuthenticateUserUseCase;
 import com.assistant.auth.application.ports.in.LogoutUseCase;
+import com.assistant.auth.application.ports.in.RefreshTokenUseCase;
 import com.assistant.auth.application.ports.in.RegisterUserUseCase;
 import com.assistant.auth.application.ports.in.ResendVerificationUseCase;
 import com.assistant.auth.application.ports.in.VerifyEmailUseCase;
 import com.assistant.auth.application.ports.out.EmailSenderPort;
 import com.assistant.auth.application.ports.out.PasswordHasherPort;
+import com.assistant.auth.application.ports.out.RefreshTokenPort;
 import com.assistant.auth.application.ports.out.TokenGeneratorPort;
 import com.assistant.auth.application.ports.out.TokenRevocationCachePort;
 import com.assistant.auth.domain.AccountStatus;
@@ -20,8 +22,6 @@ import com.assistant.kernel.event.UserRegistered;
 import com.assistant.kernel.exception.DomainException;
 import java.time.Duration;
 import java.time.Instant;
-import com.assistant.auth.application.ports.in.RefreshTokenUseCase;
-import com.assistant.auth.application.ports.out.RefreshTokenPort;
 import java.util.UUID;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -136,9 +136,7 @@ public class AuthService
             .orElseThrow(() -> new DomainException("Invalid or expired refresh token"));
 
     UserIdentity user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new DomainException("User not found"));
+        userRepository.findById(userId).orElseThrow(() -> new DomainException("User not found"));
 
     // Revoke old refresh token (rotation policy)
     refreshTokenPort.revoke(refreshToken);

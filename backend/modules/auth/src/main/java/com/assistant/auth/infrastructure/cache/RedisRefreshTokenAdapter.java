@@ -24,7 +24,8 @@ public class RedisRefreshTokenAdapter implements RefreshTokenPort {
     try {
       redisTemplate.opsForValue().set(key, userId.toString(), ttl);
     } catch (Exception e) {
-      throw new ServiceUnavailableException("Redis is unreachable. Failed to save refresh token.", e);
+      throw new ServiceUnavailableException(
+          "Redis is unreachable. Failed to save refresh token.", e);
     }
   }
 
@@ -38,7 +39,8 @@ public class RedisRefreshTokenAdapter implements RefreshTokenPort {
       }
       return Optional.of(UserId.fromString(userIdStr));
     } catch (Exception e) {
-      throw new ServiceUnavailableException("Redis is unreachable. Failed to retrieve refresh token.", e);
+      throw new ServiceUnavailableException(
+          "Redis is unreachable. Failed to retrieve refresh token.", e);
     }
   }
 
@@ -48,7 +50,8 @@ public class RedisRefreshTokenAdapter implements RefreshTokenPort {
     try {
       redisTemplate.delete(key);
     } catch (Exception e) {
-      throw new ServiceUnavailableException("Redis is unreachable. Failed to revoke refresh token.", e);
+      throw new ServiceUnavailableException(
+          "Redis is unreachable. Failed to revoke refresh token.", e);
     }
   }
 }
