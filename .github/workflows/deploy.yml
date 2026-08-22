@@ -107,6 +107,11 @@ jobs:
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             APP_FRONTEND_URL=${{ secrets.APP_FRONTEND_URL }}
+
+            SPRING_MAIL_HOST=${{ secrets.SPRING_MAIL_HOST }}
+            SPRING_MAIL_PORT=${{ secrets.SPRING_MAIL_PORT }}
+            SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }}
+            SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }}
             EOF
 
             echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io \
