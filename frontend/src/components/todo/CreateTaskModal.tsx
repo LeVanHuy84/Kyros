@@ -3,6 +3,8 @@ import { X } from 'lucide-react';
 import { TagPicker } from './TagPicker';
 import { useWorkspaceTags } from '../../hooks/useWorkspaceTags';
 
+import apiClient from '../../services/api-client';
+
 interface CreateTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,6 +25,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   isSaving,
 }) => {
   const { tags: workspaceTags, fetchTags } = useWorkspaceTags();
+  const [defaultPriority, setDefaultPriority] = useState<
+    'High' | 'Medium' | 'Low'
+  >('Medium');
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -34,6 +39,18 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       fetchTags();
+      const workspaceId = localStorage.getItem('active_workspace_id');
+      if (workspaceId) {
+        apiClient
+          .get(`/v1/workspaces/${workspaceId}/preferences`)
+          .then((res) => {
+            if (res.data && res.data.defaultPriority) {
+              setDefaultPriority(res.data.defaultPriority);
+              setForm((f) => ({ ...f, priority: res.data.defaultPriority }));
+            }
+          })
+          .catch(() => {});
+      }
     }
   }, [isOpen, fetchTags]);
 
@@ -50,11 +67,11 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         form.tags
       );
 
-      // Reset form
+      // Reset form to preferred default
       setForm({
         title: '',
         description: '',
-        priority: 'Medium',
+        priority: defaultPriority,
         dueDate: '',
         tags: [],
       });

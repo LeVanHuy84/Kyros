@@ -29,7 +29,7 @@ class WorkspaceServiceTest {
   @BeforeEach
   void setUp() {
     workspaceRepository = new FakeWorkspaceRepository();
-    workspaceService = new WorkspaceService(workspaceRepository);
+    workspaceService = new WorkspaceService(workspaceRepository, event -> {});
   }
 
   @Test

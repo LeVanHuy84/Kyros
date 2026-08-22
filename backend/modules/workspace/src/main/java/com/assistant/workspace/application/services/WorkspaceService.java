@@ -19,9 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class WorkspaceService implements WorkspacePort, TenantValidationPort {
 
   private final WorkspaceRepository workspaceRepository;
+  private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
-  public WorkspaceService(WorkspaceRepository workspaceRepository) {
+  public WorkspaceService(
+      WorkspaceRepository workspaceRepository,
+      org.springframework.context.ApplicationEventPublisher eventPublisher) {
     this.workspaceRepository = workspaceRepository;
+    this.eventPublisher = eventPublisher;
   }
 
   @Override
@@ -43,7 +47,10 @@ public class WorkspaceService implements WorkspacePort, TenantValidationPort {
               });
     }
 
-    return workspaceRepository.save(workspace);
+    Workspace saved = workspaceRepository.save(workspace);
+    eventPublisher.publishEvent(
+        new com.assistant.kernel.event.WorkspaceProvisioned(workspaceId, ownerId));
+    return saved;
   }
 
   @Override

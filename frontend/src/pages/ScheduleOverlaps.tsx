@@ -39,7 +39,9 @@ export const ScheduleOverlaps: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [prefilledStart, setPrefilledStart] = useState<Date | null>(null);
-  const [deleteConfirmEventId, setDeleteConfirmEventId] = useState<string | null>(null);
+  const [deleteConfirmEventId, setDeleteConfirmEventId] = useState<
+    string | null
+  >(null);
 
   // Active Reminder Toast Alert State
   const [activeReminders, setActiveReminders] = useState<
