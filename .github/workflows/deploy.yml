@@ -1,7 +1,10 @@
 name: Continuous Deployment (Backend)
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Backend CI"]
+    types:
+      - completed
     branches: [main, master]
 
 permissions:
@@ -12,6 +15,7 @@ jobs:
   build-and-push-backend:
     name: Build & Push Backend Docker Image
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout Code

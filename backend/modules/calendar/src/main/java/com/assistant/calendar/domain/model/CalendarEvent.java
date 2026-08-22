@@ -29,6 +29,7 @@ public class CalendarEvent {
       EventTitle title,
       EventDescription description,
       EventTimeRange timeRange,
+      EventStatus status,
       List<Reminder> reminders,
       Instant createdAt,
       Instant updatedAt,
@@ -40,7 +41,7 @@ public class CalendarEvent {
     this.title = title;
     this.description = description;
     this.timeRange = timeRange;
-    this.status = EventStatus.Scheduled;
+    this.status = status;
     this.reminders = new ArrayList<>(reminders != null ? reminders : Collections.emptyList());
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
@@ -66,6 +67,7 @@ public class CalendarEvent {
             title,
             description,
             timeRange,
+            EventStatus.Scheduled,
             Collections.emptyList(),
             now,
             now,
