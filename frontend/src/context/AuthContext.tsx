@@ -43,6 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } else if (storedToken || storedUser) {
       localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
       localStorage.removeItem('active_workspace_id');
     }
@@ -51,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = async (email: string, password: string) => {
     const response = await apiClient.post('/auth/login', { email, password });
-    const { accessToken } = response.data;
+    const { accessToken, refreshToken } = response.data;
 
     const claims = decodeJwt(accessToken);
     if (!claims) {
@@ -68,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     localStorage.setItem('token', accessToken);
+    localStorage.setItem('refresh_token', refreshToken);
     localStorage.setItem('user', JSON.stringify(parsedUser));
 
     setToken(accessToken);
@@ -90,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       // Enforce local session clearance
       localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
       localStorage.removeItem('active_workspace_id');
       setToken(null);

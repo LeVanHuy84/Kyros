@@ -2,11 +2,13 @@ package com.assistant.auth.application.services;
 
 import com.assistant.auth.application.ports.in.AuthenticateUserUseCase;
 import com.assistant.auth.application.ports.in.LogoutUseCase;
+import com.assistant.auth.application.ports.in.RefreshTokenUseCase;
 import com.assistant.auth.application.ports.in.RegisterUserUseCase;
 import com.assistant.auth.application.ports.in.ResendVerificationUseCase;
 import com.assistant.auth.application.ports.in.VerifyEmailUseCase;
 import com.assistant.auth.application.ports.out.EmailSenderPort;
 import com.assistant.auth.application.ports.out.PasswordHasherPort;
+import com.assistant.auth.application.ports.out.RefreshTokenPort;
 import com.assistant.auth.application.ports.out.TokenGeneratorPort;
 import com.assistant.auth.application.ports.out.TokenRevocationCachePort;
 import com.assistant.auth.domain.AccountStatus;
@@ -20,6 +22,7 @@ import com.assistant.kernel.event.UserRegistered;
 import com.assistant.kernel.exception.DomainException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,13 +33,15 @@ public class AuthService
         AuthenticateUserUseCase,
         LogoutUseCase,
         VerifyEmailUseCase,
-        ResendVerificationUseCase {
+        ResendVerificationUseCase,
+        RefreshTokenUseCase {
 
   private final UserRepository userRepository;
   private final EmailVerificationTokenRepository tokenRepository;
   private final PasswordHasherPort passwordHasher;
   private final TokenGeneratorPort tokenGenerator;
   private final TokenRevocationCachePort tokenRevocationCache;
+  private final RefreshTokenPort refreshTokenPort;
   private final EmailSenderPort emailSender;
   private final ApplicationEventPublisher eventPublisher;
 
@@ -46,6 +51,7 @@ public class AuthService
       PasswordHasherPort passwordHasher,
       TokenGeneratorPort tokenGenerator,
       TokenRevocationCachePort tokenRevocationCache,
+      RefreshTokenPort refreshTokenPort,
       EmailSenderPort emailSender,
       ApplicationEventPublisher eventPublisher) {
     this.userRepository = userRepository;
@@ -53,6 +59,7 @@ public class AuthService
     this.passwordHasher = passwordHasher;
     this.tokenGenerator = tokenGenerator;
     this.tokenRevocationCache = tokenRevocationCache;
+    this.refreshTokenPort = refreshTokenPort;
     this.emailSender = emailSender;
     this.eventPublisher = eventPublisher;
   }
@@ -114,7 +121,32 @@ public class AuthService
     userRepository.save(user);
 
     TokenGeneratorPort.GeneratedToken token = tokenGenerator.generateToken(user);
-    return new AuthenticationResult(token.token(), "Bearer", token.expiresIn());
+    String refreshToken = UUID.randomUUID().toString();
+    refreshTokenPort.save(refreshToken, user.getId(), Duration.ofDays(7));
+
+    return new AuthenticationResult(token.token(), refreshToken, "Bearer", token.expiresIn());
+  }
+
+  @Override
+  @Transactional
+  public AuthenticationResult refresh(String refreshToken) {
+    UserId userId =
+        refreshTokenPort
+            .findUserIdByToken(refreshToken)
+            .orElseThrow(() -> new DomainException("Invalid or expired refresh token"));
+
+    UserIdentity user =
+        userRepository.findById(userId).orElseThrow(() -> new DomainException("User not found"));
+
+    // Revoke old refresh token (rotation policy)
+    refreshTokenPort.revoke(refreshToken);
+
+    // Generate new tokens
+    TokenGeneratorPort.GeneratedToken token = tokenGenerator.generateToken(user);
+    String newRefreshToken = UUID.randomUUID().toString();
+    refreshTokenPort.save(newRefreshToken, user.getId(), Duration.ofDays(7));
+
+    return new AuthenticationResult(token.token(), newRefreshToken, "Bearer", token.expiresIn());
   }
 
   @Override

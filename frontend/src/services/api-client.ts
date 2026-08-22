@@ -30,12 +30,61 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Enforce instant session clearance on 401 Unauthorized responses
+    const originalRequest = error.config;
+
+    // Handle 401 Unauthorized by trying to refresh the access token
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('active_workspace_id');
-      window.location.href = '/login';
+      // If the refresh request itself failed with 401, clear session and redirect immediately
+      if (originalRequest.url?.includes('/auth/refresh')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('active_workspace_id');
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+
+      if (
+        !originalRequest._retry &&
+        !originalRequest.url?.includes('/auth/login')
+      ) {
+        originalRequest._retry = true;
+        const refreshToken = localStorage.getItem('refresh_token');
+
+        if (refreshToken) {
+          try {
+            const baseURL = import.meta.env.VITE_API_URL || '/api';
+            // Use plain axios instance to avoid infinite loop with the request interceptor
+            const response = await axios.post(`${baseURL}/auth/refresh`, {
+              refreshToken,
+            });
+            const { accessToken, refreshToken: newRefreshToken } =
+              response.data;
+
+            localStorage.setItem('token', accessToken);
+            localStorage.setItem('refresh_token', newRefreshToken);
+
+            originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
+            return apiClient(originalRequest);
+          } catch (refreshError) {
+            // If refresh fails, clear session immediately and redirect to login
+            localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('active_workspace_id');
+            window.location.href = '/login';
+            return Promise.reject(refreshError);
+          }
+        } else {
+          // No refresh token available, clear session, redirect and reject promise
+          localStorage.removeItem('token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('active_workspace_id');
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+      }
     }
 
     // Fail-closed notification for Redis database offline

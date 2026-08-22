@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.assistant.auth.application.ports.out.EmailSenderPort;
 import com.assistant.auth.application.ports.out.PasswordHasherPort;
+import com.assistant.auth.application.ports.out.RefreshTokenPort;
 import com.assistant.auth.application.ports.out.TokenGeneratorPort;
 import com.assistant.auth.application.ports.out.TokenRevocationCachePort;
 import com.assistant.auth.domain.AccountStatus;
@@ -40,6 +41,7 @@ class AuthServiceTest {
   private FakePasswordHasher passwordHasher;
   private FakeTokenGenerator tokenGenerator;
   private FakeTokenRevocationCache tokenRevocationCache;
+  private FakeRefreshTokenPort refreshTokenPort;
   private FakeEmailSender emailSender;
   private FakeEventPublisher eventPublisher;
   private AuthService authService;
@@ -51,6 +53,7 @@ class AuthServiceTest {
     passwordHasher = new FakePasswordHasher();
     tokenGenerator = new FakeTokenGenerator();
     tokenRevocationCache = new FakeTokenRevocationCache();
+    refreshTokenPort = new FakeRefreshTokenPort();
     emailSender = new FakeEmailSender();
     eventPublisher = new FakeEventPublisher();
     authService =
@@ -60,6 +63,7 @@ class AuthServiceTest {
             passwordHasher,
             tokenGenerator,
             tokenRevocationCache,
+            refreshTokenPort,
             emailSender,
             eventPublisher);
   }
@@ -308,5 +312,46 @@ class AuthServiceTest {
     public void publishEvent(Object event) {
       publishedEvents.add(event);
     }
+  }
+
+  private static class FakeRefreshTokenPort implements RefreshTokenPort {
+    private final Map<String, UserId> tokenMap = new HashMap<>();
+
+    @Override
+    public void save(String refreshToken, UserId userId, Duration ttl) {
+      tokenMap.put(refreshToken, userId);
+    }
+
+    @Override
+    public Optional<UserId> findUserIdByToken(String refreshToken) {
+      return Optional.ofNullable(tokenMap.get(refreshToken));
+    }
+
+    @Override
+    public void revoke(String refreshToken) {
+      tokenMap.remove(refreshToken);
+    }
+  }
+
+  @Test
+  void shouldRefreshTokenSuccessfully() {
+    String email = "refresh_test@example.com";
+    String password = "myPassword";
+
+    authService.register(email, password);
+    authService.verify(emailSender.lastToken);
+
+    var loginResult = authService.authenticate(email, password);
+    String refreshToken = loginResult.refreshToken();
+    assertNotNull(refreshToken);
+
+    var refreshResult = authService.refresh(refreshToken);
+    assertNotNull(refreshResult);
+    assertNotEquals(refreshToken, refreshResult.refreshToken());
+    assertEquals("Bearer", refreshResult.tokenType());
+    assertEquals("token_" + email, refreshResult.accessToken());
+
+    // Old token should be revoked
+    assertThrows(DomainException.class, () -> authService.refresh(refreshToken));
   }
 }
