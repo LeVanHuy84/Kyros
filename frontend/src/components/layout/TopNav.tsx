@@ -2,7 +2,6 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Menu,
-  Bell,
   History,
   PlayCircle,
   ClipboardCheck,
@@ -11,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useWorkspace } from '../../hooks/useWorkspace';
 import { useTheme } from '../../hooks/useTheme';
+import { NotificationsDropdown } from './NotificationsDropdown';
 
 interface TopNavProps {
   onToggleSidebar: () => void;
@@ -165,16 +165,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onToggleSidebar }) => {
           </button>
 
           {/* Notification Bell [Bell] */}
-          <button
-            className="action-btn"
-            title="Notifications [Bell]"
-            onClick={() =>
-              alert('Opening Notifications Dropdown Panel (Screen 18)')
-            }
-          >
-            <Bell size={18} />
-            <span className="action-badge">5</span>
-          </button>
+          <NotificationsDropdown />
         </div>
       </div>
     </header>

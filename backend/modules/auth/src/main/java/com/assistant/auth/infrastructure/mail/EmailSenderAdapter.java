@@ -32,16 +32,12 @@ public class EmailSenderAdapter implements EmailSenderPort {
       MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
 
       String htmlMsg =
-          "<h3>Welcome to Kyros!</h3><p>Please verify your email address to activate your account"
-              + " by clicking the link below:</p><p><a href=\""
-              + verificationLink
-              + "\">Verify My Email Address</a></p><p>This link is valid for 1 hour. If you didn't"
-              + " request this email, please ignore it.</p>";
+          com.assistant.kernel.util.KyrosEmailTemplate.buildVerificationEmail(verificationLink);
 
       helper.setText(htmlMsg, true);
       helper.setTo(email);
       helper.setSubject("Kyros - Verify Your Email Address");
-      helper.setFrom("no-reply@assistant.ai");
+      helper.setFrom("no-reply@kyros.ai");
 
       mailSender.send(mimeMessage);
       log.info("Successfully sent email verification link to {}", email);

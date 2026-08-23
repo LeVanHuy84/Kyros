@@ -13,6 +13,7 @@ import { useConversations } from '../hooks/useConversations';
 import { PreferencesPanel } from '../components/settings/PreferencesPanel';
 import { MemoryVaultPanel } from '../components/settings/MemoryVaultPanel';
 import { ConversationsDirectoryPanel } from '../components/settings/ConversationsDirectoryPanel';
+import { NotificationSettingsPanel } from '../components/settings/NotificationSettingsPanel';
 import { TurnsModal } from '../components/settings/TurnsModal';
 import type { ConversationTurn } from '../types/memory';
 
@@ -239,24 +240,10 @@ const Settings: React.FC = () => {
           )}
 
           {activeSubTab === 'notif' && (
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-            >
-              <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
-                Notification Settings
-              </h4>
-              <p
-                style={{
-                  fontSize: '15px',
-                  color: 'var(--text-muted)',
-                  margin: 0,
-                  lineHeight: '1.6',
-                }}
-              >
-                Configure real-time WebSocket reminders and email digests for
-                high-priority task flags.
-              </p>
-            </div>
+            <NotificationSettingsPanel
+              onSuccess={handleSuccess}
+              onError={handleError}
+            />
           )}
 
           {activeSubTab === 'ws' && (

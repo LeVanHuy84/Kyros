@@ -32,8 +32,11 @@ public class Reminder {
   }
 
   public void snooze(SnoozeOffset offset, Instant now) {
-    if (status != ReminderStatus.Triggered) {
-      throw new IllegalStateException("Only triggered reminders can be snoozed");
+    if (status != ReminderStatus.Triggered
+        && status != ReminderStatus.Scheduled
+        && status != ReminderStatus.Snoozed) {
+      throw new IllegalStateException(
+          "Only scheduled, triggered, or snoozed reminders can be snoozed");
     }
     this.triggerTime = new ReminderTriggerTime(now.plus(offset.value()));
     this.status = ReminderStatus.Snoozed;
