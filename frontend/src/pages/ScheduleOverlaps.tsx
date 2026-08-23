@@ -109,7 +109,11 @@ export const ScheduleOverlaps: React.FC = () => {
         setSelectedEvent(matched);
         setIsDrawerOpen(true);
         // Clear query param so it doesn't reopen next time
-        window.history.replaceState({}, document.title, window.location.pathname);
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
       }
     }
   }, [events]);

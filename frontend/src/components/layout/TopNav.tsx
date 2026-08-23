@@ -2,7 +2,6 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Menu,
-  Bell,
   History,
   PlayCircle,
   ClipboardCheck,

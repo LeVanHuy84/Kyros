@@ -11,14 +11,21 @@ public final class KyrosEmailTemplate {
   private static final String TEXT_MAIN = "#0F172A";
   private static final String TEXT_MUTED = "#64748B";
 
-  // Stylized Hexagon + K logo in SVG format
   private static final String KYROS_LOGO_SVG =
-      "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='44' height='44'"
-          + " style='display: block; margin: 0 auto;'>  <polygon points='50,5 90,28 90,72 50,95"
-          + " 10,72 10,28' fill='"
-          + BRAND_COLOR_PRIMARY
-          + "' />  <path d='M38,25 L38,75 M38,50 L62,25 M38,50 L62,75' stroke='#FFFFFF'"
-          + " stroke-width='10' stroke-linecap='round' stroke-linejoin='round' /></svg>";
+      "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='44' height='44'"
+          + " style='display: block; margin: 0 auto;'>  <defs>    <linearGradient id='grad-primary'"
+          + " x1='0%' y1='0%' x2='100%' y2='100%'>      <stop offset='0%' stop-color='#4F46E5' />  "
+          + "    <stop offset='50%' stop-color='#6366F1' />      <stop offset='100%'"
+          + " stop-color='#22D3EE' />    </linearGradient>    <linearGradient id='grad-accent'"
+          + " x1='0%' y1='100%' x2='100%' y2='0%'>      <stop offset='0%' stop-color='#06B6D4' />  "
+          + "    <stop offset='100%' stop-color='#10B981' />    </linearGradient>  </defs>  <g"
+          + " transform='translate(0, 0)'>    <rect x='151' y='100' width='48' height='312' rx='24'"
+          + " fill='url(#grad-primary)' />    <path d='M 175 256 C 211 256 331 180 361 130 C 381"
+          + " 100 351 70 321 90 C 261 130 201 210 175 256 Z' fill='url(#grad-accent)'"
+          + " opacity='0.95' />    <path d='M 175 256 C 211 256 331 332 361 382 C 381 412 351 442"
+          + " 321 422 C 261 382 201 302 175 256 Z' fill='url(#grad-primary)' />    <circle cx='175'"
+          + " cy='256' r='28' fill='#FFFFFF' />    <circle cx='175' cy='256' r='16'"
+          + " fill='url(#grad-primary)' />  </g></svg>";
 
   public static String buildVerificationEmail(String verificationLink) {
     return buildEmailLayout(

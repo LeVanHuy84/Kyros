@@ -36,6 +36,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({
   const [end, setEnd] = useState<string>('');
   const [reminders, setReminders] = useState<number[]>([]);
   const [submitError, setSubmitError] = useState<string>('');
+  const [hasInitialized, setHasInitialized] = useState<boolean>(false);
 
   const formatLocal = (d: Date) => {
     const pad = (n: number) => (n < 10 ? '0' + n : n);
@@ -45,7 +46,13 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
+      setHasInitialized(false);
+      return;
+    }
+
+    if (isOpen && !hasInitialized) {
+      setHasInitialized(true);
       setSubmitError('');
       if (isEditing && selectedEvent) {
         setTitle(selectedEvent.title);
@@ -84,7 +91,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({
         }
       }
     }
-  }, [isOpen]);
+  }, [isOpen, isEditing, selectedEvent, prefilledStart, hasInitialized]);
 
   if (!isOpen) return null;
 

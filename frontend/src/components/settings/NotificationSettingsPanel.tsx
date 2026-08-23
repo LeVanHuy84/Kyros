@@ -4,7 +4,6 @@ import { useNotifications } from '../../hooks/useNotifications';
 import type {
   UrgencyLevel,
   NotificationChannel,
-  NotificationProfile,
 } from '../../types/notification';
 
 interface NotificationSettingsPanelProps {
@@ -18,7 +17,7 @@ const CHANNELS: NotificationChannel[] = ['InApp', 'Email', 'Slack'];
 export const NotificationSettingsPanel: React.FC<
   NotificationSettingsPanelProps
 > = ({ onSuccess, onError }) => {
-  const { profile, isLoading, isSaving, fetchProfile, updateProfile } =
+  const { isLoading, isSaving, fetchProfile, updateProfile } =
     useNotifications();
 
   // Local state for profile edits
