@@ -84,7 +84,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({
         }
       }
     }
-  }, [isOpen, isEditing, selectedEvent, prefilledStart]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

@@ -71,13 +71,23 @@ public class NotificationApplicationService
 
     // 1. InApp Delivery
     if (channels.contains(NotificationChannel.InApp)) {
+      java.util.Map<String, String> metadata = new java.util.HashMap<>();
+      if (command.parameters() != null) {
+        for (var entry : command.parameters().entrySet()) {
+          if (entry.getValue() != null) {
+            metadata.put(entry.getKey(), entry.getValue().toString());
+          }
+        }
+      }
+
       InAppNotification notification =
           new InAppNotification(
               command.workspaceId(),
               command.userId(),
               command.title(),
               command.content(),
-              command.urgencyLevel());
+              command.urgencyLevel(),
+              metadata);
       inAppRepository.save(notification);
 
       eventPublisher.publishEvent(

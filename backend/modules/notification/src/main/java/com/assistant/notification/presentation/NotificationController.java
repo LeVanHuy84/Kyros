@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/api/v1/workspaces/{workspaceId}")
@@ -172,5 +174,18 @@ public class NotificationController {
             new GetNotificationProfileQuery(new WorkspaceId(workspaceId), userId));
 
     return ResponseEntity.ok(NotificationProfileResponse.fromDTO(dto));
+  }
+
+  @GetMapping(value = "/notifications/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public SseEmitter streamNotifications(@PathVariable("workspaceId") UUID workspaceId) {
+    validateWorkspace(workspaceId);
+    UserId userId = SecurityUtils.getCurrentUserId();
+    return SseNotificationRegistry.register(new WorkspaceId(workspaceId), userId);
+  }
+
+  @org.springframework.context.event.EventListener
+  public void onInAppNotificationCreated(
+      com.assistant.kernel.event.NotificationEvents.InAppNotificationCreated event) {
+    SseNotificationRegistry.send(event.workspaceId(), event.userId(), event);
   }
 }

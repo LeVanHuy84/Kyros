@@ -97,6 +97,7 @@ public class InAppNotificationRepositoryAdapter implements InAppNotificationRepo
         jpa.getDismissedAt(),
         jpa.getCreatedAt(),
         jpa.getUpdatedAt(),
+        jpa.getMetadata(),
         jpa.getVersion());
   }
 
@@ -113,6 +114,7 @@ public class InAppNotificationRepositoryAdapter implements InAppNotificationRepo
     jpa.setDismissedAt(domain.getDismissedAt());
     jpa.setCreatedAt(domain.getCreatedAt());
     jpa.setUpdatedAt(domain.getUpdatedAt());
+    jpa.setMetadata(domain.getMetadata());
     jpa.setVersion(domain.getVersion());
     return jpa;
   }

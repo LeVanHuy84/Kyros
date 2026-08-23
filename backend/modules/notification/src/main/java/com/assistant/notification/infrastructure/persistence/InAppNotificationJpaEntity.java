@@ -48,6 +48,10 @@ public class InAppNotificationJpaEntity {
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
 
+  @Column(name = "metadata", nullable = false)
+  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+  private java.util.Map<String, String> metadata;
+
   @Version
   @Column(name = "version")
   private int version;
@@ -148,5 +152,13 @@ public class InAppNotificationJpaEntity {
 
   public void setVersion(int version) {
     this.version = version;
+  }
+
+  public java.util.Map<String, String> getMetadata() {
+    return metadata;
+  }
+
+  public void setMetadata(java.util.Map<String, String> metadata) {
+    this.metadata = metadata;
   }
 }

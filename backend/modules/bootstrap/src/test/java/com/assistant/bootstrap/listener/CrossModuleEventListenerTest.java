@@ -57,5 +57,7 @@ class CrossModuleEventListenerTest {
     Assertions.assertEquals("Calendar Reminder: Sprint Planning", command.title());
     Assertions.assertTrue(command.content().contains("2026-08-23T10:00:00Z"));
     Assertions.assertEquals(UrgencyLevel.Normal, command.urgencyLevel());
+    Assertions.assertEquals("calendar_reminder", command.parameters().get("type"));
+    Assertions.assertEquals(eventId.value().toString(), command.parameters().get("eventId"));
   }
 }

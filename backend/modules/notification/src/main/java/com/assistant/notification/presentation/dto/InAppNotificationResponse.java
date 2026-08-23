@@ -11,6 +11,7 @@ public record InAppNotificationResponse(
     String content,
     String urgencyLevel,
     String status,
+    java.util.Map<String, String> metadata,
     Instant createdAt) {
 
   public static InAppNotificationResponse fromDomain(InAppNotification notification) {
@@ -21,6 +22,7 @@ public record InAppNotificationResponse(
         notification.getContent(),
         notification.getUrgencyLevel().name(),
         notification.getStatus().name(),
+        notification.getMetadata(),
         notification.getCreatedAt());
   }
 }

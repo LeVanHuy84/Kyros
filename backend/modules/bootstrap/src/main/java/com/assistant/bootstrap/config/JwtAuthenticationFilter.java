@@ -55,6 +55,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
 
     String authHeader = request.getHeader("Authorization");
+    if (authHeader == null) {
+      String queryToken = request.getParameter("token");
+      if (queryToken != null && !queryToken.trim().isEmpty()) {
+        authHeader = "Bearer " + queryToken.trim();
+      }
+    }
+
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
       filterChain.doFilter(request, response);
       return;
@@ -89,6 +96,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
       // Workspace Tenancy Scoping
       String xWorkspaceId = request.getHeader("X-Workspace-Id");
+      if (xWorkspaceId == null || xWorkspaceId.trim().isEmpty()) {
+        xWorkspaceId = request.getParameter("workspaceId");
+      }
       if (xWorkspaceId != null && !xWorkspaceId.trim().isEmpty()) {
         WorkspaceContextHolder.set(new WorkspaceId(UUID.fromString(xWorkspaceId.trim())));
       } else {

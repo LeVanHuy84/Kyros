@@ -24,7 +24,8 @@ public class NotificationProfileJpaEntity {
   @Column(name = "user_id", nullable = false)
   private UUID userId;
 
-  @Column(name = "urgency_channels_map", nullable = false, columnDefinition = "jsonb")
+  @Column(name = "urgency_channels_map", nullable = false)
+  @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
   private String urgencyChannelsMap;
 
   @Column(name = "email_address")

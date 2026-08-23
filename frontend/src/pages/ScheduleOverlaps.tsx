@@ -99,6 +99,21 @@ export const ScheduleOverlaps: React.FC = () => {
     fetchEvents();
   }, [fetchEvents]);
 
+  // Handle deep-linked eventId from URL query param
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const eventIdParam = params.get('eventId');
+    if (eventIdParam && events.length > 0) {
+      const matched = events.find((e) => e.eventId === eventIdParam);
+      if (matched) {
+        setSelectedEvent(matched);
+        setIsDrawerOpen(true);
+        // Clear query param so it doesn't reopen next time
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [events]);
+
   // Periodic polling for active triggered reminders
   useEffect(() => {
     const checkReminders = () => {

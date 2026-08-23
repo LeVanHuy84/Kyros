@@ -22,8 +22,11 @@ public class CrossModuleEventListener {
     String title = "Calendar Reminder: " + event.eventTitle().value();
     String content = "Your event starts at " + event.eventStartTime().toString();
 
+    Map<String, Object> metadata =
+        Map.of("type", "calendar_reminder", "eventId", event.eventId().value().toString());
+
     notificationDispatchPort.dispatch(
         new DispatchNotificationCommand(
-            event.workspaceId(), event.userId(), title, content, UrgencyLevel.Normal, Map.of()));
+            event.workspaceId(), event.userId(), title, content, UrgencyLevel.Normal, metadata));
   }
 }

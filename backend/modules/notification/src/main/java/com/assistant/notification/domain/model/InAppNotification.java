@@ -3,6 +3,7 @@ package com.assistant.notification.domain.model;
 import com.assistant.kernel.domain.UserId;
 import com.assistant.kernel.domain.WorkspaceId;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -18,6 +19,7 @@ public class InAppNotification {
   private Instant dismissedAt;
   private final Instant createdAt;
   private Instant updatedAt;
+  private final Map<String, String> metadata;
   private int version;
 
   public InAppNotification(
@@ -32,6 +34,7 @@ public class InAppNotification {
       Instant dismissedAt,
       Instant createdAt,
       Instant updatedAt,
+      Map<String, String> metadata,
       int version) {
     this.id = Objects.requireNonNull(id, "ID cannot be null");
     this.workspaceId = Objects.requireNonNull(workspaceId, "Workspace ID cannot be null");
@@ -47,6 +50,7 @@ public class InAppNotification {
     this.dismissedAt = dismissedAt;
     this.createdAt = Objects.requireNonNull(createdAt, "CreatedAt cannot be null");
     this.updatedAt = Objects.requireNonNull(updatedAt, "UpdatedAt cannot be null");
+    this.metadata = metadata == null ? Map.of() : Map.copyOf(metadata);
     this.version = version;
   }
 
@@ -55,7 +59,8 @@ public class InAppNotification {
       UserId userId,
       String title,
       String content,
-      UrgencyLevel urgencyLevel) {
+      UrgencyLevel urgencyLevel,
+      Map<String, String> metadata) {
     this(
         UUID.randomUUID(),
         workspaceId,
@@ -68,7 +73,17 @@ public class InAppNotification {
         null,
         Instant.now(),
         Instant.now(),
+        metadata,
         0);
+  }
+
+  public InAppNotification(
+      WorkspaceId workspaceId,
+      UserId userId,
+      String title,
+      String content,
+      UrgencyLevel urgencyLevel) {
+    this(workspaceId, userId, title, content, urgencyLevel, Map.of());
   }
 
   public void markRead() {
@@ -132,6 +147,10 @@ public class InAppNotification {
 
   public Instant getUpdatedAt() {
     return updatedAt;
+  }
+
+  public Map<String, String> getMetadata() {
+    return metadata;
   }
 
   public int getVersion() {
