@@ -55,8 +55,20 @@ public class TodoService implements TodoPort {
       String description,
       Priority priority,
       Instant dueDate,
-      Set<Tag> tags) {
+      Set<Tag> tags,
+      Integer estimatedDurationMinutes,
+      Boolean autoSchedule,
+      String subtasks) {
     Task task = new Task(TaskId.random(), workspaceId, title, description, priority, dueDate, tags);
+    if (estimatedDurationMinutes != null) {
+      task.setEstimatedDurationMinutes(estimatedDurationMinutes);
+    }
+    if (autoSchedule != null) {
+      task.setAutoSchedule(autoSchedule);
+    }
+    if (subtasks != null) {
+      task.setSubtasks(subtasks);
+    }
     taskRepository.save(task);
 
     eventPublisher.publishEvent(
@@ -118,6 +130,9 @@ public class TodoService implements TodoPort {
       String description,
       Priority priority,
       Instant dueDate,
+      Integer estimatedDurationMinutes,
+      Boolean autoSchedule,
+      String subtasks,
       int version) {
     Task task = loadTask(taskId, workspaceId);
     if (task.getVersion() != version) {
@@ -125,6 +140,15 @@ public class TodoService implements TodoPort {
           "Task was updated by another request. Reload task and try again.");
     }
     task.update(title, description, priority, dueDate);
+    if (estimatedDurationMinutes != null) {
+      task.setEstimatedDurationMinutes(estimatedDurationMinutes);
+    }
+    if (autoSchedule != null) {
+      task.setAutoSchedule(autoSchedule);
+    }
+    if (subtasks != null) {
+      task.setSubtasks(subtasks);
+    }
     taskRepository.save(task);
 
     eventPublisher.publishEvent(

@@ -31,9 +31,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class CalendarController {
 
   private final CalendarPort calendarPort;
+  private final com.assistant.calendar.application.service.AutoSchedulingService
+      autoSchedulingService;
 
-  public CalendarController(CalendarPort calendarPort) {
+  public CalendarController(
+      CalendarPort calendarPort,
+      com.assistant.calendar.application.service.AutoSchedulingService autoSchedulingService) {
     this.calendarPort = calendarPort;
+    this.autoSchedulingService = autoSchedulingService;
   }
 
   private void validateWorkspace(UUID pathWorkspaceId) {
@@ -216,5 +221,23 @@ public class CalendarController {
             workingHoursEnd != null ? workingHoursEnd : LocalTime.of(17, 0),
             minimumNoticeMinutes,
             maxResults));
+  }
+
+  @PostMapping("/auto-schedule")
+  public ResponseEntity<List<CalendarEventDto>> autoScheduleTasks(
+      @PathVariable("workspaceId") UUID workspaceId,
+      @RequestParam(name = "daysAhead", required = false, defaultValue = "7") int daysAhead) {
+    validateWorkspace(workspaceId);
+    return ResponseEntity.ok(
+        autoSchedulingService.autoScheduleTasks(new WorkspaceId(workspaceId), daysAhead));
+  }
+
+  @PostMapping("/resolve-conflicts")
+  public ResponseEntity<List<CalendarEventDto>> resolveConflicts(
+      @PathVariable("workspaceId") UUID workspaceId,
+      @RequestParam(name = "daysAhead", required = false, defaultValue = "7") int daysAhead) {
+    validateWorkspace(workspaceId);
+    return ResponseEntity.ok(
+        autoSchedulingService.resolveConflicts(new WorkspaceId(workspaceId), daysAhead));
   }
 }

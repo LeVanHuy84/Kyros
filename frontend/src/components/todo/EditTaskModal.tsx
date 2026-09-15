@@ -16,7 +16,9 @@ interface EditTaskModalProps {
     dueDate: string | null,
     version: number,
     tags: string[],
-    originalTags: string[]
+    originalTags: string[],
+    estimatedDurationMinutes?: number,
+    autoSchedule?: boolean
   ) => Promise<void>;
   isSaving: boolean;
 }
@@ -35,6 +37,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
     priority: 'Medium' as 'High' | 'Medium' | 'Low',
     dueDate: '',
     tags: [] as string[],
+    estimatedDurationMinutes: 30,
+    autoSchedule: true,
   });
 
   useEffect(() => {
@@ -45,6 +49,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         priority: task.priority,
         dueDate: task.dueDate ? task.dueDate.split('T')[0] : '',
         tags: task.tags || [],
+        estimatedDurationMinutes: task.estimatedDurationMinutes || 30,
+        autoSchedule: task.autoSchedule !== false,
       });
     }
   }, [task]);
@@ -68,7 +74,9 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         form.dueDate || null,
         task.version,
         form.tags,
-        task.tags || []
+        task.tags || [],
+        form.estimatedDurationMinutes,
+        form.autoSchedule
       );
       onClose();
     } catch {
@@ -277,6 +285,95 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   fontFamily: 'var(--font-sans)',
                 }}
               />
+            </div>
+          </div>
+
+          {/* Row: Duration & Auto-Schedule Toggle */}
+          <div
+            className="form-row-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+            }}
+          >
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
+            >
+              <label
+                style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: 'var(--text-main)',
+                }}
+              >
+                Estimated Duration
+              </label>
+              <select
+                value={form.estimatedDurationMinutes}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    estimatedDurationMinutes: Number(e.target.value),
+                  }))
+                }
+                style={{
+                  padding: '11px 16px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-app)',
+                  color: 'var(--text-main)',
+                  fontSize: '15px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={45}>45 minutes</option>
+                <option value={60}>1 hour</option>
+                <option value={90}>1.5 hours</option>
+                <option value={120}>2 hours</option>
+              </select>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+                justifyContent: 'center',
+              }}
+            >
+              <label
+                style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: 'var(--text-main)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  marginTop: '18px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={form.autoSchedule}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      autoSchedule: e.target.checked,
+                    }))
+                  }
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    accentColor: 'var(--color-primary)',
+                  }}
+                />
+                <span>🤖 Auto-Schedule</span>
+              </label>
             </div>
           </div>
 

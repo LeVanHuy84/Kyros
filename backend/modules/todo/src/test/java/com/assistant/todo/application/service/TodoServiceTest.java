@@ -46,7 +46,8 @@ class TodoServiceTest {
   @Test
   void testCreateTaskSavesAndPublishesEvent() {
     Task task =
-        todoPort.createTask(workspaceId, "New Task", "Desc", Priority.Medium, null, Set.of());
+        todoPort.createTask(
+            workspaceId, "New Task", "Desc", Priority.Medium, null, Set.of(), 30, true, null);
 
     assertNotNull(task);
     assertEquals("New Task", task.getTitle());
@@ -69,7 +70,8 @@ class TodoServiceTest {
     when(taskRepository.findById(taskId, workspaceId)).thenReturn(Optional.of(existingTask));
 
     Task updated =
-        todoPort.updateTask(taskId, workspaceId, "New Title", "New Desc", Priority.High, null, 0);
+        todoPort.updateTask(
+            taskId, workspaceId, "New Title", "New Desc", Priority.High, null, 30, true, null, 0);
 
     assertEquals("New Title", updated.getTitle());
     verify(taskRepository, times(1)).save(existingTask);
@@ -92,6 +94,9 @@ class TodoServiceTest {
                 "New Title",
                 "New Desc",
                 Priority.High,
+                null,
+                30,
+                true,
                 null,
                 1) // version mismatch
         );

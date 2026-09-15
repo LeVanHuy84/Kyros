@@ -4,8 +4,8 @@ import {
   Bot,
   ListTodo,
   Calendar,
+  FileText,
   Settings,
-  Link2,
   ShieldAlert,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -57,13 +57,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
           <span>Schedule Overlaps</span>
         </NavLink>
 
-        <NavLink
-          to="/integrations"
-          className="nav-link"
-          onClick={handleNavigate}
-        >
-          <Link2 size={18} aria-hidden="true" />
-          <span>Integrations</span>
+        <NavLink to="/notes" className="nav-link" onClick={handleNavigate}>
+          <FileText size={18} aria-hidden="true" />
+          <span>Smart Notes</span>
         </NavLink>
 
         <NavLink to="/settings" className="nav-link" onClick={handleNavigate}>

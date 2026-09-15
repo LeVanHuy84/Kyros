@@ -39,6 +39,15 @@ public class UserPreferencesJpaEntity {
   @Column(name = "default_reminder_lead_time_minutes", nullable = false)
   private int defaultReminderLeadTimeMinutes;
 
+  @Column(name = "working_hours_start")
+  private String workingHoursStart = "08:30";
+
+  @Column(name = "working_hours_end")
+  private String workingHoursEnd = "17:30";
+
+  @Column(name = "buffer_time_minutes")
+  private int bufferTimeMinutes = 15;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 

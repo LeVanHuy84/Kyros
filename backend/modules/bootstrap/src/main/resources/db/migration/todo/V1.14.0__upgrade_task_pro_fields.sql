@@ -1,0 +1,3 @@
+ALTER TABLE todo.tasks ADD COLUMN IF NOT EXISTS estimated_duration_minutes INT DEFAULT 30;
+ALTER TABLE todo.tasks ADD COLUMN IF NOT EXISTS auto_schedule BOOLEAN DEFAULT TRUE;
+ALTER TABLE todo.tasks ADD COLUMN IF NOT EXISTS subtasks TEXT;

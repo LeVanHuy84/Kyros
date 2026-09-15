@@ -14,4 +14,7 @@ public record UpdateTaskRequest(
     @Pattern(regexp = "High|Medium|Low", message = "Priority must be High, Medium, or Low")
         String priority,
     Instant dueDate,
+    Integer estimatedDurationMinutes,
+    Boolean autoSchedule,
+    String subtasks,
     @NotNull(message = "Version is required for optimistic locking") Integer version) {}

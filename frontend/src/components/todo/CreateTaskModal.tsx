@@ -13,7 +13,9 @@ interface CreateTaskModalProps {
     description: string,
     priority: 'High' | 'Medium' | 'Low',
     dueDate: string | null,
-    tags: string[]
+    tags: string[],
+    estimatedDurationMinutes?: number,
+    autoSchedule?: boolean
   ) => Promise<void>;
   isSaving: boolean;
 }
@@ -34,6 +36,8 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     priority: 'Medium' as 'High' | 'Medium' | 'Low',
     dueDate: '',
     tags: [] as string[],
+    estimatedDurationMinutes: 30,
+    autoSchedule: true,
   });
 
   useEffect(() => {
@@ -64,7 +68,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         form.description.trim(),
         form.priority,
         form.dueDate || null,
-        form.tags
+        form.tags,
+        form.estimatedDurationMinutes,
+        form.autoSchedule
       );
 
       // Reset form to preferred default
@@ -74,6 +80,8 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         priority: defaultPriority,
         dueDate: '',
         tags: [],
+        estimatedDurationMinutes: 30,
+        autoSchedule: true,
       });
       onClose();
     } catch {
@@ -282,6 +290,114 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                   fontFamily: 'var(--font-sans)',
                 }}
               />
+            </div>
+          </div>
+
+          {/* Row: Duration Presets & Auto-Schedule Toggle */}
+          <div
+            className="form-row-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+            }}
+          >
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
+            >
+              <label
+                style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: 'var(--text-main)',
+                }}
+              >
+                Estimated Duration
+              </label>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '6px',
+                  flexWrap: 'wrap',
+                  marginBottom: '4px',
+                }}
+              >
+                {[15, 30, 45, 60, 90, 120].map((mins) => (
+                  <button
+                    key={mins}
+                    type="button"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        estimatedDurationMinutes: mins,
+                      }))
+                    }
+                    style={{
+                      padding: '3px 8px',
+                      fontSize: '12px',
+                      borderRadius: 'var(--radius-sm)',
+                      border:
+                        form.estimatedDurationMinutes === mins
+                          ? '1px solid var(--color-primary)'
+                          : '1px solid var(--border-color)',
+                      backgroundColor:
+                        form.estimatedDurationMinutes === mins
+                          ? 'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.15)'
+                          : 'var(--bg-app)',
+                      color:
+                        form.estimatedDurationMinutes === mins
+                          ? 'var(--color-primary)'
+                          : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      fontWeight:
+                        form.estimatedDurationMinutes === mins
+                          ? '600'
+                          : 'normal',
+                    }}
+                  >
+                    {mins < 60 ? `${mins}m` : `${mins / 60}h`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+                justifyContent: 'center',
+              }}
+            >
+              <label
+                style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: 'var(--text-main)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  marginTop: '18px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={form.autoSchedule}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      autoSchedule: e.target.checked,
+                    }))
+                  }
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    accentColor: 'var(--color-primary)',
+                  }}
+                />
+                <span>🤖 Auto-Schedule</span>
+              </label>
             </div>
           </div>
 

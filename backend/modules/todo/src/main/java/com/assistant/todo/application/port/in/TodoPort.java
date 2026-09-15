@@ -19,7 +19,10 @@ public interface TodoPort {
       String description,
       Priority priority,
       Instant dueDate,
-      Set<Tag> tags);
+      Set<Tag> tags,
+      Integer estimatedDurationMinutes,
+      Boolean autoSchedule,
+      String subtasks);
 
   Page<Task> listTasks(
       WorkspaceId workspaceId,
@@ -42,6 +45,9 @@ public interface TodoPort {
       String description,
       Priority priority,
       Instant dueDate,
+      Integer estimatedDurationMinutes,
+      Boolean autoSchedule,
+      String subtasks,
       int version);
 
   void softDeleteTask(TaskId taskId, WorkspaceId workspaceId);

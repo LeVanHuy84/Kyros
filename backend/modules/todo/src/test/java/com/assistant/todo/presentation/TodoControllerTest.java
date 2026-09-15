@@ -62,6 +62,9 @@ class TodoControllerTest {
             eq("Desc"),
             eq(Priority.Medium),
             any(),
+            any(),
+            any(),
+            any(),
             any()))
         .thenReturn(task);
 

@@ -13,6 +13,9 @@ export interface Task {
   status: 'Active' | 'Completed' | 'SoftDeleted';
   tags: string[];
   dueDate: string | null;
+  estimatedDurationMinutes?: number | null;
+  autoSchedule?: boolean | null;
+  subtasks?: string | null;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -216,7 +219,9 @@ export const useTasks = () => {
     description: string,
     priority: 'High' | 'Medium' | 'Low',
     dueDate: string | null,
-    tags: string[]
+    tags: string[],
+    estimatedDurationMinutes?: number,
+    autoSchedule?: boolean
   ) => {
     if (!activeWorkspace) return;
     setIsSaving(true);
@@ -228,6 +233,8 @@ export const useTasks = () => {
         priority,
         dueDate: dueDate ? new Date(dueDate).toISOString() : null,
         tags,
+        estimatedDurationMinutes: estimatedDurationMinutes ?? 30,
+        autoSchedule: autoSchedule ?? true,
       });
       fetchTasks();
     } catch (err: any) {
@@ -250,7 +257,9 @@ export const useTasks = () => {
     dueDate: string | null,
     version: number,
     tags: string[],
-    originalTags: string[]
+    originalTags: string[],
+    estimatedDurationMinutes?: number,
+    autoSchedule?: boolean
   ) => {
     if (!activeWorkspace) return;
     setIsSaving(true);
@@ -264,6 +273,8 @@ export const useTasks = () => {
           priority,
           dueDate: dueDate ? new Date(dueDate).toISOString() : null,
           version,
+          estimatedDurationMinutes: estimatedDurationMinutes ?? 30,
+          autoSchedule: autoSchedule ?? true,
         }
       );
 
