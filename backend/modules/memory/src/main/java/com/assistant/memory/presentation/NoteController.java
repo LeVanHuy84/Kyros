@@ -63,19 +63,16 @@ public class NoteController {
   }
 
   @GetMapping
-  public ResponseEntity<List<NoteDto>> listNotes(
-      @PathVariable("workspaceId") UUID workspaceId) {
+  public ResponseEntity<List<NoteDto>> listNotes(@PathVariable("workspaceId") UUID workspaceId) {
     validateWorkspace(workspaceId);
     return ResponseEntity.ok(noteService.listNotes(new WorkspaceId(workspaceId)));
   }
 
   @GetMapping("/{noteId}")
   public ResponseEntity<NoteDto> getNote(
-      @PathVariable("workspaceId") UUID workspaceId,
-      @PathVariable("noteId") UUID noteId) {
+      @PathVariable("workspaceId") UUID workspaceId, @PathVariable("noteId") UUID noteId) {
     validateWorkspace(workspaceId);
-    return ResponseEntity.ok(
-        noteService.getNote(new WorkspaceId(workspaceId), new NoteId(noteId)));
+    return ResponseEntity.ok(noteService.getNote(new WorkspaceId(workspaceId), new NoteId(noteId)));
   }
 
   @PutMapping("/{noteId}")
@@ -96,8 +93,7 @@ public class NoteController {
 
   @DeleteMapping("/{noteId}")
   public ResponseEntity<Void> deleteNote(
-      @PathVariable("workspaceId") UUID workspaceId,
-      @PathVariable("noteId") UUID noteId) {
+      @PathVariable("workspaceId") UUID workspaceId, @PathVariable("noteId") UUID noteId) {
     validateWorkspace(workspaceId);
     noteService.deleteNote(new WorkspaceId(workspaceId), new NoteId(noteId));
     return ResponseEntity.noContent().build();

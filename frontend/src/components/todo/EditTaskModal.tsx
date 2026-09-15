@@ -297,7 +297,9 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               gap: '16px',
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
+            >
               <label
                 style={{
                   fontSize: '14px',
@@ -335,7 +337,14 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
               </select>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'center' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+                justifyContent: 'center',
+              }}
+            >
               <label
                 style={{
                   fontSize: '14px',
@@ -352,9 +361,16 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                   type="checkbox"
                   checked={form.autoSchedule}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, autoSchedule: e.target.checked }))
+                    setForm((prev) => ({
+                      ...prev,
+                      autoSchedule: e.target.checked,
+                    }))
                   }
-                  style={{ width: '18px', height: '18px', accentColor: 'var(--color-primary)' }}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    accentColor: 'var(--color-primary)',
+                  }}
                 />
                 <span>🤖 Auto-Schedule</span>
               </label>

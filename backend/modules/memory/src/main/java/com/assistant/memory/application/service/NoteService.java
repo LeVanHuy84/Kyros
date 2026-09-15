@@ -29,15 +29,7 @@ public class NoteService {
       String content,
       UUID taskId,
       UUID eventId) {
-    Note note =
-        new Note(
-            NoteId.random(),
-            workspaceId,
-            userId,
-            title,
-            content,
-            taskId,
-            eventId);
+    Note note = new Note(NoteId.random(), workspaceId, userId, title, content, taskId, eventId);
 
     noteRepository.save(note);
     return toDto(note);

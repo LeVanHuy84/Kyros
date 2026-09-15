@@ -293,7 +293,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             </div>
           </div>
 
-          {/* Row: Duration & Auto-Schedule Toggle */}
+          {/* Row: Duration Presets & Auto-Schedule Toggle */}
           <div
             className="form-row-grid"
             style={{
@@ -302,7 +302,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               gap: '16px',
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
+            >
               <label
                 style={{
                   fontSize: '14px',
@@ -312,35 +314,61 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               >
                 Estimated Duration
               </label>
-              <select
-                value={form.estimatedDurationMinutes}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    estimatedDurationMinutes: Number(e.target.value),
-                  }))
-                }
+              <div
                 style={{
-                  padding: '11px 16px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
-                  backgroundColor: 'var(--bg-app)',
-                  color: 'var(--text-main)',
-                  fontSize: '15px',
-                  outline: 'none',
-                  cursor: 'pointer',
+                  display: 'flex',
+                  gap: '6px',
+                  flexWrap: 'wrap',
+                  marginBottom: '4px',
                 }}
               >
-                <option value={15}>15 minutes</option>
-                <option value={30}>30 minutes</option>
-                <option value={45}>45 minutes</option>
-                <option value={60}>1 hour</option>
-                <option value={90}>1.5 hours</option>
-                <option value={120}>2 hours</option>
-              </select>
+                {[15, 30, 45, 60, 90, 120].map((mins) => (
+                  <button
+                    key={mins}
+                    type="button"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        estimatedDurationMinutes: mins,
+                      }))
+                    }
+                    style={{
+                      padding: '3px 8px',
+                      fontSize: '12px',
+                      borderRadius: 'var(--radius-sm)',
+                      border:
+                        form.estimatedDurationMinutes === mins
+                          ? '1px solid var(--color-primary)'
+                          : '1px solid var(--border-color)',
+                      backgroundColor:
+                        form.estimatedDurationMinutes === mins
+                          ? 'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.15)'
+                          : 'var(--bg-app)',
+                      color:
+                        form.estimatedDurationMinutes === mins
+                          ? 'var(--color-primary)'
+                          : 'var(--text-muted)',
+                      cursor: 'pointer',
+                      fontWeight:
+                        form.estimatedDurationMinutes === mins
+                          ? '600'
+                          : 'normal',
+                    }}
+                  >
+                    {mins < 60 ? `${mins}m` : `${mins / 60}h`}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', justifyContent: 'center' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+                justifyContent: 'center',
+              }}
+            >
               <label
                 style={{
                   fontSize: '14px',
@@ -357,9 +385,16 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                   type="checkbox"
                   checked={form.autoSchedule}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, autoSchedule: e.target.checked }))
+                    setForm((prev) => ({
+                      ...prev,
+                      autoSchedule: e.target.checked,
+                    }))
                   }
-                  style={{ width: '18px', height: '18px', accentColor: 'var(--color-primary)' }}
+                  style={{
+                    width: '18px',
+                    height: '18px',
+                    accentColor: 'var(--color-primary)',
+                  }}
                 />
                 <span>🤖 Auto-Schedule</span>
               </label>

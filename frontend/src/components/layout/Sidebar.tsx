@@ -1,6 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Bot, ListTodo, Calendar, FileText, Settings, ShieldAlert } from 'lucide-react';
+import {
+  Bot,
+  ListTodo,
+  Calendar,
+  FileText,
+  Settings,
+  ShieldAlert,
+} from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { TenantSelector } from './TenantSelector';
 

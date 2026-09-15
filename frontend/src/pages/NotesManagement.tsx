@@ -40,9 +40,10 @@ const NotesManagement: React.FC = () => {
   const [formTaskId, setFormTaskId] = useState<string>('');
   const [formEventId, setFormEventId] = useState<string>('');
 
-  const filteredNotes = notes.filter((n) =>
-    n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    n.content?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredNotes = notes.filter(
+    (n) =>
+      n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      n.content?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const openCreateForm = () => {
@@ -96,9 +97,21 @@ const NotesManagement: React.FC = () => {
 
   if (!activeWorkspace) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+      <div
+        style={{
+          padding: '40px',
+          textAlign: 'center',
+          color: 'var(--text-muted)',
+        }}
+      >
         <FileText size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
-        <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-main)' }}>
+        <h3
+          style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            color: 'var(--text-main)',
+          }}
+        >
           No Active Workspace
         </h3>
         <p style={{ fontSize: '15px' }}>
@@ -139,7 +152,8 @@ const NotesManagement: React.FC = () => {
                 fontSize: '12px',
                 padding: '3px 8px',
                 borderRadius: '12px',
-                backgroundColor: 'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.15)',
+                backgroundColor:
+                  'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.15)',
                 color: 'var(--color-primary)',
                 fontWeight: '600',
               }}
@@ -147,8 +161,11 @@ const NotesManagement: React.FC = () => {
               Knowledge Base
             </span>
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
-            Capture meeting notes, ideas, and context linked to tasks & calendar events for AI Agent reference.
+          <p
+            style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}
+          >
+            Capture meeting notes, ideas, and context linked to tasks & calendar
+            events for AI Agent reference.
           </p>
         </div>
 
@@ -181,7 +198,12 @@ const NotesManagement: React.FC = () => {
           <span style={{ flexGrow: 1 }}>{error}</span>
           <button
             onClick={() => setError(null)}
-            style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer' }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--color-danger)',
+              cursor: 'pointer',
+            }}
           >
             <X size={16} />
           </button>
@@ -192,13 +214,22 @@ const NotesManagement: React.FC = () => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: isCreating || isEditing || selectedNote ? '340px 1fr' : '1fr',
+          gridTemplateColumns:
+            isCreating || isEditing || selectedNote ? '340px 1fr' : '1fr',
           gap: '24px',
           alignItems: 'start',
         }}
       >
         {/* Left List Panel */}
-        <div className="card" style={{ padding: '20px', gap: '16px', display: 'flex', flexDirection: 'column' }}>
+        <div
+          className="card"
+          style={{
+            padding: '20px',
+            gap: '16px',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
           {/* Search bar */}
           <div style={{ position: 'relative' }}>
             <Search
@@ -230,18 +261,55 @@ const NotesManagement: React.FC = () => {
           </div>
 
           {isLoading ? (
-            <div style={{ padding: '30px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-              <RefreshCw size={20} className="spin" style={{ color: 'var(--color-primary)', marginBottom: '8px' }} />
+            <div
+              style={{
+                padding: '30px 0',
+                textAlign: 'center',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <RefreshCw
+                size={20}
+                className="spin"
+                style={{ color: 'var(--color-primary)', marginBottom: '8px' }}
+              />
               <div>Loading notes...</div>
             </div>
           ) : filteredNotes.length === 0 ? (
-            <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-              <FileText size={36} style={{ opacity: 0.3, marginBottom: '8px' }} />
-              <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-main)' }}>No Notes Found</div>
-              <div style={{ fontSize: '13px' }}>Click "+ New Note" to write down ideas.</div>
+            <div
+              style={{
+                padding: '40px 0',
+                textAlign: 'center',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <FileText
+                size={36}
+                style={{ opacity: 0.3, marginBottom: '8px' }}
+              />
+              <div
+                style={{
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  color: 'var(--text-main)',
+                }}
+              >
+                No Notes Found
+              </div>
+              <div style={{ fontSize: '13px' }}>
+                Click "+ New Note" to write down ideas.
+              </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '640px', overflowY: 'auto' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                maxHeight: '640px',
+                overflowY: 'auto',
+              }}
+            >
               {filteredNotes.map((note) => (
                 <div
                   key={note.id}
@@ -252,8 +320,14 @@ const NotesManagement: React.FC = () => {
                   }}
                   style={{
                     padding: '14px 16px',
-                    backgroundColor: selectedNote?.id === note.id ? 'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.08)' : 'var(--bg-app)',
-                    border: selectedNote?.id === note.id ? '1px solid var(--color-primary)' : '1px solid var(--border-color)',
+                    backgroundColor:
+                      selectedNote?.id === note.id
+                        ? 'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.08)'
+                        : 'var(--bg-app)',
+                    border:
+                      selectedNote?.id === note.id
+                        ? '1px solid var(--color-primary)'
+                        : '1px solid var(--border-color)',
                     borderRadius: 'var(--radius-md)',
                     display: 'flex',
                     flexDirection: 'column',
@@ -262,8 +336,20 @@ const NotesManagement: React.FC = () => {
                     transition: 'all var(--transition-fast)',
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-main)' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        color: 'var(--text-main)',
+                      }}
+                    >
                       {note.title}
                     </span>
                     <div style={{ display: 'flex', gap: '4px' }}>
@@ -282,7 +368,8 @@ const NotesManagement: React.FC = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteNote(note.id);
-                          if (selectedNote?.id === note.id) setSelectedNote(null);
+                          if (selectedNote?.id === note.id)
+                            setSelectedNote(null);
                         }}
                         className="btn btn-danger"
                         style={{ padding: '4px 6px' }}
@@ -308,18 +395,50 @@ const NotesManagement: React.FC = () => {
                     </p>
                   )}
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px', fontSize: '11px', color: 'var(--text-muted)' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginTop: '4px',
+                      fontSize: '11px',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
                       <Clock size={11} />
-                      {new Date(note.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                      {new Date(note.updatedAt).toLocaleDateString([], {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
                     </span>
                     {note.taskId && (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: 'var(--color-primary)' }}>
+                      <span
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          color: 'var(--color-primary)',
+                        }}
+                      >
                         <CheckCircle2 size={11} /> Linked Task
                       </span>
                     )}
                     {note.eventId && (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: 'var(--color-primary)' }}>
+                      <span
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          color: 'var(--color-primary)',
+                        }}
+                      >
                         <Calendar size={11} /> Linked Event
                       </span>
                     )}
@@ -332,9 +451,31 @@ const NotesManagement: React.FC = () => {
 
         {/* Right Editor / Detail Panel */}
         {(isCreating || isEditing) && (
-          <form onSubmit={handleSave} className="card" style={{ padding: '24px', gap: '16px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-main)', margin: 0 }}>
+          <form
+            onSubmit={handleSave}
+            className="card"
+            style={{
+              padding: '24px',
+              gap: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: 'var(--text-main)',
+                  margin: 0,
+                }}
+              >
                 {isEditing ? 'Edit Note' : 'Create New Note'}
               </h3>
               <button
@@ -343,14 +484,27 @@ const NotesManagement: React.FC = () => {
                   setIsCreating(false);
                   setIsEditing(false);
                 }}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                }}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
+            >
+              <label
+                style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: 'var(--text-main)',
+                }}
+              >
                 Title *
               </label>
               <input
@@ -371,8 +525,16 @@ const NotesManagement: React.FC = () => {
               />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
+            >
+              <label
+                style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: 'var(--text-main)',
+                }}
+              >
                 Content (Markdown supported)
               </label>
               <textarea
@@ -394,9 +556,23 @@ const NotesManagement: React.FC = () => {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '16px',
+              }}
+            >
+              <div
+                style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
+              >
+                <label
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: 'var(--text-muted)',
+                  }}
+                >
                   Linked Task ID (Optional)
                 </label>
                 <input
@@ -416,8 +592,16 @@ const NotesManagement: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>
+              <div
+                style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
+              >
+                <label
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: 'var(--text-muted)',
+                  }}
+                >
                   Linked Event ID (Optional)
                 </label>
                 <input
@@ -438,7 +622,14 @@ const NotesManagement: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+                marginTop: '8px',
+              }}
+            >
               <button
                 type="button"
                 onClick={() => {
@@ -450,27 +641,61 @@ const NotesManagement: React.FC = () => {
               >
                 Cancel
               </button>
-              <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                {isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Note'}
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isSaving}
+              >
+                {isSaving
+                  ? 'Saving...'
+                  : isEditing
+                    ? 'Save Changes'
+                    : 'Create Note'}
               </button>
             </div>
           </form>
         )}
 
         {selectedNote && !isCreating && !isEditing && (
-          <div className="card" style={{ padding: '24px', gap: '16px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div
+            className="card"
+            style={{
+              padding: '24px',
+              gap: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+              }}
+            >
               <div>
-                <h3 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-main)', margin: '0 0 6px 0' }}>
+                <h3
+                  style={{
+                    fontSize: '20px',
+                    fontWeight: '700',
+                    color: 'var(--text-main)',
+                    margin: '0 0 6px 0',
+                  }}
+                >
                   {selectedNote.title}
                 </h3>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  Last updated {new Date(selectedNote.updatedAt).toLocaleString()}
+                  Last updated{' '}
+                  {new Date(selectedNote.updatedAt).toLocaleString()}
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => openEditForm(selectedNote)} className="btn btn-secondary" style={{ padding: '6px 12px' }}>
+                <button
+                  onClick={() => openEditForm(selectedNote)}
+                  className="btn btn-secondary"
+                  style={{ padding: '6px 12px' }}
+                >
                   <Edit3 size={14} /> Edit
                 </button>
                 <button
@@ -499,18 +724,48 @@ const NotesManagement: React.FC = () => {
                 minHeight: '200px',
               }}
             >
-              {selectedNote.content || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No content provided.</span>}
+              {selectedNote.content || (
+                <span
+                  style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}
+                >
+                  No content provided.
+                </span>
+              )}
             </div>
 
             {(selectedNote.taskId || selectedNote.eventId) && (
-              <div style={{ display: 'flex', gap: '16px', fontSize: '13px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '16px',
+                  fontSize: '13px',
+                  paddingTop: '12px',
+                  borderTop: '1px solid var(--border-color)',
+                }}
+              >
                 {selectedNote.taskId && (
-                  <span style={{ color: 'var(--color-primary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span
+                    style={{
+                      color: 'var(--color-primary)',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
                     <CheckCircle2 size={14} /> Task ID: {selectedNote.taskId}
                   </span>
                 )}
                 {selectedNote.eventId && (
-                  <span style={{ color: 'var(--color-primary)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span
+                    style={{
+                      color: 'var(--color-primary)',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
                     <Calendar size={14} /> Event ID: {selectedNote.eventId}
                   </span>
                 )}
