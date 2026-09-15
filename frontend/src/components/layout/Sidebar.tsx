@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Bot, ListTodo, Calendar, Settings, ShieldAlert } from 'lucide-react';
+import { Bot, ListTodo, Calendar, FileText, Settings, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { TenantSelector } from './TenantSelector';
 
@@ -48,6 +48,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
         <NavLink to="/calendar" className="nav-link" onClick={handleNavigate}>
           <Calendar size={18} aria-hidden="true" />
           <span>Schedule Overlaps</span>
+        </NavLink>
+
+        <NavLink to="/notes" className="nav-link" onClick={handleNavigate}>
+          <FileText size={18} aria-hidden="true" />
+          <span>Smart Notes</span>
         </NavLink>
 
         <NavLink to="/settings" className="nav-link" onClick={handleNavigate}>

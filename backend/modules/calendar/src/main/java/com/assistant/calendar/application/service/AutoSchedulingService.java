@@ -152,4 +152,55 @@ public class AutoSchedulingService {
 
     return scheduledEvents;
   }
+
+  public List<CalendarEventDto> resolveConflicts(WorkspaceId workspaceId, int daysAhead) {
+    Instant now = Instant.now();
+    Instant rangeEnd = now.plus(Duration.ofDays(Math.max(1, daysAhead)));
+
+    List<CalendarEvent> activeEvents =
+        calendarEventRepository.findActiveEvents(workspaceId, now, rangeEnd);
+
+    activeEvents.sort(Comparator.comparing(e -> e.getTimeRange().startTime()));
+
+    List<CalendarEventDto> resolvedList = new ArrayList<>();
+    Instant lastOccupiedEnd = now;
+
+    for (CalendarEvent event : activeEvents) {
+      Instant start = event.getTimeRange().startTime();
+      Instant end = event.getTimeRange().endTime();
+
+      if (start.isBefore(lastOccupiedEnd) && event.getTaskId() != null) {
+        // Shift task block forward after last occupied end
+        Duration duration = Duration.between(start, end);
+        Instant newStart = lastOccupiedEnd.plus(Duration.ofMinutes(15));
+        Instant newEnd = newStart.plus(duration);
+
+        event.reschedule(new EventTimeRange(newStart, newEnd), Instant.now());
+        calendarEventRepository.save(event);
+        lastOccupiedEnd = newEnd;
+      } else {
+        if (end.isAfter(lastOccupiedEnd)) {
+          lastOccupiedEnd = end;
+        }
+      }
+
+      resolvedList.add(
+          new CalendarEventDto(
+              event.getEventId().value().toString(),
+              event.getWorkspaceId().value().toString(),
+              null,
+              event.getTaskId() != null ? event.getTaskId().value().toString() : null,
+              event.getTitle().value(),
+              event.getDescription() != null ? event.getDescription().value() : null,
+              event.getTimeRange().startTime(),
+              event.getTimeRange().endTime(),
+              event.getStatus().name(),
+              List.of(),
+              event.getCreatedAt(),
+              event.getUpdatedAt(),
+              event.getVersion()));
+    }
+
+    return resolvedList;
+  }
 }

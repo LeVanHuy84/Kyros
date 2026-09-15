@@ -231,4 +231,13 @@ public class CalendarController {
     return ResponseEntity.ok(
         autoSchedulingService.autoScheduleTasks(new WorkspaceId(workspaceId), daysAhead));
   }
+
+  @PostMapping("/resolve-conflicts")
+  public ResponseEntity<List<CalendarEventDto>> resolveConflicts(
+      @PathVariable("workspaceId") UUID workspaceId,
+      @RequestParam(name = "daysAhead", required = false, defaultValue = "7") int daysAhead) {
+    validateWorkspace(workspaceId);
+    return ResponseEntity.ok(
+        autoSchedulingService.resolveConflicts(new WorkspaceId(workspaceId), daysAhead));
+  }
 }
