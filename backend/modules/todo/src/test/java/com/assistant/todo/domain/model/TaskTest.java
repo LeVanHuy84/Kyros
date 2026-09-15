@@ -111,6 +111,9 @@ class TaskTest {
             null,
             null,
             null,
+            30,
+            true,
+            null,
             Instant.now().minusSeconds(10800),
             Instant.now().minusSeconds(10800),
             0);

@@ -14,4 +14,7 @@ public record CreateTaskRequest(
     @Pattern(regexp = "High|Medium|Low", message = "Priority must be High, Medium, or Low")
         String priority,
     Instant dueDate,
-    Set<String> tags) {}
+    Set<String> tags,
+    Integer estimatedDurationMinutes,
+    Boolean autoSchedule,
+    String subtasks) {}

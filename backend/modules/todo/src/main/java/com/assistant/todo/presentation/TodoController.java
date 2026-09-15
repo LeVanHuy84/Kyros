@@ -68,7 +68,15 @@ public class TodoController {
 
     Task task =
         todoPort.createTask(
-            wsId, request.title(), request.description(), priority, request.dueDate(), tags);
+            wsId,
+            request.title(),
+            request.description(),
+            priority,
+            request.dueDate(),
+            tags,
+            request.estimatedDurationMinutes(),
+            request.autoSchedule(),
+            request.subtasks());
 
     return ResponseEntity.created(
             URI.create("/api/v1/workspaces/" + workspaceId + "/tasks/" + task.getId()))
@@ -145,6 +153,9 @@ public class TodoController {
             request.description(),
             priority,
             request.dueDate(),
+            request.estimatedDurationMinutes(),
+            request.autoSchedule(),
+            request.subtasks(),
             request.version());
 
     return ResponseEntity.ok(TaskResponse.fromDomain(task));

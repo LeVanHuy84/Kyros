@@ -63,13 +63,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onToggleSidebar }) => {
           'Analyze timeline intervals to intercept scheduling collisions.',
       };
     }
-    if (path.startsWith('/integrations')) {
-      return {
-        title: 'Connector Integrations Hub',
-        description:
-          'Register and manage external system adapters and OAuth bindings.',
-      };
-    }
+
     if (path.startsWith('/settings')) {
       return {
         title: 'Settings Hub',

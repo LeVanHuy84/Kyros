@@ -58,6 +58,15 @@ public class TaskJpaEntity {
   @Column(name = "last_generated_occurrence")
   private Instant lastGeneratedOccurrence;
 
+  @Column(name = "estimated_duration_minutes")
+  private Integer estimatedDurationMinutes;
+
+  @Column(name = "auto_schedule")
+  private Boolean autoSchedule;
+
+  @Column(name = "subtasks")
+  private String subtasks;
+
   @Column(name = "deleted_at")
   private Instant deletedAt;
 
@@ -221,6 +230,30 @@ public class TaskJpaEntity {
 
   public void setVersion(int version) {
     this.version = version;
+  }
+
+  public Integer getEstimatedDurationMinutes() {
+    return estimatedDurationMinutes;
+  }
+
+  public void setEstimatedDurationMinutes(Integer estimatedDurationMinutes) {
+    this.estimatedDurationMinutes = estimatedDurationMinutes;
+  }
+
+  public Boolean getAutoSchedule() {
+    return autoSchedule;
+  }
+
+  public void setAutoSchedule(Boolean autoSchedule) {
+    this.autoSchedule = autoSchedule;
+  }
+
+  public String getSubtasks() {
+    return subtasks;
+  }
+
+  public void setSubtasks(String subtasks) {
+    this.subtasks = subtasks;
   }
 
   public List<TagJpaEntity> getTags() {

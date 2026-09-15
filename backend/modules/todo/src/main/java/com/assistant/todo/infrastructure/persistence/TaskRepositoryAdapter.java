@@ -213,6 +213,9 @@ public class TaskRepositoryAdapter implements TaskRepository {
             ? com.assistant.todo.domain.model.RecurrenceStatus.valueOf(jpa.getRecurrenceStatus())
             : null,
         jpa.getLastGeneratedOccurrence(),
+        jpa.getEstimatedDurationMinutes(),
+        jpa.getAutoSchedule(),
+        jpa.getSubtasks(),
         jpa.getCreatedAt(),
         jpa.getUpdatedAt(),
         jpa.getVersion());
@@ -243,6 +246,9 @@ public class TaskRepositoryAdapter implements TaskRepository {
     jpa.setRecurrenceStatus(
         domain.getRecurrenceStatus() != null ? domain.getRecurrenceStatus().name() : null);
     jpa.setLastGeneratedOccurrence(domain.getLastGeneratedOccurrence());
+    jpa.setEstimatedDurationMinutes(domain.getEstimatedDurationMinutes());
+    jpa.setAutoSchedule(domain.getAutoSchedule());
+    jpa.setSubtasks(domain.getSubtasks());
     jpa.setDeletedAt(domain.getDeletedAt());
     jpa.setCreatedAt(domain.getCreatedAt());
     jpa.setUpdatedAt(domain.getUpdatedAt());

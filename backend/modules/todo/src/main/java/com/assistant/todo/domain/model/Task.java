@@ -23,7 +23,10 @@ public class Task {
   private Integer recurrenceInterval;
   private RecurrenceStatus recurrenceStatus;
   private Instant lastGeneratedOccurrence;
-  private final Instant createdAt;
+  private Integer estimatedDurationMinutes;
+  private Boolean autoSchedule;
+  private String subtasks;
+  private Instant createdAt;
   private Instant updatedAt;
   private int version;
 
@@ -43,6 +46,9 @@ public class Task {
       Integer recurrenceInterval,
       RecurrenceStatus recurrenceStatus,
       Instant lastGeneratedOccurrence,
+      Integer estimatedDurationMinutes,
+      Boolean autoSchedule,
+      String subtasks,
       Instant createdAt,
       Instant updatedAt,
       int version) {
@@ -60,6 +66,10 @@ public class Task {
     this.recurrenceInterval = recurrenceInterval;
     this.recurrenceStatus = recurrenceStatus;
     this.lastGeneratedOccurrence = lastGeneratedOccurrence;
+    this.estimatedDurationMinutes =
+        estimatedDurationMinutes != null ? estimatedDurationMinutes : 30;
+    this.autoSchedule = autoSchedule != null ? autoSchedule : true;
+    this.subtasks = subtasks;
     this.createdAt = Objects.requireNonNull(createdAt);
     this.updatedAt = Objects.requireNonNull(updatedAt);
     this.version = version;
@@ -89,6 +99,9 @@ public class Task {
         null,
         null,
         null,
+        30,
+        true,
+        null,
         Instant.now(),
         Instant.now(),
         0);
@@ -117,6 +130,9 @@ public class Task {
         null,
         null,
         null,
+        null,
+        30,
+        true,
         null,
         Instant.now(),
         Instant.now(),
@@ -297,6 +313,37 @@ public class Task {
 
   public Instant getLastGeneratedOccurrence() {
     return lastGeneratedOccurrence;
+  }
+
+  public Integer getEstimatedDurationMinutes() {
+    return estimatedDurationMinutes;
+  }
+
+  public void setEstimatedDurationMinutes(Integer estimatedDurationMinutes) {
+    checkNotDeleted();
+    this.estimatedDurationMinutes =
+        estimatedDurationMinutes != null ? estimatedDurationMinutes : 30;
+    this.updatedAt = Instant.now();
+  }
+
+  public Boolean getAutoSchedule() {
+    return autoSchedule;
+  }
+
+  public void setAutoSchedule(Boolean autoSchedule) {
+    checkNotDeleted();
+    this.autoSchedule = autoSchedule != null ? autoSchedule : true;
+    this.updatedAt = Instant.now();
+  }
+
+  public String getSubtasks() {
+    return subtasks;
+  }
+
+  public void setSubtasks(String subtasks) {
+    checkNotDeleted();
+    this.subtasks = subtasks;
+    this.updatedAt = Instant.now();
   }
 
   public Instant getCreatedAt() {
