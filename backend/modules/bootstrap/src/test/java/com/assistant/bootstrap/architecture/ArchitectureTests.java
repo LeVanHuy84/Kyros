@@ -16,7 +16,7 @@ class ArchitectureTests {
   @Test
   void shouldFollowHexagonalArchitecturePerModule() {
     String[] modules = {
-      "auth", "workspace", "todo", "calendar", "memory", "notification", "connector"
+      "auth", "workspace", "todo", "calendar", "memory", "notification", "connector", "agent"
     };
 
     for (String module : modules) {
