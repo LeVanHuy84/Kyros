@@ -8,6 +8,7 @@ import com.assistant.agent.domain.model.AgentTurn;
 import com.assistant.agent.domain.model.ToolExecutionResult;
 import com.assistant.agent.domain.tool.AgentToolContract;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -26,14 +27,18 @@ public class ReActOrchestratorService {
   private final Map<String, AgentToolContract> toolRegistry;
   private final List<AgentToolContract> toolList;
   private final LlmPort llmPort;
+  private final com.assistant.agent.infrastructure.memory.ConversationMemoryStore memoryStore;
 
   public ReActOrchestratorService(
-      List<AgentToolContract> toolContracts, LlmPort llmPort) {
+      List<AgentToolContract> toolContracts,
+      LlmPort llmPort,
+      com.assistant.agent.infrastructure.memory.ConversationMemoryStore memoryStore) {
     this.toolList = toolContracts;
     this.toolRegistry =
         toolContracts.stream()
             .collect(Collectors.toMap(AgentToolContract::getName, Function.identity()));
     this.llmPort = llmPort;
+    this.memoryStore = memoryStore;
   }
 
   public AgentExecutionResult processUserPrompt(
@@ -141,6 +146,7 @@ public class ReActOrchestratorService {
 
   public void streamUserPrompt(
       UUID workspaceId,
+      UUID conversationId,
       UUID userId,
       String prompt,
       String provider,
@@ -150,6 +156,8 @@ public class ReActOrchestratorService {
       SseEmitter emitter) {
     com.assistant.kernel.domain.WorkspaceId activeWsId =
         new com.assistant.kernel.domain.WorkspaceId(workspaceId);
+
+    UUID targetMemoryId = conversationId != null ? conversationId : workspaceId;
 
     CompletableFuture.runAsync(() -> {
       try {
@@ -171,10 +179,16 @@ public class ReActOrchestratorService {
 
         boolean hasCustomLlmConfig = (apiKey != null && !apiKey.isBlank()) || (baseUrl != null && !baseUrl.isBlank());
 
+        memoryStore.addMessage(targetMemoryId, "user", prompt);
+        List<Map<String, String>> history = memoryStore.getLlmFormattedHistory(targetMemoryId, 10);
+
         if (hasCustomLlmConfig) {
           emitter.send(SseEmitter.event().name("thought").data("Đang kết nối tới " + (provider != null ? provider : "Local Ollama") + " (" + (model != null ? model : "default") + ")..."));
+          java.time.ZonedDateTime nowLocal = java.time.ZonedDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+          String currentLocalTimeStr = nowLocal.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss (EEEE, 'múi giờ' z)"));
+          String systemPrompt = "You are Kyros AI Assistant. Current Local Time: " + currentLocalTimeStr + ". Always convert event timestamps into local Vietnam time (UTC+7 / Asia/Ho_Chi_Minh) when responding. Choose tools when needed to fulfill user requests. Available query tools: list_events, list_tasks, list_notes. Respond concisely in Vietnamese.";
           LlmPort.LlmResponse llmResp =
-              llmPort.callLlm(baseUrl, apiKey, model, "You are Kyros AI Assistant.", prompt, toolList);
+              llmPort.callLlm(baseUrl, apiKey, model, systemPrompt, prompt, history, toolList);
 
           if (llmResp.toolCalls() != null && !llmResp.toolCalls().isEmpty()) {
             StringBuilder executionLogs = new StringBuilder();
@@ -183,44 +197,65 @@ public class ReActOrchestratorService {
                 AgentToolContract tool = toolRegistry.get(tc.name());
                 emitter.send(SseEmitter.event().name("thought").data("LLM quyết định gọi công cụ: " + tool.getName()));
                 ToolExecutionResult execRes = tool.execute(tc.argumentsJson());
-                emitter.send(SseEmitter.event().name("observation").data("thành công - " + execRes.output()));
-                executionLogs.append("- ").append(tool.getName()).append(": ").append(execRes.output()).append("\n");
+                emitter.send(SseEmitter.event().name("observation").data("Kết quả (" + tool.getName() + "): " + execRes.output()));
+                executionLogs.append("Tool ").append(tool.getName()).append(" returned result: ").append(execRes.output()).append("\n");
               }
             }
-            emitter.send(SseEmitter.event().name("completed").data("Hoàn tất thực thi " + llmResp.toolCalls().size() + " công cụ."));
+
+            // ReAct Loop - Second Pass: Feed tool observations back to LLM for final natural answer
+            emitter.send(SseEmitter.event().name("thought").data("Đang tổng hợp câu trả lời từ kết quả dữ liệu..."));
+            String secondPassPrompt = prompt + "\n\n[Dữ liệu truy vấn được từ hệ thống]:\n" + executionLogs.toString() + "\nHãy dùng dữ liệu trên để trả lời người dùng một cách tự nhiên, ngắn gọn, rõ ràng bằng Tiếng Việt. KHÔNG gọi lại công cụ nữa.";
+            LlmPort.LlmResponse finalLlmResp =
+                llmPort.callLlm(baseUrl, apiKey, model, systemPrompt, secondPassPrompt, history, Collections.emptyList());
+
+            String answerText = null;
+            if (finalLlmResp.content() != null && !finalLlmResp.content().isBlank() && !finalLlmResp.content().startsWith("Invocation Error") && !finalLlmResp.content().startsWith("LLM Error")) {
+              answerText = finalLlmResp.content();
+            } else {
+              answerText = "Đây là thông tin truy vấn từ hệ thống:\n\n" + executionLogs.toString();
+            }
+
+            memoryStore.addMessage(targetMemoryId, "assistant", answerText);
+            // In SSE specification, multi-line data must split each line with "data: " or be formatted.
+            for (String line : answerText.split("\n")) {
+              emitter.send(SseEmitter.event().name("chunk").data(line + "\n"));
+            }
+            emitter.send(SseEmitter.event().name("completed").data("Hoàn tất."));
             emitter.complete();
             return;
-          } else if (llmResp.content() != null && !llmResp.content().isBlank()) {
+          } else if (llmResp.content() != null && !llmResp.content().isBlank() && !llmResp.content().startsWith("Invocation Error") && !llmResp.content().startsWith("LLM Error")) {
+            memoryStore.addMessage(targetMemoryId, "assistant", llmResp.content());
             emitter.send(SseEmitter.event().name("chunk").data(llmResp.content()));
             emitter.send(SseEmitter.event().name("completed").data("Hoàn thành."));
             emitter.complete();
             return;
-          } else {
-            emitter.send(SseEmitter.event().name("chunk").data("⚠️ Không nhận được phản hồi từ Ollama/LLM Engine. Kiểm tra thông số Endpoint/Model."));
-            emitter.send(SseEmitter.event().name("completed").data("Hoàn tất với cảnh báo."));
-            emitter.complete();
-            return;
           }
+          // Fall through to planActions rule-based engine if Ollama/LLM timed out or produced no tool calls
         }
 
         List<AgentAction> plannedActions = planActions(workspaceId, userId, prompt);
         if (plannedActions.isEmpty()) {
-          emitter.send(SseEmitter.event().name("chunk").data("Tôi đã tiếp nhận yêu cầu: \"" + prompt + "\". Hệ thống sẵn sàng hỗ trợ bạn."));
+          String fallbackReply = "Tôi đã tiếp nhận yêu cầu: \"" + prompt + "\". Hệ thống sẵn sàng hỗ trợ bạn.";
+          memoryStore.addMessage(targetMemoryId, "assistant", fallbackReply);
+          emitter.send(SseEmitter.event().name("chunk").data(fallbackReply));
           emitter.complete();
           return;
         }
 
         int step = 1;
+        StringBuilder resultSummary = new StringBuilder();
         for (AgentAction action : plannedActions) {
           AgentToolContract tool = toolRegistry.get(action.toolName());
           if (tool != null) {
             emitter.send(SseEmitter.event().name("thought").data("Step " + step + ": Đang thực thi công cụ " + tool.getName() + "..."));
             ToolExecutionResult result = tool.execute(action.argumentsJson());
             emitter.send(SseEmitter.event().name("observation").data("Kết quả " + tool.getName() + ": " + result.output()));
+            resultSummary.append(result.output()).append(" ");
             step++;
           }
         }
 
+        memoryStore.addMessage(targetMemoryId, "assistant", resultSummary.toString().trim());
         emitter.send(SseEmitter.event().name("completed").data("Đã hoàn thành tất cả các bước xử lý Agentic."));
         emitter.complete();
       } catch (Exception e) {
@@ -235,7 +270,7 @@ public class ReActOrchestratorService {
   }
 
   public void streamUserPrompt(UUID workspaceId, UUID userId, String prompt, SseEmitter emitter) {
-    streamUserPrompt(workspaceId, userId, prompt, null, null, null, null, emitter);
+    streamUserPrompt(workspaceId, null, userId, prompt, null, null, null, null, emitter);
   }
 
   public AgentExecutionResult approveAndExecuteTool(
@@ -266,7 +301,15 @@ public class ReActOrchestratorService {
     List<AgentAction> actions = new ArrayList<>();
     String lower = prompt.toLowerCase(Locale.ROOT);
 
-    if (lower.contains("note") || lower.contains("ghi chú")) {
+    boolean isQuery = lower.contains("có") || lower.contains("xem") || lower.contains("tra cứu") || lower.contains("lấy") || lower.contains("gì") || lower.contains("danh sách") || lower.contains("báo cáo");
+
+    if (isQuery && (lower.contains("lịch") || lower.contains("họp") || lower.contains("sự kiện") || lower.contains("tối nay") || lower.contains("hôm nay"))) {
+      actions.add(new AgentAction("list_events", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
+    } else if (isQuery && (lower.contains("task") || lower.contains("nhiệm vụ") || lower.contains("công việc"))) {
+      actions.add(new AgentAction("list_tasks", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
+    } else if (isQuery && (lower.contains("note") || lower.contains("ghi chú"))) {
+      actions.add(new AgentAction("list_notes", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
+    } else if (lower.contains("note") || lower.contains("ghi chú")) {
       String title = "Ghi chú từ Agent";
       String content = prompt;
       String args =

@@ -22,9 +22,19 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class AgentChatController {
 
   private final ReActOrchestratorService orchestratorService;
+  private final com.assistant.agent.infrastructure.memory.ConversationMemoryStore memoryStore;
 
-  public AgentChatController(ReActOrchestratorService orchestratorService) {
+  public AgentChatController(
+      ReActOrchestratorService orchestratorService,
+      com.assistant.agent.infrastructure.memory.ConversationMemoryStore memoryStore) {
     this.orchestratorService = orchestratorService;
+    this.memoryStore = memoryStore;
+  }
+
+  @GetMapping("/history")
+  public ResponseEntity<java.util.List<com.assistant.agent.infrastructure.memory.ConversationMemoryStore.ChatMessageDto>> getHistory(
+      @PathVariable("workspaceId") UUID workspaceId) {
+    return ResponseEntity.ok(memoryStore.getMessages(workspaceId));
   }
 
   @PostMapping("/chat")
@@ -51,6 +61,7 @@ public class AgentChatController {
   public SseEmitter streamChat(
       @PathVariable("workspaceId") UUID workspaceId,
       @RequestParam("prompt") String prompt,
+      @RequestParam(name = "conversationId", required = false) UUID conversationId,
       @RequestParam(name = "userId", required = false) UUID userId,
       @RequestHeader(name = "X-AI-Api-Key", required = false) String apiKey,
       @RequestHeader(name = "X-AI-Provider", required = false) String provider,
@@ -59,7 +70,7 @@ public class AgentChatController {
     SseEmitter emitter = new SseEmitter(120_000L);
     UUID finalUserId = userId != null ? userId : UUID.randomUUID();
     orchestratorService.streamUserPrompt(
-        workspaceId, finalUserId, prompt, provider, apiKey, baseUrl, model, emitter);
+        workspaceId, conversationId, finalUserId, prompt, provider, apiKey, baseUrl, model, emitter);
     return emitter;
   }
 

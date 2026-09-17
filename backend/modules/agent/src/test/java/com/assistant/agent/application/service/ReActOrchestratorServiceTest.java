@@ -45,7 +45,9 @@ class ReActOrchestratorServiceTest {
         };
 
     OpenAiCompatibleLlmClient mockClient = new OpenAiCompatibleLlmClient(new ObjectMapper());
-    orchestratorService = new ReActOrchestratorService(List.of(mockNoteTool), mockClient);
+    com.assistant.agent.infrastructure.memory.ConversationMemoryStore memoryStore =
+        new com.assistant.agent.infrastructure.memory.ConversationMemoryStore();
+    orchestratorService = new ReActOrchestratorService(List.of(mockNoteTool), mockClient, memoryStore);
   }
 
   @Test

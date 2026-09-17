@@ -9,11 +9,22 @@ public interface LlmPort {
 
   record LlmResponse(String content, List<ToolCall> toolCalls) {}
 
+  default LlmResponse callLlm(
+      String baseUrl,
+      String apiKey,
+      String modelName,
+      String systemPrompt,
+      String userPrompt,
+      List<AgentToolContract> availableTools) {
+    return callLlm(baseUrl, apiKey, modelName, systemPrompt, userPrompt, java.util.Collections.emptyList(), availableTools);
+  }
+
   LlmResponse callLlm(
       String baseUrl,
       String apiKey,
       String modelName,
       String systemPrompt,
       String userPrompt,
+      List<java.util.Map<String, String>> chatHistory,
       List<AgentToolContract> availableTools);
 }

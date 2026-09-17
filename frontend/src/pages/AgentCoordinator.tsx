@@ -22,7 +22,10 @@ import type { MessageItem } from '../components/agent/ChatWindow';
 import { ApprovalBanner } from '../components/agent/ApprovalBanner';
 import type { PendingApprovalData } from '../components/agent/ApprovalBanner';
 
-const PROVIDER_PRESETS: Record<string, { baseUrl: string; model: string; name: string }> = {
+const PROVIDER_PRESETS: Record<
+  string,
+  { baseUrl: string; model: string; name: string }
+> = {
   groq: {
     name: '🚀 Groq (Free Tier)',
     baseUrl: 'https://api.groq.com/openai/v1',
@@ -35,8 +38,8 @@ const PROVIDER_PRESETS: Record<string, { baseUrl: string; model: string; name: s
   },
   xkiro: {
     name: '🤖 xAI / XKiro',
-    baseUrl: 'https://api.x.ai/v1',
-    model: 'grok-2-latest',
+    baseUrl: 'https://api.xkiro.com/v1',
+    model: 'mistralai/mistral-small-2603',
   },
   ollama: {
     name: '🦙 Local Ollama (Offline)',
@@ -53,7 +56,9 @@ const PROVIDER_PRESETS: Record<string, { baseUrl: string; model: string; name: s
 export const AgentCoordinator: React.FC = () => {
   const { activeWorkspace } = useWorkspace();
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<
+    string | null
+  >(null);
 
   const [messages, setMessages] = useState<MessageItem[]>([
     {
@@ -69,7 +74,8 @@ export const AgentCoordinator: React.FC = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [isStreamingMode, setIsStreamingMode] = useState(true);
   const [showConfigModal, setShowConfigModal] = useState(false);
-  const [pendingApproval, setPendingApproval] = useState<PendingApprovalData | null>(null);
+  const [pendingApproval, setPendingApproval] =
+    useState<PendingApprovalData | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -83,7 +89,8 @@ export const AgentCoordinator: React.FC = () => {
   // Auto-scroll chat window to bottom
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [messages, isThinking]);
 
@@ -113,7 +120,9 @@ export const AgentCoordinator: React.FC = () => {
     if (!activeWorkspace) return;
     const fetchConversations = async () => {
       try {
-        const res = await apiClient.get(`/v1/workspaces/${activeWorkspace.id}/conversations`);
+        const res = await apiClient.get(
+          `/v1/workspaces/${activeWorkspace.id}/conversations`
+        );
         const list: ConversationItem[] = res.data.data || [];
         setConversations(list);
 
@@ -133,13 +142,23 @@ export const AgentCoordinator: React.FC = () => {
 
   const loadConversationTurns = async (wsId: string, convId: string) => {
     try {
-      const res = await apiClient.get(`/v1/workspaces/${wsId}/conversations/${convId}/turns?limit=50`);
-      const turns: Array<{ id: string; role: string; content: string; timestamp: string }> = res.data || [];
+      const res = await apiClient.get(
+        `/v1/workspaces/${wsId}/conversations/${convId}/turns?limit=50`
+      );
+      const turns: Array<{
+        id: string;
+        role: string;
+        content: string;
+        timestamp: string;
+      }> = res.data || [];
       if (turns.length > 0) {
         const mappedMessages: MessageItem[] = turns.map((t) => ({
           sender: t.role.toLowerCase() === 'user' ? 'user' : 'agent',
           text: t.content,
-          time: new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          time: new Date(t.timestamp).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
         }));
         setMessages(mappedMessages);
       } else {
@@ -147,7 +166,10 @@ export const AgentCoordinator: React.FC = () => {
           {
             sender: 'agent',
             text: 'Chào bạn! Tôi là Kyros AI Executive Assistant. Bạn muốn tôi hỗ trợ xếp lịch, quản lý task hay tổng hợp note hôm nay?',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            time: new Date().toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
           },
         ]);
       }
@@ -172,7 +194,10 @@ export const AgentCoordinator: React.FC = () => {
         {
           sender: 'agent',
           text: 'Chào bạn! Tôi là Kyros AI Executive Assistant. Bạn muốn tôi hỗ trợ xếp lịch, quản lý task hay tổng hợp note hôm nay?',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          time: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
         },
       ]);
     } catch (err) {
@@ -215,7 +240,10 @@ export const AgentCoordinator: React.FC = () => {
         {
           sender: 'agent',
           text: '⚠️ Vui lòng chọn một Workspace hoạt động trước khi sử dụng Agent Coordinator.',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          time: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
         },
       ]);
       return;
@@ -235,16 +263,21 @@ export const AgentCoordinator: React.FC = () => {
 
     if (activeConversationId) {
       apiClient
-        .post(`/v1/workspaces/${currentWorkspaceId}/conversations/${activeConversationId}/turns`, {
-          senderRole: 'USER',
-          messageContent: userText,
-        })
+        .post(
+          `/v1/workspaces/${currentWorkspaceId}/conversations/${activeConversationId}/turns`,
+          {
+            senderRole: 'USER',
+            messageContent: userText,
+          }
+        )
         .then(() => {
-          apiClient.get(`/v1/workspaces/${currentWorkspaceId}/conversations`).then((res) => {
-            if (res.data && res.data.data) {
-              setConversations(res.data.data);
-            }
-          });
+          apiClient
+            .get(`/v1/workspaces/${currentWorkspaceId}/conversations`)
+            .then((res) => {
+              if (res.data && res.data.data) {
+                setConversations(res.data.data);
+              }
+            });
         })
         .catch(() => {});
     }
@@ -270,23 +303,32 @@ export const AgentCoordinator: React.FC = () => {
         {
           sender: 'agent',
           text: '',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          time: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
           isStreaming: true,
         },
       ]);
 
       try {
+        const convParam = activeConversationId ? `&conversationId=${encodeURIComponent(activeConversationId)}` : '';
         const response = await fetch(
-          `/api/v1/workspaces/${currentWorkspaceId}/agent/chat/stream?prompt=${encodeURIComponent(userText)}`,
+          `/api/v1/workspaces/${currentWorkspaceId}/agent/chat/stream?prompt=${encodeURIComponent(userText)}${convParam}`,
           { headers: secureHeaders }
         );
 
-        if (!response.ok || !response.body) throw new Error(`Stream HTTP ${response.status}: ${response.statusText}`);
+        if (!response.ok || !response.body)
+          throw new Error(
+            `Stream HTTP ${response.status}: ${response.statusText}`
+          );
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
         let fullAgentResponse = '';
+
+        let currentEvent = 'message';
 
         while (true) {
           const { done, value } = await reader.read();
@@ -296,17 +338,43 @@ export const AgentCoordinator: React.FC = () => {
           const lines = buffer.split('\n');
           buffer = lines.pop() || '';
 
-          let currentEvent = 'message';
           for (const line of lines) {
-            if (line.startsWith('event:')) {
-              currentEvent = line.replace('event:', '').trim();
-            } else if (line.startsWith('data:')) {
-              const dataText = line.replace('data:', '').trim();
+            const trimmed = line.trim();
+            if (trimmed.startsWith('event:')) {
+              currentEvent = trimmed.replace('event:', '').trim();
+            } else if (trimmed.startsWith('data:')) {
+              const dataText = trimmed.replace('data:', '').trim();
 
               if (currentEvent === 'thought') {
-                fullAgentResponse += `> 🧠 *${dataText}*\n\n`;
+                setMessages((prev) => {
+                  const next = [...prev];
+                  if (next.length > 0 && next[next.length - 1].sender === 'agent') {
+                    const last = next[next.length - 1];
+                    const steps = last.thoughtSteps || [];
+                    const updatedSteps = last.activeThoughtStatus ? [...steps, last.activeThoughtStatus] : steps;
+                    next[next.length - 1] = {
+                      ...last,
+                      activeThoughtStatus: dataText,
+                      thoughtSteps: updatedSteps,
+                    };
+                  }
+                  return next;
+                });
               } else if (currentEvent === 'observation') {
-                fullAgentResponse += `> 🔧 *Công cụ:* ${dataText}\n\n`;
+                setMessages((prev) => {
+                  const next = [...prev];
+                  if (next.length > 0 && next[next.length - 1].sender === 'agent') {
+                    const last = next[next.length - 1];
+                    const steps = last.thoughtSteps || [];
+                    const updatedSteps = last.activeThoughtStatus ? [...steps, last.activeThoughtStatus] : steps;
+                    next[next.length - 1] = {
+                      ...last,
+                      activeThoughtStatus: `🔧 ${dataText}`,
+                      thoughtSteps: updatedSteps,
+                    };
+                  }
+                  return next;
+                });
               } else if (currentEvent === 'approval') {
                 try {
                   const data = JSON.parse(dataText);
@@ -320,15 +388,32 @@ export const AgentCoordinator: React.FC = () => {
                   // ignore
                 }
               } else if (currentEvent === 'completed') {
-                // Done
+                setMessages((prev) => {
+                  const next = [...prev];
+                  if (next.length > 0 && next[next.length - 1].sender === 'agent') {
+                    const last = next[next.length - 1];
+                    const steps = last.thoughtSteps || [];
+                    const updatedSteps = last.activeThoughtStatus ? [...steps, last.activeThoughtStatus] : steps;
+                    next[next.length - 1] = {
+                      ...last,
+                      activeThoughtStatus: undefined,
+                      thoughtSteps: updatedSteps,
+                      isStreaming: false,
+                    };
+                  }
+                  return next;
+                });
               } else if (currentEvent === 'chunk') {
-                fullAgentResponse += dataText;
+                fullAgentResponse += dataText + '\n';
               }
 
               const currentContent = fullAgentResponse;
               setMessages((prev) => {
                 const next = [...prev];
-                if (next.length > 0 && next[next.length - 1].sender === 'agent') {
+                if (
+                  next.length > 0 &&
+                  next[next.length - 1].sender === 'agent'
+                ) {
                   next[next.length - 1] = {
                     ...next[next.length - 1],
                     text: currentContent,
@@ -350,31 +435,42 @@ export const AgentCoordinator: React.FC = () => {
         });
 
         if (activeConversationId && fullAgentResponse.trim()) {
-          apiClient.post(`/v1/workspaces/${currentWorkspaceId}/conversations/${activeConversationId}/turns`, {
-            senderRole: 'ASSISTANT',
-            messageContent: fullAgentResponse.trim(),
-          }).catch(() => {});
+          apiClient
+            .post(
+              `/v1/workspaces/${currentWorkspaceId}/conversations/${activeConversationId}/turns`,
+              {
+                senderRole: 'ASSISTANT',
+                messageContent: fullAgentResponse.trim(),
+              }
+            )
+            .catch(() => {});
         }
 
         setIsThinking(false);
       } catch (err: any) {
         setIsThinking(false);
         const errorText = `⚠️ **[Lỗi kết nối Agent]**: ${err?.message || 'Không thể gọi tới Backend/LLM Service'}\n\n*[Agent Fallback]*: Đã tiếp nhận "${userText}". Engine đang xử lý ngoại tuyến.`;
-        
+
         setMessages((prev) => {
           const next = [...prev];
           if (next.length > 0 && next[next.length - 1].sender === 'agent') {
             next[next.length - 1] = {
               sender: 'agent',
               text: errorText,
-              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              time: new Date().toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
               isStreaming: false,
             };
           } else {
             next.push({
               sender: 'agent',
               text: errorText,
-              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              time: new Date().toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
             });
           }
           return next;
@@ -382,19 +478,25 @@ export const AgentCoordinator: React.FC = () => {
       }
     } else {
       try {
-        const response = await fetch(`/api/v1/workspaces/${currentWorkspaceId}/agent/chat`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...secureHeaders,
-          },
-          body: JSON.stringify({ prompt: userText }),
-        });
+        const response = await fetch(
+          `/api/v1/workspaces/${currentWorkspaceId}/agent/chat`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...secureHeaders,
+            },
+            body: JSON.stringify({ prompt: userText }),
+          }
+        );
 
         if (response.ok) {
           const data = await response.json();
           setIsThinking(false);
-          const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const time = new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
           let finalAnswerText = data.finalAnswer || '';
 
           if (data.pendingApproval) {
@@ -406,13 +508,21 @@ export const AgentCoordinator: React.FC = () => {
             finalAnswerText = `⚠️ **[CẦN PHÊ DUYỆT]**: ${data.approvalReason}\n*Công cụ:* \`${data.pendingToolName}\``;
           }
 
-          setMessages((prev) => [...prev, { sender: 'agent', text: finalAnswerText, time }]);
+          setMessages((prev) => [
+            ...prev,
+            { sender: 'agent', text: finalAnswerText, time },
+          ]);
 
           if (activeConversationId && finalAnswerText.trim()) {
-            apiClient.post(`/v1/workspaces/${currentWorkspaceId}/conversations/${activeConversationId}/turns`, {
-              senderRole: 'ASSISTANT',
-              messageContent: finalAnswerText.trim(),
-            }).catch(() => {});
+            apiClient
+              .post(
+                `/v1/workspaces/${currentWorkspaceId}/conversations/${activeConversationId}/turns`,
+                {
+                  senderRole: 'ASSISTANT',
+                  messageContent: finalAnswerText.trim(),
+                }
+              )
+              .catch(() => {});
           }
         } else {
           throw new Error('API request failed');
@@ -424,7 +534,10 @@ export const AgentCoordinator: React.FC = () => {
           {
             sender: 'agent',
             text: `[Agent Fallback]: Đã tiếp nhận "${userText}". Engine đang xử lý ngoại tuyến.`,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            time: new Date().toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
           },
         ]);
       }
@@ -435,14 +548,17 @@ export const AgentCoordinator: React.FC = () => {
     if (!pendingApproval || !activeWorkspace) return;
     setIsThinking(true);
     try {
-      const response = await fetch(`/api/v1/workspaces/${activeWorkspace.id}/agent/approve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          toolName: pendingApproval.toolName,
-          argumentsJson: pendingApproval.argumentsJson,
-        }),
-      });
+      const response = await fetch(
+        `/api/v1/workspaces/${activeWorkspace.id}/agent/approve`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            toolName: pendingApproval.toolName,
+            argumentsJson: pendingApproval.argumentsJson,
+          }),
+        }
+      );
       setIsThinking(false);
       if (response.ok) {
         const data = await response.json();
@@ -452,7 +568,10 @@ export const AgentCoordinator: React.FC = () => {
           {
             sender: 'agent',
             text: data.finalAnswer,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            time: new Date().toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
           },
         ]);
       }
@@ -464,7 +583,9 @@ export const AgentCoordinator: React.FC = () => {
   const handleDeleteConversation = async (convId: string) => {
     if (!activeWorkspace) return;
     try {
-      await apiClient.delete(`/v1/workspaces/${activeWorkspace.id}/conversations/${convId}`);
+      await apiClient.delete(
+        `/v1/workspaces/${activeWorkspace.id}/conversations/${convId}`
+      );
       const updated = conversations.filter((c) => c.id !== convId);
       setConversations(updated);
       if (activeConversationId === convId) {
@@ -566,13 +687,16 @@ export const AgentCoordinator: React.FC = () => {
                 padding: '4px 10px',
                 fontSize: '12px',
                 cursor: 'pointer',
-                color: isStreamingMode ? 'var(--color-primary)' : 'var(--text-muted)',
+                color: isStreamingMode
+                  ? 'var(--color-primary)'
+                  : 'var(--text-muted)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
               }}
             >
-              <Radio size={14} /> {isStreamingMode ? 'SSE Streaming ON' : 'REST Standard'}
+              <Radio size={14} />{' '}
+              {isStreamingMode ? 'SSE Streaming ON' : 'REST Standard'}
             </button>
           </div>
         </div>
@@ -586,13 +710,20 @@ export const AgentCoordinator: React.FC = () => {
           onClose={() => setShowConfigModal(false)}
         />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '16px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '220px 1fr',
+            gap: '16px',
+          }}
+        >
           <ConversationSidebar
             conversations={conversations}
             activeConversationId={activeConversationId}
             onSelectConversation={(id) => {
               setActiveConversationId(id);
-              if (activeWorkspace) loadConversationTurns(activeWorkspace.id, id);
+              if (activeWorkspace)
+                loadConversationTurns(activeWorkspace.id, id);
             }}
             onDeleteConversation={handleDeleteConversation}
           />

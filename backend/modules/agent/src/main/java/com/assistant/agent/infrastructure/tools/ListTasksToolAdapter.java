@@ -11,24 +11,24 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TaskToolAdapter implements AgentToolContract {
+public class ListTasksToolAdapter implements AgentToolContract {
 
   private final ApplicationContext applicationContext;
   private final ObjectMapper objectMapper;
 
-  public TaskToolAdapter(ApplicationContext applicationContext, ObjectMapper objectMapper) {
+  public ListTasksToolAdapter(ApplicationContext applicationContext, ObjectMapper objectMapper) {
     this.applicationContext = applicationContext;
     this.objectMapper = objectMapper;
   }
 
   @Override
   public String getName() {
-    return "create_task";
+    return "list_tasks";
   }
 
   @Override
   public String getDescription() {
-    return "Create a new task in the workspace todo list.";
+    return "List tasks in the workspace to view pending or existing tasks.";
   }
 
   @Override
@@ -38,11 +38,9 @@ public class TaskToolAdapter implements AgentToolContract {
           "type": "object",
           "properties": {
             "workspaceId": { "type": "string" },
-            "userId": { "type": "string" },
-            "title": { "type": "string" },
-            "description": { "type": "string" }
+            "title": { "type": "string" }
           },
-          "required": ["workspaceId", "userId", "title"]
+          "required": []
         }
         """;
   }
@@ -50,30 +48,33 @@ public class TaskToolAdapter implements AgentToolContract {
   @Override
   public ToolExecutionResult execute(String argumentsJson) {
     try {
-      JsonNode jsonNode = objectMapper.readTree(argumentsJson);
-      String workspaceIdStr = jsonNode.get("workspaceId").asText();
-      String userIdStr = jsonNode.get("userId").asText();
-      String title = jsonNode.get("title").asText();
-      String description = jsonNode.has("description") ? jsonNode.get("description").asText() : "";
+      String workspaceIdStr = null;
+      String title = null;
+      if (argumentsJson != null && !argumentsJson.isBlank() && !argumentsJson.equals("{}")) {
+        JsonNode jsonNode = objectMapper.readTree(argumentsJson);
+        if (jsonNode.has("workspaceId")) {
+          workspaceIdStr = jsonNode.get("workspaceId").asText();
+        }
+        if (jsonNode.has("title")) {
+          title = jsonNode.get("title").asText();
+        }
+      }
 
       Object todoService = applicationContext.getBean("todoService");
-      Method createMethod = null;
+      Method listMethod = null;
       for (Method m : todoService.getClass().getMethods()) {
-        if (m.getName().equals("createTask")) {
-          createMethod = m;
+        if (m.getName().equals("listTasks")) {
+          listMethod = m;
           break;
         }
       }
 
-      if (createMethod == null) {
-        return ToolExecutionResult.error("TodoService createTask method not found");
+      if (listMethod == null) {
+        return ToolExecutionResult.error("TodoService listTasks method not found");
       }
 
       Class<?> wsIdClass = Class.forName("com.assistant.kernel.domain.WorkspaceId");
-      Class<?> uIdClass = Class.forName("com.assistant.kernel.domain.UserId");
-
       Constructor<?> wsConst = wsIdClass.getConstructor(UUID.class);
-      Constructor<?> uConst = uIdClass.getConstructor(UUID.class);
 
       UUID wsUuid;
       try {
@@ -84,20 +85,16 @@ public class TaskToolAdapter implements AgentToolContract {
             .orElseGet(UUID::randomUUID);
       }
 
-      UUID uUuid;
-      try {
-        uUuid = UUID.fromString(userIdStr);
-      } catch (Exception e) {
-        uUuid = UUID.randomUUID();
-      }
-
       Object wsIdObj = wsConst.newInstance(wsUuid);
-      Object uIdObj = uConst.newInstance(uUuid);
 
-      Object result = createMethod.invoke(todoService, wsIdObj, title, description, null, null, null, null, null, null);
-      return ToolExecutionResult.ok("Task created successfully: " + result.toString());
+      Class<?> pageReqClass = Class.forName("org.springframework.data.domain.PageRequest");
+      Method ofMethod = pageReqClass.getMethod("of", int.class, int.class);
+      Object pageable = ofMethod.invoke(null, 0, 10);
+
+      Object result = listMethod.invoke(todoService, wsIdObj, title, null, null, null, null, null, pageable);
+      return ToolExecutionResult.ok("Tasks retrieved: " + objectMapper.writeValueAsString(result));
     } catch (Exception e) {
-      return ToolExecutionResult.error("Failed to execute create_task tool: " + e.getMessage());
+      return ToolExecutionResult.error("Failed to execute list_tasks tool: " + e.getMessage());
     }
   }
 }

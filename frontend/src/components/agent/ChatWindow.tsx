@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { RefObject } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ChevronDown, ChevronRight, Check } from 'lucide-react';
 
 export interface MessageItem {
   sender: 'user' | 'agent';
   text: string;
   time: string;
   isStreaming?: boolean;
+  activeThoughtStatus?: string;
+  thoughtSteps?: string[];
 }
 
 interface ChatWindowProps {
@@ -15,6 +17,72 @@ interface ChatWindowProps {
   isThinking: boolean;
   chatContainerRef: RefObject<HTMLDivElement | null>;
 }
+
+const AgentThoughtAccordion: React.FC<{
+  activeThoughtStatus?: string;
+  thoughtSteps?: string[];
+  isStreaming?: boolean;
+}> = ({ activeThoughtStatus, thoughtSteps, isStreaming }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const stepCount = (thoughtSteps?.length || 0) + (activeThoughtStatus ? 1 : 0);
+  if (stepCount === 0) return null;
+
+  // While streaming, keep open by default. When finished streaming, auto-collapse.
+  const showDetails = isStreaming || isOpen;
+
+  return (
+    <div
+      style={{
+        fontSize: '12px',
+        color: 'var(--text-muted)',
+        marginBottom: '8px',
+        paddingBottom: '6px',
+        borderBottom: '1px dashed var(--border-color)',
+      }}
+    >
+      {!isStreaming ? (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            padding: '2px 0',
+            fontSize: '11px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            opacity: 0.85,
+          }}
+        >
+          {isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          <span>
+            🧠 Đã thực thi {stepCount} bước suy nghĩ & công cụ {isOpen ? '(Thu gọn)' : '(Xem chi tiết)'}
+          </span>
+        </button>
+      ) : null}
+
+      {showDetails && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: isStreaming ? '0' : '6px' }}>
+          {thoughtSteps?.map((step, sIdx) => (
+            <div key={sIdx} style={{ opacity: 0.8, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Check size={11} style={{ color: '#10b981' }} />
+              <span>{step}</span>
+            </div>
+          ))}
+          {activeThoughtStatus && (
+            <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px', color: '#6366f1' }}>
+              <Sparkles size={12} className="animate-spin" />
+              <span>{activeThoughtStatus}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({
   messages,
@@ -61,9 +129,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             boxShadow: 'var(--shadow-sm)',
           }}
         >
+          {m.sender === 'agent' && (
+            <AgentThoughtAccordion
+              activeThoughtStatus={m.activeThoughtStatus}
+              thoughtSteps={m.thoughtSteps}
+              isStreaming={m.isStreaming}
+            />
+          )}
+
           {m.sender === 'agent' ? (
             <div className="markdown-body">
-              <ReactMarkdown>{m.text || (m.isStreaming ? '...' : '')}</ReactMarkdown>
+              <ReactMarkdown>{m.text || (m.isStreaming && !m.activeThoughtStatus ? '...' : '')}</ReactMarkdown>
             </div>
           ) : (
             <div>{m.text}</div>
@@ -97,7 +173,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           }}
         >
           <Sparkles size={14} className="animate-spin" />
-          <span>🤖 Kyros AI đang suy nghĩ & soạn phản hồi...</span>
+          <span>🤖 Kyros AI đang suy nghĩ...</span>
         </div>
       )}
     </div>
