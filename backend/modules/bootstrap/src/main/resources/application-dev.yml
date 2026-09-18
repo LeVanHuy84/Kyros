@@ -44,3 +44,6 @@ scalar:
 
 app:
   frontend-url: ${APP_FRONTEND_URL:http://localhost:3000}
+  security:
+    vault-master-key: ${APP_SECURITY_VAULT_MASTER_KEY:KyrosMasterVaultKey256BitsSecret!}
+
