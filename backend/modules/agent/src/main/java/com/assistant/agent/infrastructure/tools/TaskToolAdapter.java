@@ -66,7 +66,6 @@ public class TaskToolAdapter implements AgentToolContract {
       JsonNode jsonNode = objectMapper.readTree(argumentsJson);
       String workspaceIdStr =
           jsonNode.has("workspaceId") ? jsonNode.get("workspaceId").asText() : "";
-      String userIdStr = jsonNode.has("userId") ? jsonNode.get("userId").asText() : "";
 
       JsonNode tasksNode = jsonNode.has("tasks") ? jsonNode.get("tasks") : jsonNode;
       if (!tasksNode.isArray()) {
@@ -108,9 +107,8 @@ public class TaskToolAdapter implements AgentToolContract {
         String description =
             taskItem.has("description") ? taskItem.get("description").asText() : "";
 
-        Object result =
-            createMethod.invoke(
-                todoService, wsIdObj, title, description, null, null, null, null, null, null);
+        createMethod.invoke(
+            todoService, wsIdObj, title, description, null, null, null, null, null, null);
         results.add(title + " (Status: Created/Updated)");
       }
 

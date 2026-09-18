@@ -15,7 +15,11 @@ public interface SpringDataMemoryEntryRepository extends JpaRepository<MemoryEnt
   Page<MemoryEntryJpaEntity> findByWorkspaceIdAndUserId(
       UUID workspaceId, UUID userId, Pageable pageable);
 
+  Page<MemoryEntryJpaEntity> findByWorkspaceId(UUID workspaceId, Pageable pageable);
+
   long countByWorkspaceIdAndUserId(UUID workspaceId, UUID userId);
+
+  long countByWorkspaceId(UUID workspaceId);
 
   @Query(
       "SELECT m FROM MemoryEntryJpaEntity m WHERE m.workspaceId = :workspaceId AND"

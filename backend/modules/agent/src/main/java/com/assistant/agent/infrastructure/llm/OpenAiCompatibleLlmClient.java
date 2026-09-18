@@ -55,12 +55,26 @@ public class OpenAiCompatibleLlmClient implements LlmPort {
       if (chatHistory != null && !chatHistory.isEmpty()) {
         for (Map<String, String> msg : chatHistory) {
           if (msg.containsKey("role") && msg.containsKey("content")) {
-            messages.add(Map.of("role", msg.get("role"), "content", msg.get("content")));
+            String role = msg.get("role");
+            if ("agent".equalsIgnoreCase(role) || "assistant".equalsIgnoreCase(role)) {
+              role = "assistant";
+            } else if (!"system".equalsIgnoreCase(role)) {
+              role = "user";
+            }
+            messages.add(Map.of("role", role, "content", msg.get("content")));
           }
         }
       }
 
-      messages.add(Map.of("role", "user", "content", userPrompt));
+      // Append user prompt only if it's not already the last message in chatHistory
+      boolean lastIsSameUserPrompt =
+          chatHistory != null
+              && !chatHistory.isEmpty()
+              && userPrompt.equalsIgnoreCase(
+                  chatHistory.get(chatHistory.size() - 1).get("content"));
+      if (!lastIsSameUserPrompt) {
+        messages.add(Map.of("role", "user", "content", userPrompt));
+      }
       requestBody.put("messages", messages);
 
       boolean isLocalOllama =

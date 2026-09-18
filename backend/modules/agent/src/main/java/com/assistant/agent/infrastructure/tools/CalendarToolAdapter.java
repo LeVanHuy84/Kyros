@@ -117,17 +117,16 @@ public class CalendarToolAdapter implements AgentToolContract {
           endTime = startTime.plus(java.time.Duration.ofHours(1));
         }
 
-        Object result =
-            createMethod.invoke(
-                calendarService,
-                wsIdObj,
-                dummyUserId,
-                null,
-                title,
-                description,
-                startTime,
-                endTime,
-                null);
+        createMethod.invoke(
+            calendarService,
+            wsIdObj,
+            dummyUserId,
+            null,
+            title,
+            description,
+            startTime,
+            endTime,
+            null);
         results.add(title + " (" + startTime.toString() + ")");
       }
 

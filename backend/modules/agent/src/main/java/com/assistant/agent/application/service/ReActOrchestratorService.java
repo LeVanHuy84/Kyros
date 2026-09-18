@@ -337,7 +337,11 @@ public class ReActOrchestratorService {
                         new com.assistant.memory.domain.model.ConversationId(conversationId),
                         20);
                 for (var t : existingTurns) {
-                  memoryStore.addMessage(targetMemoryId, t.role().toLowerCase(), t.content());
+                  String roleStr =
+                      ("user".equalsIgnoreCase(t.role()) || "User".equalsIgnoreCase(t.role()))
+                          ? "user"
+                          : "assistant";
+                  memoryStore.addMessage(targetMemoryId, roleStr, t.content());
                 }
               } catch (Exception ignored) {
               }
@@ -579,6 +583,13 @@ public class ReActOrchestratorService {
             || lower.contains("danh sách")
             || lower.contains("báo cáo");
 
+    boolean isCreate =
+        lower.contains("thêm")
+            || lower.contains("tạo")
+            || lower.contains("lên lịch")
+            || lower.contains("lưu")
+            || lower.contains("mới");
+
     if (isQuery
         && (lower.contains("lịch")
             || lower.contains("họp")
@@ -602,17 +613,35 @@ public class ReActOrchestratorService {
               "{\"workspaceId\":\"%s\",\"userId\":\"%s\",\"title\":\"%s\",\"content\":\"%s\"}",
               workspaceId, userId, title, content);
       actions.add(new AgentAction("create_note", args));
-    } else if (lower.contains("task") || lower.contains("nhiệm vụ")) {
-      String title = "Nhiệm vụ từ Agent: " + prompt;
+    } else if (lower.contains("task")
+        || lower.contains("nhiệm vụ")
+        || lower.contains("công việc")
+        || (isCreate
+            && (lower.contains("làm") || lower.contains("dự án") || lower.contains("app")))) {
+      String cleanTitle =
+          prompt.replaceAll("(?i)^(thêm|tạo|cho tôi|nhiệm vụ|task|giúp tôi)\\s*", "").trim();
+      if (cleanTitle.isEmpty()) {
+        cleanTitle = prompt;
+      }
+      String title = cleanTitle;
       String args =
           String.format(
               "{\"workspaceId\":\"%s\",\"userId\":\"%s\",\"tasks\":[{\"title\":\"%s\"}]}",
               workspaceId, userId, title);
       actions.add(new AgentAction("upsert_tasks", args));
-    } else if (lower.contains("lịch") || lower.contains("họp") || lower.contains("nhắc")) {
-      String title = "Cuộc họp từ Agent: " + prompt;
-      String start = "2026-09-16T09:00:00Z";
-      String end = "2026-09-16T10:00:00Z";
+    } else if (lower.contains("lịch")
+        || lower.contains("họp")
+        || lower.contains("nhắc")
+        || lower.contains("chiều nay")
+        || lower.contains("sáng nay")) {
+      String cleanTitle =
+          prompt.replaceAll("(?i)^(lên lịch|thêm|tạo|cho tôi|giúp tôi)\\s*", "").trim();
+      if (cleanTitle.isEmpty()) {
+        cleanTitle = prompt;
+      }
+      String title = cleanTitle;
+      String start = "2026-09-18T14:00:00Z";
+      String end = "2026-09-18T15:00:00Z";
       String args =
           String.format(
               "{\"workspaceId\":\"%s\",\"events\":[{\"title\":\"%s\",\"startTime\":\"%s\",\"endTime\":\"%s\"}]}",
