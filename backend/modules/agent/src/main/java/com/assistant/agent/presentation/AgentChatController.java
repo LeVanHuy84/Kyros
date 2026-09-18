@@ -23,18 +23,44 @@ public class AgentChatController {
 
   private final ReActOrchestratorService orchestratorService;
   private final com.assistant.agent.infrastructure.memory.ConversationMemoryStore memoryStore;
+  private final com.assistant.memory.application.ports.in.ConversationHistoryPort conversationHistoryPort;
 
   public AgentChatController(
       ReActOrchestratorService orchestratorService,
-      com.assistant.agent.infrastructure.memory.ConversationMemoryStore memoryStore) {
+      com.assistant.agent.infrastructure.memory.ConversationMemoryStore memoryStore,
+      com.assistant.memory.application.ports.in.ConversationHistoryPort conversationHistoryPort) {
     this.orchestratorService = orchestratorService;
     this.memoryStore = memoryStore;
+    this.conversationHistoryPort = conversationHistoryPort;
   }
 
   @GetMapping("/history")
   public ResponseEntity<java.util.List<com.assistant.agent.infrastructure.memory.ConversationMemoryStore.ChatMessageDto>> getHistory(
-      @PathVariable("workspaceId") UUID workspaceId) {
-    return ResponseEntity.ok(memoryStore.getMessages(workspaceId));
+      @PathVariable("workspaceId") UUID workspaceId,
+      @RequestParam(name = "conversationId", required = false) UUID conversationId) {
+    UUID targetId = conversationId != null ? conversationId : workspaceId;
+    var inMemoryMessages = memoryStore.getMessages(targetId);
+    if (!inMemoryMessages.isEmpty() || conversationId == null) {
+      return ResponseEntity.ok(inMemoryMessages);
+    }
+
+    // Persistent fallback: query database turns from memory module
+    try {
+      var dbTurns = conversationHistoryPort.getRecentTurns(
+          new com.assistant.kernel.domain.WorkspaceId(workspaceId),
+          new com.assistant.memory.domain.model.ConversationId(conversationId),
+          50);
+      java.util.List<com.assistant.agent.infrastructure.memory.ConversationMemoryStore.ChatMessageDto> fallbackList =
+          dbTurns.stream()
+              .map(t -> new com.assistant.agent.infrastructure.memory.ConversationMemoryStore.ChatMessageDto(
+                  t.role().toLowerCase(),
+                  t.content(),
+                  t.timestamp() != null ? t.timestamp().toEpochMilli() : System.currentTimeMillis()))
+              .collect(java.util.stream.Collectors.toList());
+      return ResponseEntity.ok(fallbackList);
+    } catch (Exception e) {
+      return ResponseEntity.ok(java.util.Collections.emptyList());
+    }
   }
 
   @PostMapping("/chat")
@@ -53,7 +79,7 @@ public class AgentChatController {
 
     AgentExecutionResult result =
         orchestratorService.processUserPrompt(
-            workspaceId, userId, request.prompt(), provider, apiKey, baseUrl, model);
+            workspaceId, userId, request.prompt(), request.noteIds(), provider, apiKey, baseUrl, model);
     return ResponseEntity.ok(result);
   }
 
@@ -61,6 +87,7 @@ public class AgentChatController {
   public SseEmitter streamChat(
       @PathVariable("workspaceId") UUID workspaceId,
       @RequestParam("prompt") String prompt,
+      @RequestParam(name = "noteIds", required = false) java.util.List<UUID> noteIds,
       @RequestParam(name = "conversationId", required = false) UUID conversationId,
       @RequestParam(name = "userId", required = false) UUID userId,
       @RequestHeader(name = "X-AI-Api-Key", required = false) String apiKey,
@@ -70,7 +97,7 @@ public class AgentChatController {
     SseEmitter emitter = new SseEmitter(120_000L);
     UUID finalUserId = userId != null ? userId : UUID.randomUUID();
     orchestratorService.streamUserPrompt(
-        workspaceId, conversationId, finalUserId, prompt, provider, apiKey, baseUrl, model, emitter);
+        workspaceId, conversationId, finalUserId, prompt, noteIds, provider, apiKey, baseUrl, model, emitter);
     return emitter;
   }
 

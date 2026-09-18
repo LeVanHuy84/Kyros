@@ -24,15 +24,13 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
   return (
     <div
       style={{
-        backgroundColor: 'var(--bg-app)',
-        border: '1px solid var(--border-color)',
-        borderRadius: 'var(--radius-md)',
-        padding: '12px',
+        padding: '12px 8px',
         display: 'flex',
         flexDirection: 'column',
         gap: '8px',
-        height: '380px',
+        height: '100%',
         overflowY: 'auto',
+        borderRight: '1px solid var(--border-color)',
       }}
     >
       <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>

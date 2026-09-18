@@ -47,7 +47,9 @@ class ReActOrchestratorServiceTest {
     OpenAiCompatibleLlmClient mockClient = new OpenAiCompatibleLlmClient(new ObjectMapper());
     com.assistant.agent.infrastructure.memory.ConversationMemoryStore memoryStore =
         new com.assistant.agent.infrastructure.memory.ConversationMemoryStore();
-    orchestratorService = new ReActOrchestratorService(List.of(mockNoteTool), mockClient, memoryStore);
+    com.assistant.memory.application.ports.in.ConversationHistoryPort mockHistoryPort = org.mockito.Mockito.mock(com.assistant.memory.application.ports.in.ConversationHistoryPort.class);
+    com.assistant.memory.domain.repository.NoteRepository mockNoteRepo = org.mockito.Mockito.mock(com.assistant.memory.domain.repository.NoteRepository.class);
+    orchestratorService = new ReActOrchestratorService(List.of(mockNoteTool), mockClient, memoryStore, mockHistoryPort, mockNoteRepo);
   }
 
   @Test
@@ -74,7 +76,7 @@ class ReActOrchestratorServiceTest {
 
     assertNotNull(result);
     assertTrue(result.pendingApproval());
-    assertEquals("delete_event", result.pendingToolName());
+    assertEquals("delete_events", result.pendingToolName());
     assertNotNull(result.approvalReason());
   }
 }

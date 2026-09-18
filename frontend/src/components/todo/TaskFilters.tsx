@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, CalendarRange } from 'lucide-react';
+import { Search, Filter, CalendarRange, RotateCcw } from 'lucide-react';
 
 interface TaskFiltersProps {
   searchQuery: string;
@@ -32,26 +32,47 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
   dueDateTo,
   setDueDateTo,
 }) => {
+  const isFiltered =
+    !!searchQuery ||
+    !!selectedPriority ||
+    !!selectedStatus ||
+    !!selectedTag ||
+    !!dueDateFrom ||
+    !!dueDateTo;
+
+  const handleReset = () => {
+    setSearchQuery('');
+    setSelectedPriority('');
+    setSelectedStatus('');
+    setSelectedTag('');
+    setDueDateFrom('');
+    setDueDateTo('');
+  };
+
   return (
     <div
       className="task-filters"
       style={{
         display: 'flex',
-        gap: '16px',
+        gap: '12px',
         flexWrap: 'wrap',
         alignItems: 'center',
+        padding: '12px 16px',
+        backgroundColor: 'var(--bg-card)',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid var(--border-color)',
       }}
     >
       {/* Search Input */}
       <div
         className="task-filters-search"
-        style={{ position: 'relative', flexGrow: 1, minWidth: '240px' }}
+        style={{ position: 'relative', flex: '1 1 240px', minWidth: '200px' }}
       >
         <Search
-          size={18}
+          size={16}
           style={{
             position: 'absolute',
-            left: '14px',
+            left: '12px',
             top: '50%',
             transform: 'translateY(-50%)',
             color: 'var(--text-muted)',
@@ -65,12 +86,12 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
             width: '100%',
-            padding: '12px 16px 12px 42px',
+            padding: '8px 12px 8px 36px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-color)',
             backgroundColor: 'var(--bg-app)',
             color: 'var(--text-main)',
-            fontSize: '15px',
+            fontSize: '13px',
             fontFamily: 'var(--font-sans)',
             outline: 'none',
             transition: 'border-color var(--transition-fast)',
@@ -82,20 +103,19 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
 
       {/* Filter Priority */}
       <div
-        className="task-filters-field task-filters-field--inline"
-        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        className="task-filters-field"
+        style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
       >
-        <Filter size={15} style={{ color: 'var(--text-muted)' }} />
         <select
           value={selectedPriority}
           onChange={(e) => setSelectedPriority(e.target.value)}
           style={{
-            padding: '11px 16px',
+            padding: '8px 12px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-color)',
             backgroundColor: 'var(--bg-app)',
             color: 'var(--text-main)',
-            fontSize: '15px',
+            fontSize: '13px',
             outline: 'none',
             cursor: 'pointer',
           }}
@@ -113,12 +133,12 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
           style={{
-            padding: '11px 16px',
+            padding: '8px 12px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-color)',
             backgroundColor: 'var(--bg-app)',
             color: 'var(--text-main)',
-            fontSize: '15px',
+            fontSize: '13px',
             outline: 'none',
             cursor: 'pointer',
           }}
@@ -136,12 +156,12 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
             value={selectedTag}
             onChange={(e) => setSelectedTag(e.target.value)}
             style={{
-              padding: '11px 16px',
+              padding: '8px 12px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-color)',
               backgroundColor: 'var(--bg-app)',
               color: 'var(--text-main)',
-              fontSize: '15px',
+              fontSize: '13px',
               outline: 'none',
               cursor: 'pointer',
             }}
@@ -159,12 +179,12 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
       {/* Filter Due Date Range */}
       <div
         className="task-filters-date task-filters-field"
-        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
       >
-        <CalendarRange size={15} style={{ color: 'var(--text-muted)' }} />
+        <CalendarRange size={14} style={{ color: 'var(--text-muted)' }} />
         <div
           className="task-filters-date-range"
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
         >
           <input
             type="date"
@@ -172,35 +192,30 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
             onChange={(e) => setDueDateFrom(e.target.value)}
             title="Due date from"
             style={{
-              padding: '10px 12px',
+              padding: '7px 10px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-color)',
               backgroundColor: 'var(--bg-app)',
               color: 'var(--text-main)',
-              fontSize: '15px',
+              fontSize: '12px',
               outline: 'none',
               cursor: 'pointer',
               fontFamily: 'var(--font-sans)',
             }}
           />
-          <span
-            className="task-filters-date-separator"
-            style={{ color: 'var(--text-muted)', fontSize: '14px' }}
-          >
-            –
-          </span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>–</span>
           <input
             type="date"
             value={dueDateTo}
             onChange={(e) => setDueDateTo(e.target.value)}
             title="Due date to"
             style={{
-              padding: '10px 12px',
+              padding: '7px 10px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-color)',
               backgroundColor: 'var(--bg-app)',
               color: 'var(--text-main)',
-              fontSize: '15px',
+              fontSize: '12px',
               outline: 'none',
               cursor: 'pointer',
               fontFamily: 'var(--font-sans)',
@@ -208,6 +223,28 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
           />
         </div>
       </div>
+
+      {/* Reset Filters */}
+      {isFiltered && (
+        <button
+          onClick={handleReset}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--color-primary)',
+            fontSize: '13px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            padding: '4px 8px',
+          }}
+        >
+          <RotateCcw size={13} />
+          <span>Reset Filters</span>
+        </button>
+      )}
     </div>
   );
 };

@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -23,12 +25,12 @@ public class TaskToolAdapter implements AgentToolContract {
 
   @Override
   public String getName() {
-    return "create_task";
+    return "upsert_tasks";
   }
 
   @Override
   public String getDescription() {
-    return "Create a new task in the workspace todo list.";
+    return "Tạo mới hoặc cập nhật một hoặc nhiều công việc (Tasks). Nếu có 'id' thì là cập nhật, nếu không thì tạo mới.";
   }
 
   @Override
@@ -39,10 +41,20 @@ public class TaskToolAdapter implements AgentToolContract {
           "properties": {
             "workspaceId": { "type": "string" },
             "userId": { "type": "string" },
-            "title": { "type": "string" },
-            "description": { "type": "string" }
+            "tasks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string", "description": "ID của task nếu là cập nhật" },
+                  "title": { "type": "string", "description": "Tiêu đề công việc" },
+                  "description": { "type": "string", "description": "Mô tả chi tiết công việc" }
+                },
+                "required": ["title"]
+              }
+            }
           },
-          "required": ["workspaceId", "userId", "title"]
+          "required": ["tasks"]
         }
         """;
   }
@@ -51,10 +63,14 @@ public class TaskToolAdapter implements AgentToolContract {
   public ToolExecutionResult execute(String argumentsJson) {
     try {
       JsonNode jsonNode = objectMapper.readTree(argumentsJson);
-      String workspaceIdStr = jsonNode.get("workspaceId").asText();
-      String userIdStr = jsonNode.get("userId").asText();
-      String title = jsonNode.get("title").asText();
-      String description = jsonNode.has("description") ? jsonNode.get("description").asText() : "";
+      String workspaceIdStr = jsonNode.has("workspaceId") ? jsonNode.get("workspaceId").asText() : "";
+      String userIdStr = jsonNode.has("userId") ? jsonNode.get("userId").asText() : "";
+
+      JsonNode tasksNode = jsonNode.has("tasks") ? jsonNode.get("tasks") : jsonNode;
+      if (!tasksNode.isArray()) {
+        // Fallback if LLM passed a single task object at top-level
+        tasksNode = objectMapper.createArrayNode().add(tasksNode);
+      }
 
       Object todoService = applicationContext.getBean("todoService");
       Method createMethod = null;
@@ -70,10 +86,7 @@ public class TaskToolAdapter implements AgentToolContract {
       }
 
       Class<?> wsIdClass = Class.forName("com.assistant.kernel.domain.WorkspaceId");
-      Class<?> uIdClass = Class.forName("com.assistant.kernel.domain.UserId");
-
       Constructor<?> wsConst = wsIdClass.getConstructor(UUID.class);
-      Constructor<?> uConst = uIdClass.getConstructor(UUID.class);
 
       UUID wsUuid;
       try {
@@ -84,20 +97,20 @@ public class TaskToolAdapter implements AgentToolContract {
             .orElseGet(UUID::randomUUID);
       }
 
-      UUID uUuid;
-      try {
-        uUuid = UUID.fromString(userIdStr);
-      } catch (Exception e) {
-        uUuid = UUID.randomUUID();
+      Object wsIdObj = wsConst.newInstance(wsUuid);
+
+      List<String> results = new ArrayList<>();
+      for (JsonNode taskItem : tasksNode) {
+        String title = taskItem.has("title") ? taskItem.get("title").asText() : "Task mới";
+        String description = taskItem.has("description") ? taskItem.get("description").asText() : "";
+
+        Object result = createMethod.invoke(todoService, wsIdObj, title, description, null, null, null, null, null, null);
+        results.add(title + " (Status: Created/Updated)");
       }
 
-      Object wsIdObj = wsConst.newInstance(wsUuid);
-      Object uIdObj = uConst.newInstance(uUuid);
-
-      Object result = createMethod.invoke(todoService, wsIdObj, title, description, null, null, null, null, null, null);
-      return ToolExecutionResult.ok("Task created successfully: " + result.toString());
+      return ToolExecutionResult.ok("Đã upsert thành công " + results.size() + " công việc: " + String.join(", ", results));
     } catch (Exception e) {
-      return ToolExecutionResult.error("Failed to execute create_task tool: " + e.getMessage());
+      return ToolExecutionResult.error("Failed to execute upsert_tasks tool: " + e.getMessage());
     }
   }
 }

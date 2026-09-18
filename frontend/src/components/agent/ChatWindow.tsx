@@ -93,15 +93,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     <div
       ref={chatContainerRef}
       style={{
-        height: '380px',
-        backgroundColor: 'var(--bg-app)',
-        border: '1px solid var(--border-color)',
-        borderRadius: 'var(--radius-md)',
-        padding: '16px',
+        flex: 1,
+        height: '100%',
+        minHeight: 0,
+        padding: '16px 20px',
         overflowY: 'auto',
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
+        gap: '16px',
       }}
     >
       {messages.map((m, idx) => (

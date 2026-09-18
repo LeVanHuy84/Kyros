@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -24,12 +26,12 @@ public class CalendarToolAdapter implements AgentToolContract {
 
   @Override
   public String getName() {
-    return "create_event";
+    return "upsert_events";
   }
 
   @Override
   public String getDescription() {
-    return "Schedule a calendar event in the workspace calendar.";
+    return "Tạo mới hoặc cập nhật một hoặc nhiều sự kiện trên lịch (Calendar Events). Nếu có 'id' thì là cập nhật, không có 'id' thì tạo mới.";
   }
 
   @Override
@@ -39,12 +41,22 @@ public class CalendarToolAdapter implements AgentToolContract {
           "type": "object",
           "properties": {
             "workspaceId": { "type": "string" },
-            "title": { "type": "string" },
-            "description": { "type": "string" },
-            "startTime": { "type": "string" },
-            "endTime": { "type": "string" }
+            "events": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string", "description": "ID sự kiện nếu là cập nhật" },
+                  "title": { "type": "string", "description": "Tiêu đề sự kiện" },
+                  "description": { "type": "string", "description": "Mô tả chi tiết" },
+                  "startTime": { "type": "string", "description": "Thời gian bắt đầu (ISO-8601 hoặc HH:mm)" },
+                  "endTime": { "type": "string", "description": "Thời gian kết thúc (ISO-8601 hoặc HH:mm)" }
+                },
+                "required": ["title", "startTime"]
+              }
+            }
           },
-          "required": ["workspaceId", "title", "startTime", "endTime"]
+          "required": ["events"]
         }
         """;
   }
@@ -53,13 +65,11 @@ public class CalendarToolAdapter implements AgentToolContract {
   public ToolExecutionResult execute(String argumentsJson) {
     try {
       JsonNode jsonNode = objectMapper.readTree(argumentsJson);
-      String workspaceIdStr = jsonNode.get("workspaceId").asText();
-      String title = jsonNode.get("title").asText();
-      String description = jsonNode.has("description") ? jsonNode.get("description").asText() : "";
-      Instant startTime = parseDateTime(jsonNode.get("startTime").asText());
-      Instant endTime = parseDateTime(jsonNode.has("endTime") ? jsonNode.get("endTime").asText() : null);
-      if (endTime == null) {
-        endTime = startTime.plus(java.time.Duration.ofHours(1));
+      String workspaceIdStr = jsonNode.has("workspaceId") ? jsonNode.get("workspaceId").asText() : "";
+
+      JsonNode eventsNode = jsonNode.has("events") ? jsonNode.get("events") : jsonNode;
+      if (!eventsNode.isArray()) {
+        eventsNode = objectMapper.createArrayNode().add(eventsNode);
       }
 
       Object calendarService = applicationContext.getBean("calendarEventService");
@@ -88,10 +98,26 @@ public class CalendarToolAdapter implements AgentToolContract {
       Object wsIdObj = wsConst.newInstance(wsUuid);
       String dummyUserId = UUID.randomUUID().toString();
 
-      Object result = createMethod.invoke(calendarService, wsIdObj, dummyUserId, null, title, description, startTime, endTime, null);
-      return ToolExecutionResult.ok("Calendar event scheduled successfully: " + result.toString());
+      List<String> results = new ArrayList<>();
+      for (JsonNode eventItem : eventsNode) {
+        String title = eventItem.has("title") ? eventItem.get("title").asText() : "Sự kiện mới";
+        String description = eventItem.has("description") ? eventItem.get("description").asText() : "";
+        Instant startTime = parseDateTime(eventItem.has("startTime") ? eventItem.get("startTime").asText() : null);
+        Instant endTime = parseDateTime(eventItem.has("endTime") ? eventItem.get("endTime").asText() : null);
+        if (startTime == null) {
+          startTime = Instant.now().plus(java.time.Duration.ofHours(1));
+        }
+        if (endTime == null) {
+          endTime = startTime.plus(java.time.Duration.ofHours(1));
+        }
+
+        Object result = createMethod.invoke(calendarService, wsIdObj, dummyUserId, null, title, description, startTime, endTime, null);
+        results.add(title + " (" + startTime.toString() + ")");
+      }
+
+      return ToolExecutionResult.ok("Đã lên lịch thành công " + results.size() + " sự kiện: " + String.join(", ", results));
     } catch (Exception e) {
-      return ToolExecutionResult.error("Failed to execute create_event tool: " + e.getMessage());
+      return ToolExecutionResult.error("Failed to execute upsert_events tool: " + e.getMessage());
     }
   }
 

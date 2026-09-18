@@ -569,4 +569,25 @@
     min-width: 0 !important;
     width: 100% !important;
   }
+
+  /* ------------------------------------------------------------------------
+     Calendar / Schedule Overlaps Responsive rules
+     ------------------------------------------------------------------------ */
+
+  .calendar-month-grid {
+    font-size: 11px !important;
+  }
 }
+
+@media (max-width: 640px) {
+  .calendar-shell {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .calendar-month-grid,
+  .calendar-week-grid {
+    min-width: 580px;
+  }
+}
+
