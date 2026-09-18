@@ -52,3 +52,6 @@ scalar:
 
 app:
   frontend-url: ${APP_FRONTEND_URL:}
+  security:
+    vault-master-key: ${APP_SECURITY_VAULT_MASTER_KEY:}
+
