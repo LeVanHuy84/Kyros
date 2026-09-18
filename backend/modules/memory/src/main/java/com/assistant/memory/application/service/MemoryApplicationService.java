@@ -69,7 +69,22 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
     ConversationTurn turn =
         new ConversationTurn(TurnId.random(), command.senderRole(), command.messageContent(), now);
 
+    if (command.senderRole() == com.assistant.memory.domain.model.SenderRole.User) {
+      String currentTitle = conversation.getTitle();
+      if (currentTitle == null
+          || currentTitle.equalsIgnoreCase("New Conversation")
+          || currentTitle.equalsIgnoreCase("Cuộc trò chuyện mới")) {
+        String cleanText = command.messageContent().replaceAll("\\s+", " ").trim();
+        String generatedTitle =
+            cleanText.length() > 30 ? cleanText.substring(0, 30) + "..." : cleanText;
+        if (!generatedTitle.isEmpty()) {
+          conversation.updateTitle(generatedTitle);
+        }
+      }
+    }
+
     conversation.appendTurn(command.senderRole(), command.messageContent(), now);
+    conversationRepository.save(conversation);
     conversationRepository.appendTurn(conversation.getId(), conversation.getWorkspaceId(), turn);
 
     eventPublisher.publishEvent(
@@ -97,6 +112,20 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
 
     eventPublisher.publishEvent(
         new MemoryEvents.ConversationCleared(conversationId.value(), workspaceId));
+    eventPublisher.publishEvent(
+        new MemoryEvents.MemoryUpdated(workspaceId, conversation.getUserId(), "CONVERSATION"));
+  }
+
+  @Transactional
+  public void deleteConversation(WorkspaceId workspaceId, ConversationId conversationId) {
+    Conversation conversation =
+        conversationRepository
+            .findById(conversationId, workspaceId)
+            .orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
+
+    conversationRepository.deleteTurns(conversationId);
+    conversationRepository.delete(conversationId, workspaceId);
+
     eventPublisher.publishEvent(
         new MemoryEvents.MemoryUpdated(workspaceId, conversation.getUserId(), "CONVERSATION"));
   }

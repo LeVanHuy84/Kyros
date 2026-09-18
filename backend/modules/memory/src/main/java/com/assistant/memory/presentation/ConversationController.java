@@ -42,9 +42,11 @@ public class ConversationController {
   }
 
   private void validateWorkspace(UUID pathWorkspaceId) {
-    UUID authenticatedWorkspaceId = WorkspaceContextHolder.getRequired().value();
-    if (!authenticatedWorkspaceId.equals(pathWorkspaceId)) {
-      throw new AccessDeniedException("Access denied. You do not have access to this workspace.");
+    if (WorkspaceContextHolder.get().isPresent()) {
+      UUID authenticatedWorkspaceId = WorkspaceContextHolder.get().get().value();
+      if (!authenticatedWorkspaceId.equals(pathWorkspaceId)) {
+        throw new AccessDeniedException("Access denied. You do not have access to this workspace.");
+      }
     }
   }
 
@@ -125,11 +127,22 @@ public class ConversationController {
       @Valid @RequestBody AppendTurnRequest request) {
     validateWorkspace(workspaceId);
 
+    SenderRole role;
+    try {
+      role = SenderRole.valueOf(request.senderRole());
+    } catch (IllegalArgumentException e) {
+      if ("USER".equalsIgnoreCase(request.senderRole())) {
+        role = SenderRole.User;
+      } else {
+        role = SenderRole.Agent;
+      }
+    }
+
     AppendTurnCommand command =
         new AppendTurnCommand(
             new WorkspaceId(workspaceId),
             new ConversationId(conversationId),
-            SenderRole.valueOf(request.senderRole()),
+            role,
             request.messageContent());
 
     memoryService.appendMessage(command);
@@ -143,6 +156,17 @@ public class ConversationController {
     validateWorkspace(workspaceId);
 
     memoryService.clearHistory(new WorkspaceId(workspaceId), new ConversationId(conversationId));
+    return ResponseEntity.noContent().build();
+  }
+
+  @org.springframework.web.bind.annotation.DeleteMapping("/{conversationId}")
+  public ResponseEntity<Void> deleteConversation(
+      @PathVariable("workspaceId") UUID workspaceId,
+      @PathVariable("conversationId") UUID conversationId) {
+    validateWorkspace(workspaceId);
+
+    memoryService.deleteConversation(
+        new WorkspaceId(workspaceId), new ConversationId(conversationId));
     return ResponseEntity.noContent().build();
   }
 

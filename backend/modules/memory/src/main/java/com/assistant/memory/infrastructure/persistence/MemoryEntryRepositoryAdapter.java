@@ -31,17 +31,30 @@ public class MemoryEntryRepositoryAdapter implements MemoryEntryRepository {
       WorkspaceId workspaceId, UserId userId, int offset, int limit) {
     int page = limit > 0 ? offset / limit : 0;
     Pageable pageable = PageRequest.of(page, limit > 0 ? limit : 20);
-    return repository
-        .findByWorkspaceIdAndUserId(workspaceId.value(), userId.value(), pageable)
-        .getContent()
-        .stream()
-        .map(this::toDomain)
-        .collect(Collectors.toList());
+    List<MemoryEntryJpaEntity> content =
+        userId != null
+            ? repository
+                .findByWorkspaceIdAndUserId(workspaceId.value(), userId.value(), pageable)
+                .getContent()
+            : repository.findByWorkspaceId(workspaceId.value(), pageable).getContent();
+
+    if (content.isEmpty() && userId != null) {
+      content = repository.findByWorkspaceId(workspaceId.value(), pageable).getContent();
+    }
+
+    return content.stream().map(this::toDomain).collect(Collectors.toList());
   }
 
   @Override
   public long countByUser(WorkspaceId workspaceId, UserId userId) {
-    return repository.countByWorkspaceIdAndUserId(workspaceId.value(), userId.value());
+    long count =
+        userId != null
+            ? repository.countByWorkspaceIdAndUserId(workspaceId.value(), userId.value())
+            : repository.countByWorkspaceId(workspaceId.value());
+    if (count == 0 && userId != null) {
+      count = repository.countByWorkspaceId(workspaceId.value());
+    }
+    return count;
   }
 
   @Override

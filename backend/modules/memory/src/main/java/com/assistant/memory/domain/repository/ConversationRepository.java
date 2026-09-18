@@ -21,4 +21,6 @@ public interface ConversationRepository {
   List<ConversationTurn> findRecentTurns(ConversationId conversationId, int limit);
 
   void deleteTurns(ConversationId conversationId);
+
+  void delete(ConversationId conversationId, WorkspaceId workspaceId);
 }

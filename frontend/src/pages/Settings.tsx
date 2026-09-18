@@ -8,19 +8,21 @@ import {
   Check,
   X,
   Loader2,
+  Cpu,
 } from 'lucide-react';
 import { useConversations } from '../hooks/useConversations';
 import { PreferencesPanel } from '../components/settings/PreferencesPanel';
 import { MemoryVaultPanel } from '../components/settings/MemoryVaultPanel';
 import { ConversationsDirectoryPanel } from '../components/settings/ConversationsDirectoryPanel';
 import { NotificationSettingsPanel } from '../components/settings/NotificationSettingsPanel';
+import { AiConfigPanel } from '../components/settings/AiConfigPanel';
 import { TurnsModal } from '../components/settings/TurnsModal';
 import type { ConversationTurn } from '../types/memory';
 
 const Settings: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<
-    'pref' | 'vault' | 'conv' | 'notif' | 'ws'
-  >('pref');
+    'ai' | 'pref' | 'vault' | 'conv' | 'notif' | 'ws'
+  >('ai');
   const { getConversationTurns } = useConversations();
 
   // Alert and success statuses
@@ -166,6 +168,11 @@ const Settings: React.FC = () => {
         >
           {[
             {
+              id: 'ai',
+              label: 'AI Provider & Vault',
+              icon: <Cpu size={16} />,
+            },
+            {
               id: 'pref',
               label: 'Preferences',
               icon: <SettingsIcon size={16} />,
@@ -223,6 +230,10 @@ const Settings: React.FC = () => {
 
         {/* Settings content body */}
         <div style={{ padding: '32px', minHeight: '300px' }}>
+          {activeSubTab === 'ai' && (
+            <AiConfigPanel onSuccess={handleSuccess} onError={handleError} />
+          )}
+
           {activeSubTab === 'pref' && (
             <PreferencesPanel onSuccess={handleSuccess} onError={handleError} />
           )}

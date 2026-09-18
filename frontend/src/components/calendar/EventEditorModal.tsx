@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import type { CalendarEvent } from './types';
 import { useTasks } from '../../hooks/useTasks';
-import apiClient from '../../services/api-client';
 
 interface EventEditorModalProps {
   isOpen: boolean;
@@ -58,37 +58,18 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({
         setTitle(selectedEvent.title);
         setDesc(selectedEvent.description || '');
         setSelectedTaskId(selectedEvent.taskId || '');
-        const formatLocalIso = (iso: string) => formatLocal(new Date(iso));
-        setStart(formatLocalIso(selectedEvent.startTime));
-        setEnd(formatLocalIso(selectedEvent.endTime));
+        setStart(formatLocal(new Date(selectedEvent.startTime)));
+        setEnd(formatLocal(new Date(selectedEvent.endTime)));
         setReminders(selectedEvent.reminders.map((r) => r.leadTimeMinutes));
       } else {
         setTitle('');
         setDesc('');
         setSelectedTaskId('');
-        const startDay = prefilledStart || new Date();
-        const endDay = new Date(startDay.getTime() + 60 * 60 * 1000);
-        setStart(formatLocal(startDay));
-        setEnd(formatLocal(endDay));
-
-        // Fetch preferences for default reminder lead time
-        const workspaceId = localStorage.getItem('active_workspace_id');
-        if (workspaceId) {
-          apiClient
-            .get(`/v1/workspaces/${workspaceId}/preferences`)
-            .then((res) => {
-              if (res.data && res.data.leadTimeMinutes !== undefined) {
-                setReminders([res.data.leadTimeMinutes]);
-              } else {
-                setReminders([15]);
-              }
-            })
-            .catch(() => {
-              setReminders([15]);
-            });
-        } else {
-          setReminders([15]);
-        }
+        const now = prefilledStart || new Date();
+        const defaultEnd = new Date(now.getTime() + 60 * 60 * 1000);
+        setStart(formatLocal(now));
+        setEnd(formatLocal(defaultEnd));
+        setReminders([15]);
       }
     }
   }, [isOpen, isEditing, selectedEvent, prefilledStart, hasInitialized]);
@@ -119,7 +100,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({
     }
   };
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed',
@@ -127,12 +108,14 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0.45)',
         backdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 200,
+        zIndex: 9999,
         padding: '24px',
       }}
       onClick={onClose}
@@ -441,6 +424,7 @@ export const EventEditorModal: React.FC<EventEditorModalProps> = ({
           </button>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body
   );
 };

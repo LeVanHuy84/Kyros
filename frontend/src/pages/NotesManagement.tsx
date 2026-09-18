@@ -1,20 +1,11 @@
 import React, { useState } from 'react';
-import {
-  FileText,
-  Plus,
-  Trash2,
-  Edit3,
-  Search,
-  CheckCircle2,
-  Calendar,
-  X,
-  AlertCircle,
-  RefreshCw,
-  Clock,
-} from 'lucide-react';
+import { FileText, Plus, X, AlertCircle, PanelLeftOpen } from 'lucide-react';
 import { useWorkspace } from '../hooks/useWorkspace';
 import { useNotes } from '../hooks/useNotes';
 import type { Note } from '../hooks/useNotes';
+import { NoteListPanel } from '../components/notes/NoteListPanel';
+import { NoteFormEditor } from '../components/notes/NoteFormEditor';
+import { NoteDetailView } from '../components/notes/NoteDetailView';
 
 const NotesManagement: React.FC = () => {
   const { activeWorkspace } = useWorkspace();
@@ -33,12 +24,14 @@ const NotesManagement: React.FC = () => {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [isListCollapsed, setIsListCollapsed] = useState<boolean>(false);
 
   // Form states
   const [formTitle, setFormTitle] = useState<string>('');
   const [formContent, setFormContent] = useState<string>('');
   const [formTaskId, setFormTaskId] = useState<string>('');
   const [formEventId, setFormEventId] = useState<string>('');
+  const [formTab, setFormTab] = useState<'edit' | 'preview'>('edit');
 
   const filteredNotes = notes.filter(
     (n) =>
@@ -53,6 +46,7 @@ const NotesManagement: React.FC = () => {
     setFormContent('');
     setFormTaskId('');
     setFormEventId('');
+    setFormTab('edit');
     setIsCreating(true);
   };
 
@@ -63,6 +57,7 @@ const NotesManagement: React.FC = () => {
     setFormContent(note.content || '');
     setFormTaskId(note.taskId || '');
     setFormEventId(note.eventId || '');
+    setFormTab('edit');
     setIsEditing(true);
   };
 
@@ -214,564 +209,91 @@ const NotesManagement: React.FC = () => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns:
-            isCreating || isEditing || selectedNote ? '340px 1fr' : '1fr',
-          gap: '24px',
+          gridTemplateColumns: isListCollapsed
+            ? 'auto 1fr'
+            : isCreating || isEditing || selectedNote
+              ? '320px 1fr'
+              : '1fr',
+          gap: '20px',
           alignItems: 'start',
+          transition: 'all var(--transition-normal)',
         }}
       >
         {/* Left List Panel */}
-        <div
-          className="card"
-          style={{
-            padding: '20px',
-            gap: '16px',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {/* Search bar */}
-          <div style={{ position: 'relative' }}>
-            <Search
-              size={16}
-              style={{
-                position: 'absolute',
-                left: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'var(--text-muted)',
-              }}
-            />
-            <input
-              type="text"
-              placeholder="Search notes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '9px 12px 9px 36px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-color)',
-                backgroundColor: 'var(--bg-app)',
-                color: 'var(--text-main)',
-                fontSize: '14px',
-                outline: 'none',
-              }}
-            />
-          </div>
-
-          {isLoading ? (
-            <div
-              style={{
-                padding: '30px 0',
-                textAlign: 'center',
-                color: 'var(--text-muted)',
-              }}
-            >
-              <RefreshCw
-                size={20}
-                className="spin"
-                style={{ color: 'var(--color-primary)', marginBottom: '8px' }}
-              />
-              <div>Loading notes...</div>
-            </div>
-          ) : filteredNotes.length === 0 ? (
-            <div
-              style={{
-                padding: '40px 0',
-                textAlign: 'center',
-                color: 'var(--text-muted)',
-              }}
-            >
-              <FileText
-                size={36}
-                style={{ opacity: 0.3, marginBottom: '8px' }}
-              />
-              <div
-                style={{
-                  fontWeight: '600',
-                  fontSize: '14px',
-                  color: 'var(--text-main)',
-                }}
-              >
-                No Notes Found
-              </div>
-              <div style={{ fontSize: '13px' }}>
-                Click "+ New Note" to write down ideas.
-              </div>
-            </div>
-          ) : (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                maxHeight: '640px',
-                overflowY: 'auto',
-              }}
-            >
-              {filteredNotes.map((note) => (
-                <div
-                  key={note.id}
-                  onClick={() => {
-                    setSelectedNote(note);
-                    setIsCreating(false);
-                    setIsEditing(false);
-                  }}
-                  style={{
-                    padding: '14px 16px',
-                    backgroundColor:
-                      selectedNote?.id === note.id
-                        ? 'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.08)'
-                        : 'var(--bg-app)',
-                    border:
-                      selectedNote?.id === note.id
-                        ? '1px solid var(--color-primary)'
-                        : '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-md)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px',
-                    cursor: 'pointer',
-                    transition: 'all var(--transition-fast)',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontWeight: '600',
-                        fontSize: '14px',
-                        color: 'var(--text-main)',
-                      }}
-                    >
-                      {note.title}
-                    </span>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditForm(note);
-                        }}
-                        className="btn btn-secondary"
-                        style={{ padding: '4px 6px' }}
-                        title="Edit"
-                      >
-                        <Edit3 size={12} />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteNote(note.id);
-                          if (selectedNote?.id === note.id)
-                            setSelectedNote(null);
-                        }}
-                        className="btn btn-danger"
-                        style={{ padding: '4px 6px' }}
-                        title="Delete"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {note.content && (
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: '12px',
-                        color: 'var(--text-muted)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {note.content}
-                    </p>
-                  )}
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      marginTop: '4px',
-                      fontSize: '11px',
-                      color: 'var(--text-muted)',
-                    }}
-                  >
-                    <span
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                      }}
-                    >
-                      <Clock size={11} />
-                      {new Date(note.updatedAt).toLocaleDateString([], {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
-                    {note.taskId && (
-                      <span
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '3px',
-                          color: 'var(--color-primary)',
-                        }}
-                      >
-                        <CheckCircle2 size={11} /> Linked Task
-                      </span>
-                    )}
-                    {note.eventId && (
-                      <span
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '3px',
-                          color: 'var(--color-primary)',
-                        }}
-                      >
-                        <Calendar size={11} /> Linked Event
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Right Editor / Detail Panel */}
-        {(isCreating || isEditing) && (
-          <form
-            onSubmit={handleSave}
-            className="card"
+        {isListCollapsed ? (
+          <button
+            onClick={() => setIsListCollapsed(false)}
+            className="btn btn-secondary"
+            title="Expand Note List"
             style={{
-              padding: '24px',
-              gap: '16px',
               display: 'flex',
-              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '10px 14px',
+              backgroundColor: 'var(--bg-card)',
+              whiteSpace: 'nowrap',
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: 'var(--text-main)',
-                  margin: 0,
-                }}
-              >
-                {isEditing ? 'Edit Note' : 'Create New Note'}
-              </h3>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCreating(false);
-                  setIsEditing(false);
-                }}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
-            >
-              <label
-                style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: 'var(--text-main)',
-                }}
-              >
-                Title *
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="Note title..."
-                value={formTitle}
-                onChange={(e) => setFormTitle(e.target.value)}
-                style={{
-                  padding: '11px 16px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
-                  backgroundColor: 'var(--bg-app)',
-                  color: 'var(--text-main)',
-                  fontSize: '15px',
-                  outline: 'none',
-                }}
-              />
-            </div>
-
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
-            >
-              <label
-                style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: 'var(--text-main)',
-                }}
-              >
-                Content (Markdown supported)
-              </label>
-              <textarea
-                placeholder="Write your note content, meeting summaries, ideas..."
-                rows={10}
-                value={formContent}
-                onChange={(e) => setFormContent(e.target.value)}
-                style={{
-                  padding: '12px 16px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
-                  backgroundColor: 'var(--bg-app)',
-                  color: 'var(--text-main)',
-                  fontSize: '14px',
-                  outline: 'none',
-                  fontFamily: 'var(--font-sans)',
-                  resize: 'vertical',
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '16px',
-              }}
-            >
-              <div
-                style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
-              >
-                <label
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  Linked Task ID (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="UUID of associated Task"
-                  value={formTaskId}
-                  onChange={(e) => setFormTaskId(e.target.value)}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--bg-app)',
-                    color: 'var(--text-main)',
-                    fontSize: '13px',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-
-              <div
-                style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}
-              >
-                <label
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  Linked Event ID (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="UUID of Calendar Event"
-                  value={formEventId}
-                  onChange={(e) => setFormEventId(e.target.value)}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: 'var(--bg-app)',
-                    color: 'var(--text-main)',
-                    fontSize: '13px',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '12px',
-                marginTop: '8px',
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCreating(false);
-                  setIsEditing(false);
-                }}
-                className="btn btn-secondary"
-                disabled={isSaving}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={isSaving}
-              >
-                {isSaving
-                  ? 'Saving...'
-                  : isEditing
-                    ? 'Save Changes'
-                    : 'Create Note'}
-              </button>
-            </div>
-          </form>
+            <PanelLeftOpen size={18} />
+            <span>Notes List ({filteredNotes.length})</span>
+          </button>
+        ) : (
+          <NoteListPanel
+            notes={notes}
+            filteredNotes={filteredNotes}
+            selectedNote={selectedNote}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onSelectNote={(note) => {
+              setSelectedNote(note);
+              setIsCreating(false);
+              setIsEditing(false);
+            }}
+            onOpenEditForm={openEditForm}
+            onDeleteNote={(id) => {
+              deleteNote(id);
+              if (selectedNote?.id === id) setSelectedNote(null);
+            }}
+            isLoading={isLoading}
+            isCreating={isCreating}
+            isEditing={isEditing}
+            onCollapse={() => setIsListCollapsed(true)}
+          />
         )}
 
-        {selectedNote && !isCreating && !isEditing && (
-          <div
-            className="card"
-            style={{
-              padding: '24px',
-              gap: '16px',
-              display: 'flex',
-              flexDirection: 'column',
+        {/* Right Editor Panel */}
+        {(isCreating || isEditing) && (
+          <NoteFormEditor
+            isEditing={isEditing}
+            formTitle={formTitle}
+            setFormTitle={setFormTitle}
+            formContent={formContent}
+            setFormContent={setFormContent}
+            formTaskId={formTaskId}
+            setFormTaskId={setFormTaskId}
+            formEventId={formEventId}
+            setFormEventId={setFormEventId}
+            formTab={formTab}
+            setFormTab={setFormTab}
+            isSaving={isSaving}
+            onSave={handleSave}
+            onCancel={() => {
+              setIsCreating(false);
+              setIsEditing(false);
             }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-              }}
-            >
-              <div>
-                <h3
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: '700',
-                    color: 'var(--text-main)',
-                    margin: '0 0 6px 0',
-                  }}
-                >
-                  {selectedNote.title}
-                </h3>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  Last updated{' '}
-                  {new Date(selectedNote.updatedAt).toLocaleString()}
-                </div>
-              </div>
+          />
+        )}
 
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={() => openEditForm(selectedNote)}
-                  className="btn btn-secondary"
-                  style={{ padding: '6px 12px' }}
-                >
-                  <Edit3 size={14} /> Edit
-                </button>
-                <button
-                  onClick={() => {
-                    deleteNote(selectedNote.id);
-                    setSelectedNote(null);
-                  }}
-                  className="btn btn-danger"
-                  style={{ padding: '6px 12px' }}
-                >
-                  <Trash2 size={14} /> Delete
-                </button>
-              </div>
-            </div>
-
-            <div
-              style={{
-                padding: '16px',
-                backgroundColor: 'var(--bg-app)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-color)',
-                fontSize: '14px',
-                lineHeight: '1.6',
-                color: 'var(--text-main)',
-                whiteSpace: 'pre-wrap',
-                minHeight: '200px',
-              }}
-            >
-              {selectedNote.content || (
-                <span
-                  style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}
-                >
-                  No content provided.
-                </span>
-              )}
-            </div>
-
-            {(selectedNote.taskId || selectedNote.eventId) && (
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '16px',
-                  fontSize: '13px',
-                  paddingTop: '12px',
-                  borderTop: '1px solid var(--border-color)',
-                }}
-              >
-                {selectedNote.taskId && (
-                  <span
-                    style={{
-                      color: 'var(--color-primary)',
-                      fontWeight: '600',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    <CheckCircle2 size={14} /> Task ID: {selectedNote.taskId}
-                  </span>
-                )}
-                {selectedNote.eventId && (
-                  <span
-                    style={{
-                      color: 'var(--color-primary)',
-                      fontWeight: '600',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    <Calendar size={14} /> Event ID: {selectedNote.eventId}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
+        {/* Right Detail Panel */}
+        {selectedNote && !isCreating && !isEditing && (
+          <NoteDetailView
+            note={selectedNote}
+            onEdit={() => openEditForm(selectedNote)}
+            onDelete={() => {
+              deleteNote(selectedNote.id);
+              setSelectedNote(null);
+            }}
+          />
         )}
       </div>
     </div>

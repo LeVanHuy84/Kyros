@@ -100,6 +100,14 @@ public class ConversationRepositoryAdapter implements ConversationRepository {
     turnRepository.deleteByConversationId(conversationId.value());
   }
 
+  @Override
+  @Transactional
+  public void delete(ConversationId conversationId, WorkspaceId workspaceId) {
+    conversationRepository
+        .findByIdAndWorkspaceId(conversationId.value(), workspaceId.value())
+        .ifPresent(conversationRepository::delete);
+  }
+
   private Conversation toDomain(ConversationJpaEntity jpa) {
     return new Conversation(
         new ConversationId(jpa.getId()),

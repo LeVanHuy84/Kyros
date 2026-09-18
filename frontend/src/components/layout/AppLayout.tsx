@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useWorkspace } from '../../hooks/useWorkspace';
 import { Sidebar } from './Sidebar';
@@ -9,6 +9,9 @@ export const AppLayout: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { activeWorkspace, isLoading: wsLoading } = useWorkspace();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  const isFullViewPage = location.pathname.startsWith('/agent');
 
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -113,7 +116,9 @@ export const AppLayout: React.FC = () => {
       )}
       <div className="main-content">
         <TopNav onToggleSidebar={() => setSidebarOpen(true)} />
-        <main className="content-body fade-in-slide-up">
+        <main
+          className={`content-body ${isFullViewPage ? 'content-body-full' : ''} fade-in-slide-up`}
+        >
           <Outlet />
         </main>
       </div>

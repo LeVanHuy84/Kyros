@@ -41,6 +41,8 @@ public class SecurityConfig {
                         "/api/auth/verify",
                         "/api/auth/resend-verification",
                         "/api/auth/refresh",
+                        "/api/v1/workspaces/*/agent/**",
+                        "/api/v1/workspaces/*/conversations/**",
                         "/actuator/health",
                         "/actuator/health/**",
                         "/v3/api-docs",
