@@ -35,17 +35,17 @@ public class NoteToolAdapter implements AgentToolContract {
   @Override
   public String getJsonSchema() {
     return """
-        {
-          "type": "object",
-          "properties": {
-            "workspaceId": { "type": "string" },
-            "userId": { "type": "string" },
-            "title": { "type": "string" },
-            "content": { "type": "string" }
-          },
-          "required": ["workspaceId", "userId", "title", "content"]
-        }
-        """;
+    {
+      "type": "object",
+      "properties": {
+        "workspaceId": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" }
+      },
+      "required": ["workspaceId", "userId", "title", "content"]
+    }
+    """;
   }
 
   @Override
@@ -61,7 +61,8 @@ public class NoteToolAdapter implements AgentToolContract {
           noteService.createNote(
               new WorkspaceId(wsId), new UserId(uId), title, content, null, null);
 
-      return ToolExecutionResult.ok("Created note ID: " + noteDto.id() + ", Title: " + noteDto.title());
+      return ToolExecutionResult.ok(
+          "Created note ID: " + noteDto.id() + ", Title: " + noteDto.title());
     } catch (Exception e) {
       return ToolExecutionResult.error("Failed to create note: " + e.getMessage());
     }

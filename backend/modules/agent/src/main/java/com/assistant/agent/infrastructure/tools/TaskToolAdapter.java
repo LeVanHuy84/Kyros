@@ -30,40 +30,42 @@ public class TaskToolAdapter implements AgentToolContract {
 
   @Override
   public String getDescription() {
-    return "Tạo mới hoặc cập nhật một hoặc nhiều công việc (Tasks). Nếu có 'id' thì là cập nhật, nếu không thì tạo mới.";
+    return "Tạo mới hoặc cập nhật một hoặc nhiều công việc (Tasks). Nếu có 'id' thì là cập nhật,"
+        + " nếu không thì tạo mới.";
   }
 
   @Override
   public String getJsonSchema() {
     return """
-        {
-          "type": "object",
-          "properties": {
-            "workspaceId": { "type": "string" },
-            "userId": { "type": "string" },
-            "tasks": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": { "type": "string", "description": "ID của task nếu là cập nhật" },
-                  "title": { "type": "string", "description": "Tiêu đề công việc" },
-                  "description": { "type": "string", "description": "Mô tả chi tiết công việc" }
-                },
-                "required": ["title"]
-              }
-            }
-          },
-          "required": ["tasks"]
+    {
+      "type": "object",
+      "properties": {
+        "workspaceId": { "type": "string" },
+        "userId": { "type": "string" },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "description": "ID của task nếu là cập nhật" },
+              "title": { "type": "string", "description": "Tiêu đề công việc" },
+              "description": { "type": "string", "description": "Mô tả chi tiết công việc" }
+            },
+            "required": ["title"]
+          }
         }
-        """;
+      },
+      "required": ["tasks"]
+    }
+    """;
   }
 
   @Override
   public ToolExecutionResult execute(String argumentsJson) {
     try {
       JsonNode jsonNode = objectMapper.readTree(argumentsJson);
-      String workspaceIdStr = jsonNode.has("workspaceId") ? jsonNode.get("workspaceId").asText() : "";
+      String workspaceIdStr =
+          jsonNode.has("workspaceId") ? jsonNode.get("workspaceId").asText() : "";
       String userIdStr = jsonNode.has("userId") ? jsonNode.get("userId").asText() : "";
 
       JsonNode tasksNode = jsonNode.has("tasks") ? jsonNode.get("tasks") : jsonNode;
@@ -92,9 +94,10 @@ public class TaskToolAdapter implements AgentToolContract {
       try {
         wsUuid = UUID.fromString(workspaceIdStr);
       } catch (Exception e) {
-        wsUuid = com.assistant.kernel.context.WorkspaceContextHolder.get()
-            .map(com.assistant.kernel.domain.WorkspaceId::value)
-            .orElseGet(UUID::randomUUID);
+        wsUuid =
+            com.assistant.kernel.context.WorkspaceContextHolder.get()
+                .map(com.assistant.kernel.domain.WorkspaceId::value)
+                .orElseGet(UUID::randomUUID);
       }
 
       Object wsIdObj = wsConst.newInstance(wsUuid);
@@ -102,13 +105,17 @@ public class TaskToolAdapter implements AgentToolContract {
       List<String> results = new ArrayList<>();
       for (JsonNode taskItem : tasksNode) {
         String title = taskItem.has("title") ? taskItem.get("title").asText() : "Task mới";
-        String description = taskItem.has("description") ? taskItem.get("description").asText() : "";
+        String description =
+            taskItem.has("description") ? taskItem.get("description").asText() : "";
 
-        Object result = createMethod.invoke(todoService, wsIdObj, title, description, null, null, null, null, null, null);
+        Object result =
+            createMethod.invoke(
+                todoService, wsIdObj, title, description, null, null, null, null, null, null);
         results.add(title + " (Status: Created/Updated)");
       }
 
-      return ToolExecutionResult.ok("Đã upsert thành công " + results.size() + " công việc: " + String.join(", ", results));
+      return ToolExecutionResult.ok(
+          "Đã upsert thành công " + results.size() + " công việc: " + String.join(", ", results));
     } catch (Exception e) {
       return ToolExecutionResult.error("Failed to execute upsert_tasks tool: " + e.getMessage());
     }

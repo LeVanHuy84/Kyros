@@ -42,7 +42,9 @@ export const PROVIDER_PRESETS: Record<
 export const useAgentChat = () => {
   const { activeWorkspace } = useWorkspace();
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<
+    string | null
+  >(null);
 
   const [selectedNotes, setSelectedNotes] = useState<Note[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([
@@ -59,7 +61,8 @@ export const useAgentChat = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [isStreamingMode, setIsStreamingMode] = useState(true);
   const [showConfigModal, setShowConfigModal] = useState(false);
-  const [pendingApproval, setPendingApproval] = useState<PendingApprovalData | null>(null);
+  const [pendingApproval, setPendingApproval] =
+    useState<PendingApprovalData | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -73,7 +76,8 @@ export const useAgentChat = () => {
   // Auto-scroll chat window to bottom
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [messages, isThinking]);
 
@@ -122,7 +126,7 @@ export const useAgentChat = () => {
       }
     };
     fetchConversations();
-  }, [activeWorkspace?.id]);
+  }, [activeWorkspace]);
 
   const loadConversationTurns = async (wsId: string, convId: string) => {
     try {
@@ -144,7 +148,11 @@ export const useAgentChat = () => {
           const historyRes = await apiClient.get(
             `/v1/workspaces/${wsId}/agent/history?conversationId=${convId}`
           );
-          if (historyRes.data && Array.isArray(historyRes.data) && historyRes.data.length > 0) {
+          if (
+            historyRes.data &&
+            Array.isArray(historyRes.data) &&
+            historyRes.data.length > 0
+          ) {
             turns = historyRes.data;
           }
         } catch {
@@ -157,11 +165,16 @@ export const useAgentChat = () => {
           const roleStr = t.role || t.sender || 'agent';
           const contentStr = t.content || t.text || '';
           const timeStr = t.timestamp
-            ? new Date(typeof t.timestamp === 'number' ? t.timestamp : t.timestamp).toLocaleTimeString([], {
+            ? new Date(
+                typeof t.timestamp === 'number' ? t.timestamp : t.timestamp
+              ).toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit',
               })
-            : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            : new Date().toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              });
 
           return {
             sender: roleStr.toLowerCase() === 'user' ? 'user' : 'agent',
@@ -266,9 +279,12 @@ export const useAgentChat = () => {
     let currentConvId = activeConversationId;
     if (!currentConvId) {
       try {
-        const res = await apiClient.post(`/v1/workspaces/${currentWorkspaceId}/conversations`, {
-          sessionId: null,
-        });
+        const res = await apiClient.post(
+          `/v1/workspaces/${currentWorkspaceId}/conversations`,
+          {
+            sessionId: null,
+          }
+        );
         currentConvId = res.data.id;
         const newConv: ConversationItem = {
           id: res.data.id,
@@ -387,7 +403,10 @@ export const useAgentChat = () => {
               if (currentEvent === 'thought') {
                 setMessages((prev) => {
                   const next = [...prev];
-                  if (next.length > 0 && next[next.length - 1].sender === 'agent') {
+                  if (
+                    next.length > 0 &&
+                    next[next.length - 1].sender === 'agent'
+                  ) {
                     const last = next[next.length - 1];
                     const steps = last.thoughtSteps || [];
                     const updatedSteps = last.activeThoughtStatus
@@ -404,7 +423,10 @@ export const useAgentChat = () => {
               } else if (currentEvent === 'observation') {
                 setMessages((prev) => {
                   const next = [...prev];
-                  if (next.length > 0 && next[next.length - 1].sender === 'agent') {
+                  if (
+                    next.length > 0 &&
+                    next[next.length - 1].sender === 'agent'
+                  ) {
                     const last = next[next.length - 1];
                     const steps = last.thoughtSteps || [];
                     const updatedSteps = last.activeThoughtStatus
@@ -433,7 +455,10 @@ export const useAgentChat = () => {
               } else if (currentEvent === 'completed') {
                 setMessages((prev) => {
                   const next = [...prev];
-                  if (next.length > 0 && next[next.length - 1].sender === 'agent') {
+                  if (
+                    next.length > 0 &&
+                    next[next.length - 1].sender === 'agent'
+                  ) {
                     const last = next[next.length - 1];
                     const steps = last.thoughtSteps || [];
                     const updatedSteps = last.activeThoughtStatus
@@ -455,7 +480,10 @@ export const useAgentChat = () => {
               const currentContent = fullAgentResponse;
               setMessages((prev) => {
                 const next = [...prev];
-                if (next.length > 0 && next[next.length - 1].sender === 'agent') {
+                if (
+                  next.length > 0 &&
+                  next[next.length - 1].sender === 'agent'
+                ) {
                   next[next.length - 1] = {
                     ...next[next.length - 1],
                     text: currentContent,

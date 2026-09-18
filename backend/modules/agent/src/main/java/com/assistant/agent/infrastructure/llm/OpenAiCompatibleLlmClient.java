@@ -37,14 +37,17 @@ public class OpenAiCompatibleLlmClient implements LlmPort {
       List<Map<String, String>> chatHistory,
       List<AgentToolContract> availableTools) {
     try {
-      String effectiveBaseUrl = (baseUrl != null && !baseUrl.isBlank()) ? baseUrl : "https://api.groq.com/openai/v1";
+      String effectiveBaseUrl =
+          (baseUrl != null && !baseUrl.isBlank()) ? baseUrl : "https://api.groq.com/openai/v1";
       if (!effectiveBaseUrl.endsWith("/")) {
         effectiveBaseUrl += "/";
       }
       String targetUrl = effectiveBaseUrl + "chat/completions";
 
       Map<String, Object> requestBody = new HashMap<>();
-      requestBody.put("model", (modelName != null && !modelName.isBlank()) ? modelName : "llama-3.3-70b-versatile");
+      requestBody.put(
+          "model",
+          (modelName != null && !modelName.isBlank()) ? modelName : "llama-3.3-70b-versatile");
 
       List<Map<String, Object>> messages = new ArrayList<>();
       messages.add(Map.of("role", "system", "content", systemPrompt));
@@ -60,10 +63,15 @@ public class OpenAiCompatibleLlmClient implements LlmPort {
       messages.add(Map.of("role", "user", "content", userPrompt));
       requestBody.put("messages", messages);
 
-      boolean isLocalOllama = targetUrl.contains("11434") || targetUrl.contains("localhost") || targetUrl.contains("127.0.0.1");
+      boolean isLocalOllama =
+          targetUrl.contains("11434")
+              || targetUrl.contains("localhost")
+              || targetUrl.contains("127.0.0.1");
 
-      // Small local models in Ollama (like qwen2.5:1.5b) spin 100% CPU if full OpenAI tools JSON array is sent.
-      // For local Ollama, append available tools to system prompt text to prevent Ollama grammar lockup, unless Cloud API is used.
+      // Small local models in Ollama (like qwen2.5:1.5b) spin 100% CPU if full OpenAI tools JSON
+      // array is sent.
+      // For local Ollama, append available tools to system prompt text to prevent Ollama grammar
+      // lockup, unless Cloud API is used.
       if (availableTools != null && !availableTools.isEmpty()) {
         if (!isLocalOllama) {
           List<Map<String, Object>> toolsJson = new ArrayList<>();
@@ -82,7 +90,12 @@ public class OpenAiCompatibleLlmClient implements LlmPort {
         } else {
           StringBuilder toolDesc = new StringBuilder("\nAvailable tools:\n");
           for (AgentToolContract tool : availableTools) {
-            toolDesc.append("- ").append(tool.getName()).append(": ").append(tool.getDescription()).append("\n");
+            toolDesc
+                .append("- ")
+                .append(tool.getName())
+                .append(": ")
+                .append(tool.getDescription())
+                .append("\n");
           }
           systemPrompt += toolDesc.toString();
           messages.set(0, Map.of("role", "system", "content", systemPrompt));
@@ -92,17 +105,19 @@ public class OpenAiCompatibleLlmClient implements LlmPort {
       String jsonPayload = objectMapper.writeValueAsString(requestBody);
 
       int timeoutSeconds = isLocalOllama ? 12 : 45;
-      HttpRequest.Builder reqBuilder = HttpRequest.newBuilder()
-          .uri(URI.create(targetUrl))
-          .timeout(Duration.ofSeconds(timeoutSeconds))
-          .header("Content-Type", "application/json")
-          .POST(HttpRequest.BodyPublishers.ofString(jsonPayload));
+      HttpRequest.Builder reqBuilder =
+          HttpRequest.newBuilder()
+              .uri(URI.create(targetUrl))
+              .timeout(Duration.ofSeconds(timeoutSeconds))
+              .header("Content-Type", "application/json")
+              .POST(HttpRequest.BodyPublishers.ofString(jsonPayload));
 
       if (apiKey != null && !apiKey.isBlank()) {
         reqBuilder.header("Authorization", "Bearer " + apiKey);
       }
 
-      HttpResponse<String> response = httpClient.send(reqBuilder.build(), HttpResponse.BodyHandlers.ofString());
+      HttpResponse<String> response =
+          httpClient.send(reqBuilder.build(), HttpResponse.BodyHandlers.ofString());
 
       if (response.statusCode() >= 200 && response.statusCode() < 300) {
         JsonNode root = objectMapper.readTree(response.body());
@@ -114,9 +129,10 @@ public class OpenAiCompatibleLlmClient implements LlmPort {
           for (JsonNode tcNode : messageNode.path("tool_calls")) {
             JsonNode fnNode = tcNode.path("function");
             String toolName = fnNode.path("name").asText();
-            String toolArgs = fnNode.path("arguments").isObject()
-                ? objectMapper.writeValueAsString(fnNode.path("arguments"))
-                : fnNode.path("arguments").asText();
+            String toolArgs =
+                fnNode.path("arguments").isObject()
+                    ? objectMapper.writeValueAsString(fnNode.path("arguments"))
+                    : fnNode.path("arguments").asText();
             toolCalls.add(new ToolCall(toolName, toolArgs));
           }
           return new LlmResponse(null, toolCalls);
@@ -125,7 +141,9 @@ public class OpenAiCompatibleLlmClient implements LlmPort {
         String content = messageNode.path("content").asText("");
         return new LlmResponse(content, Collections.emptyList());
       } else {
-        return new LlmResponse("LLM Error (" + response.statusCode() + "): " + response.body(), Collections.emptyList());
+        return new LlmResponse(
+            "LLM Error (" + response.statusCode() + "): " + response.body(),
+            Collections.emptyList());
       }
     } catch (Exception e) {
       return new LlmResponse("Invocation Error: " + e.getMessage(), Collections.emptyList());

@@ -37,6 +37,8 @@
     38%
   ); /* Increased contrast from hsl(220, 10%, 48%) */
   --border-color: hsl(220, 15%, 92%);
+  --bg-ai-bubble: hsl(214, 25%, 96%);
+  --border-ai-bubble: hsl(220, 15%, 89%);
 
   /* Shadows & Radius */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
@@ -104,6 +106,8 @@
       78%
     ); /* Increased contrast from hsl(215, 15%, 68%) */
     --border-color: hsl(222, 16%, 18%);
+    --bg-ai-bubble: hsl(222, 20%, 14%);
+    --border-ai-bubble: hsl(222, 16%, 18%);
   }
 }
 
@@ -124,4 +128,6 @@
     78%
   ); /* Increased contrast from hsl(215, 15%, 68%) */
   --border-color: hsl(222, 16%, 18%);
+  --bg-ai-bubble: hsl(222, 20%, 14%);
+  --border-ai-bubble: hsl(222, 16%, 18%);
 }

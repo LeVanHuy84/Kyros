@@ -1,5 +1,15 @@
 import React from 'react';
-import { Search, RefreshCw, FileText, Edit3, Trash2, Clock, CheckCircle2, Calendar, PanelLeftClose } from 'lucide-react';
+import {
+  Search,
+  RefreshCw,
+  FileText,
+  Edit3,
+  Trash2,
+  Clock,
+  CheckCircle2,
+  Calendar,
+  PanelLeftClose,
+} from 'lucide-react';
 import type { Note } from '../../hooks/useNotes';
 
 interface NoteListPanelProps {
@@ -132,10 +142,7 @@ export const NoteListPanel: React.FC<NoteListPanelProps> = ({
             color: 'var(--text-muted)',
           }}
         >
-          <FileText
-            size={36}
-            style={{ opacity: 0.3, marginBottom: '8px' }}
-          />
+          <FileText size={36} style={{ opacity: 0.3, marginBottom: '8px' }} />
           <div
             style={{
               fontWeight: '600',

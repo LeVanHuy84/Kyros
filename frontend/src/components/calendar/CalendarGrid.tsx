@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Clock, ChevronRight, X, Calendar as CalendarIcon } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import {
+  AlertTriangle,
+  Clock,
+  ChevronRight,
+  X,
+  Calendar as CalendarIcon,
+} from 'lucide-react';
 import type { CalendarEvent } from './types';
 
 interface CalendarGridProps {
@@ -27,7 +34,11 @@ const getCategoryStyle = (event: CalendarEvent, hasConflict: boolean) => {
 
   const titleLower = (event.title || '').toLowerCase();
 
-  if (titleLower.includes('meeting') || titleLower.includes('họp') || titleLower.includes('call')) {
+  if (
+    titleLower.includes('meeting') ||
+    titleLower.includes('họp') ||
+    titleLower.includes('call')
+  ) {
     return {
       bg: 'rgba(59, 130, 246, 0.12)',
       border: 'rgba(59, 130, 246, 0.3)',
@@ -37,7 +48,12 @@ const getCategoryStyle = (event: CalendarEvent, hasConflict: boolean) => {
       categoryName: 'Meeting',
     };
   }
-  if (titleLower.includes('task') || titleLower.includes('viết') || titleLower.includes('làm') || event.taskId) {
+  if (
+    titleLower.includes('task') ||
+    titleLower.includes('viết') ||
+    titleLower.includes('làm') ||
+    event.taskId
+  ) {
     return {
       bg: 'rgba(16, 185, 129, 0.12)',
       border: 'rgba(16, 185, 129, 0.3)',
@@ -47,7 +63,12 @@ const getCategoryStyle = (event: CalendarEvent, hasConflict: boolean) => {
       categoryName: 'Task',
     };
   }
-  if (titleLower.includes('speaking') || titleLower.includes('listening') || titleLower.includes('reading') || titleLower.includes('học')) {
+  if (
+    titleLower.includes('speaking') ||
+    titleLower.includes('listening') ||
+    titleLower.includes('reading') ||
+    titleLower.includes('học')
+  ) {
     return {
       bg: 'rgba(168, 85, 247, 0.12)',
       border: 'rgba(168, 85, 247, 0.3)',
@@ -61,10 +82,12 @@ const getCategoryStyle = (event: CalendarEvent, hasConflict: boolean) => {
   // Default Primary Theme
   return {
     bg: 'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.12)',
-    border: 'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.25)',
+    border:
+      'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.25)',
     text: 'var(--text-main)',
     dotColor: 'var(--color-primary)',
-    badgeBg: 'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.18)',
+    badgeBg:
+      'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.18)',
     categoryName: 'Event',
   };
 };
@@ -224,7 +247,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               // Sort events by startTime ASC
               dayEvents.sort(
                 (a, b) =>
-                  new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+                  new Date(a.startTime).getTime() -
+                  new Date(b.startTime).getTime()
               );
 
               const isToday = new Date().toDateString() === day.toDateString();
@@ -274,7 +298,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       style={{
                         fontSize: '12px',
                         fontWeight: isToday ? '800' : '600',
-                        color: isToday ? 'var(--color-primary)' : 'var(--text-muted)',
+                        color: isToday
+                          ? 'var(--color-primary)'
+                          : 'var(--text-muted)',
                         padding: '2px 6px',
                         borderRadius: '4px',
                         backgroundColor: isToday
@@ -295,7 +321,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                           fontWeight: '500',
                         }}
                       >
-                        {dayEvents.length} {dayEvents.length === 1 ? 'evt' : 'evts'}
+                        {dayEvents.length}{' '}
+                        {dayEvents.length === 1 ? 'evt' : 'evts'}
                       </span>
                     )}
                   </div>
@@ -322,7 +349,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                             onEventClick(event);
                           }}
                           onMouseEnter={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
+                            const rect =
+                              e.currentTarget.getBoundingClientRect();
                             setHoveredEvent({ event, rect });
                           }}
                           onMouseLeave={() => setHoveredEvent(null)}
@@ -441,7 +469,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             });
             dayEvents.sort(
               (a, b) =>
-                new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+                new Date(a.startTime).getTime() -
+                new Date(b.startTime).getTime()
             );
 
             const isToday = new Date().toDateString() === day.toDateString();
@@ -565,7 +594,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                             {event.title}
                           </span>
                           {hasConflict && (
-                            <AlertTriangle size={12} style={{ color: '#ef4444', flexShrink: 0 }} />
+                            <AlertTriangle
+                              size={12}
+                              style={{ color: '#ef4444', flexShrink: 0 }}
+                            />
                           )}
                         </div>
                         <span
@@ -614,7 +646,13 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 color: 'var(--text-main)',
               }}
             >
-              Agenda — {currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+              Agenda —{' '}
+              {currentDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
             </h3>
           </div>
 
@@ -637,7 +675,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   fontSize: '14px',
                 }}
               >
-                No commitments scheduled for this day. Click "+ New Event" to schedule.
+                No commitments scheduled for this day. Click "+ New Event" to
+                schedule.
               </div>
             ) : (
               events
@@ -651,7 +690,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 })
                 .sort(
                   (a, b) =>
-                    new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+                    new Date(a.startTime).getTime() -
+                    new Date(b.startTime).getTime()
                 )
                 .map((event) => {
                   const conflicts = checkConflicts(event);
@@ -717,7 +757,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                           >
                             <Clock size={14} />
                             <span>
-                              {formatTimeStr(event.startTime)} - {formatTimeStr(event.endTime)}
+                              {formatTimeStr(event.startTime)} -{' '}
+                              {formatTimeStr(event.endTime)}
                             </span>
                           </div>
                         </div>
@@ -747,204 +788,276 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       )}
 
       {/* ----------------- HOVER TOOLTIP ----------------- */}
-      {hoveredEvent && (
-        <div
-          style={{
-            position: 'fixed',
-            top: `${hoveredEvent.rect.bottom + 6}px`,
-            left: `${Math.min(window.innerWidth - 260, Math.max(10, hoveredEvent.rect.left))}px`,
-            width: '250px',
-            backgroundColor: 'var(--bg-sidebar)',
-            border: '1px solid var(--border-color)',
-            borderRadius: 'var(--radius-md)',
-            padding: '12px',
-            boxShadow: 'var(--shadow-lg)',
-            zIndex: 1000,
-            pointerEvents: 'none',
-            animation: 'fadeIn 0.15s ease',
-          }}
-        >
-          <div
-            style={{
-              fontSize: '13px',
-              fontWeight: '700',
-              color: 'var(--text-main)',
-              marginBottom: '6px',
-            }}
-          >
-            {hoveredEvent.event.title}
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '11px',
-              color: 'var(--text-muted)',
-              marginBottom: '4px',
-            }}
-          >
-            <Clock size={12} />
-            <span>
-              {formatTimeStr(hoveredEvent.event.startTime)} -{' '}
-              {formatTimeStr(hoveredEvent.event.endTime)}
-            </span>
-          </div>
-          {hoveredEvent.event.description && (
-            <div
-              style={{
-                fontSize: '11px',
-                color: 'var(--text-muted)',
-                lineHeight: '1.4',
-                marginTop: '6px',
-                borderTop: '1px solid var(--border-color)',
-                paddingTop: '6px',
-                maxHeight: '60px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {hoveredEvent.event.description}
-            </div>
-          )}
-        </div>
-      )}
+      {hoveredEvent &&
+        createPortal(
+          (() => {
+            const tooltipWidth = 260;
+            const tooltipHeight = 120;
+            const margin = 16;
+            let left = hoveredEvent.rect.left;
+            if (left + tooltipWidth > window.innerWidth - margin) {
+              left = hoveredEvent.rect.right - tooltipWidth;
+            }
+            left = Math.max(
+              margin,
+              Math.min(left, window.innerWidth - tooltipWidth - margin)
+            );
 
-      {/* ----------------- DAY DETAIL POPOVER / MODAL FOR "+N MORE" ----------------- */}
-      {dayPopoverData && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(3px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 999,
-          }}
-          onClick={() => setDayPopoverData(null)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 'var(--radius-lg)',
-              width: '100%',
-              maxWidth: '420px',
-              maxHeight: '80vh',
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: 'var(--shadow-lg)',
-              overflow: 'hidden',
-              animation: 'scaleIn 0.15s ease',
-            }}
-          >
-            {/* Popover Header */}
-            <div
-              style={{
-                padding: '14px 18px',
-                borderBottom: '1px solid var(--border-color)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                backgroundColor: 'var(--bg-app)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CalendarIcon size={16} style={{ color: 'var(--color-primary)' }} />
-                <span style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-main)' }}>
-                  {dayPopoverData.date.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </span>
-                <span
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: '600',
-                    backgroundColor: 'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.15)',
-                    color: 'var(--color-primary)',
-                    padding: '2px 6px',
-                    borderRadius: '10px',
-                  }}
-                >
-                  {dayPopoverData.events.length} events
-                </span>
-              </div>
-              <button
-                onClick={() => setDayPopoverData(null)}
+            let top = hoveredEvent.rect.bottom + 6;
+            if (top + tooltipHeight > window.innerHeight - margin) {
+              top = Math.max(margin, hoveredEvent.rect.top - tooltipHeight - 6);
+            }
+
+            return (
+              <div
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  borderRadius: '4px',
+                  position: 'fixed',
+                  top: `${top}px`,
+                  left: `${left}px`,
+                  width: `${tooltipWidth}px`,
+                  backgroundColor: 'var(--bg-card)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '12px',
+                  boxShadow: 'var(--shadow-lg)',
+                  zIndex: 10000,
+                  pointerEvents: 'none',
+                  animation: 'fadeIn 0.15s ease',
                 }}
               >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Popover Events List */}
-            <div
-              style={{
-                padding: '14px 18px',
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-              }}
-            >
-              {dayPopoverData.events.map((event) => {
-                const conflicts = checkConflicts(event);
-                const hasConflict = conflicts.length > 0;
-                const style = getCategoryStyle(event, hasConflict);
-
-                return (
+                <div
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    color: 'var(--text-main)',
+                    marginBottom: '6px',
+                  }}
+                >
+                  {hoveredEvent.event.title}
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '11px',
+                    color: 'var(--text-muted)',
+                    marginBottom: '4px',
+                  }}
+                >
+                  <Clock size={12} />
+                  <span>
+                    {formatTimeStr(hoveredEvent.event.startTime)} -{' '}
+                    {formatTimeStr(hoveredEvent.event.endTime)}
+                  </span>
+                </div>
+                {hoveredEvent.event.description && (
                   <div
-                    key={event.eventId}
-                    onClick={() => {
-                      setDayPopoverData(null);
-                      onEventClick(event);
-                    }}
                     style={{
-                      backgroundColor: style.bg,
-                      border: `1px solid ${style.border}`,
-                      borderRadius: 'var(--radius-md)',
-                      padding: '10px 12px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      transition: 'transform 0.15s ease',
+                      fontSize: '11px',
+                      color: 'var(--text-muted)',
+                      lineHeight: '1.4',
+                      marginTop: '6px',
+                      borderTop: '1px solid var(--border-color)',
+                      paddingTop: '6px',
+                      maxHeight: '60px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
                     }}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                      <span style={{ fontWeight: '700', fontSize: '13px', color: style.text }}>
-                        {event.title}
-                      </span>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        {formatTimeStr(event.startTime)} - {formatTimeStr(event.endTime)}
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {hasConflict && (
-                        <AlertTriangle size={14} style={{ color: '#ef4444' }} />
-                      )}
-                      <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
-                    </div>
+                    {hoveredEvent.event.description}
                   </div>
-                );
-              })}
+                )}
+              </div>
+            );
+          })(),
+          document.body
+        )}
+
+      {/* ----------------- DAY DETAIL POPOVER / MODAL FOR "+N MORE" ----------------- */}
+      {dayPopoverData &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100vw',
+              height: '100vh',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(4px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+            }}
+            onClick={() => setDayPopoverData(null)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-lg)',
+                width: '100%',
+                maxWidth: '420px',
+                maxHeight: '80vh',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: 'var(--shadow-lg)',
+                overflow: 'hidden',
+                animation: 'scaleIn 0.15s ease',
+              }}
+            >
+              {/* Popover Header */}
+              <div
+                style={{
+                  padding: '14px 18px',
+                  borderBottom: '1px solid var(--border-color)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  backgroundColor: 'var(--bg-app)',
+                }}
+              >
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <CalendarIcon
+                    size={16}
+                    style={{ color: 'var(--color-primary)' }}
+                  />
+                  <span
+                    style={{
+                      fontWeight: '700',
+                      fontSize: '15px',
+                      color: 'var(--text-main)',
+                    }}
+                  >
+                    {dayPopoverData.date.toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      backgroundColor:
+                        'rgba(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.15)',
+                      color: 'var(--color-primary)',
+                      padding: '2px 6px',
+                      borderRadius: '10px',
+                    }}
+                  >
+                    {dayPopoverData.events.length} events
+                  </span>
+                </div>
+                <button
+                  onClick={() => setDayPopoverData(null)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Popover Events List */}
+              <div
+                style={{
+                  padding: '14px 18px',
+                  overflowY: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                {dayPopoverData.events.map((event) => {
+                  const conflicts = checkConflicts(event);
+                  const hasConflict = conflicts.length > 0;
+                  const style = getCategoryStyle(event, hasConflict);
+
+                  return (
+                    <div
+                      key={event.eventId}
+                      onClick={() => {
+                        setDayPopoverData(null);
+                        onEventClick(event);
+                      }}
+                      style={{
+                        backgroundColor: style.bg,
+                        border: `1px solid ${style.border}`,
+                        borderRadius: 'var(--radius-md)',
+                        padding: '10px 12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        transition: 'transform 0.15s ease',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '3px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontWeight: '700',
+                            fontSize: '13px',
+                            color: style.text,
+                          }}
+                        >
+                          {event.title}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            color: 'var(--text-muted)',
+                          }}
+                        >
+                          {formatTimeStr(event.startTime)} -{' '}
+                          {formatTimeStr(event.endTime)}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        {hasConflict && (
+                          <AlertTriangle
+                            size={14}
+                            style={{ color: '#ef4444' }}
+                          />
+                        )}
+                        <ChevronRight
+                          size={16}
+                          style={{ color: 'var(--text-muted)' }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

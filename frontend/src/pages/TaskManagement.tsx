@@ -16,7 +16,6 @@ import {
   Edit3,
   Tags,
   Zap,
-  MoreVertical,
   CalendarCheck,
 } from 'lucide-react';
 import { useWorkspace } from '../hooks/useWorkspace';
@@ -80,12 +79,11 @@ const TaskManagement: React.FC = () => {
   // Task Overlay state coordinators
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
-  const [showRecurrenceModal, setShowRecurrenceModal] = useState<boolean>(false);
-  const [showTagManagerModal, setShowTagManagerModal] = useState<boolean>(false);
+  const [showRecurrenceModal, setShowRecurrenceModal] =
+    useState<boolean>(false);
+  const [showTagManagerModal, setShowTagManagerModal] =
+    useState<boolean>(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  // Active overflow action menu ID
-  const [activeMenuTaskId, setActiveMenuTaskId] = useState<string | null>(null);
 
   // One-Click AI Auto Schedule Action
   const handleAutoSchedule = async () => {
@@ -117,7 +115,9 @@ const TaskManagement: React.FC = () => {
       // Create a quick calendar event for the task starting now + 1 hour or default time
       const startTime = new Date();
       startTime.setHours(startTime.getHours() + 1, 0, 0, 0);
-      const endTime = new Date(startTime.getTime() + (task.estimatedDurationMinutes || 30) * 60000);
+      const endTime = new Date(
+        startTime.getTime() + (task.estimatedDurationMinutes || 30) * 60000
+      );
 
       await apiClient.post(
         `/v1/workspaces/${activeWorkspace.id}/calendar/events`,
@@ -166,14 +166,22 @@ const TaskManagement: React.FC = () => {
           No Active Workspace
         </h3>
         <p style={{ fontSize: '14px' }}>
-          Please select or create a workspace from the sidebar to manage your tasks.
+          Please select or create a workspace from the sidebar to manage your
+          tasks.
         </p>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+        width: '100%',
+      }}
+    >
       {/* 1. PAGE HEADER */}
       <div
         style={{
@@ -196,7 +204,9 @@ const TaskManagement: React.FC = () => {
           >
             Task Management
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
+          <p
+            style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}
+          >
             Manage and organize your tasks across your workspace.
           </p>
         </div>
@@ -236,7 +246,12 @@ const TaskManagement: React.FC = () => {
           <button
             onClick={() => setShowCreateModal(true)}
             className="btn btn-secondary"
-            style={{ height: '40px', padding: '0 16px', fontSize: '13px', fontWeight: '500' }}
+            style={{
+              height: '40px',
+              padding: '0 16px',
+              fontSize: '13px',
+              fontWeight: '500',
+            }}
           >
             <Plus size={16} />
             <span>New Task</span>
@@ -246,7 +261,12 @@ const TaskManagement: React.FC = () => {
           <button
             onClick={() => setShowTagManagerModal(true)}
             className="btn btn-secondary"
-            style={{ height: '40px', padding: '0 14px', fontSize: '13px', fontWeight: '500' }}
+            style={{
+              height: '40px',
+              padding: '0 14px',
+              fontSize: '13px',
+              fontWeight: '500',
+            }}
           >
             <Tags size={16} />
             <span>Tags</span>
@@ -338,8 +358,16 @@ const TaskManagement: React.FC = () => {
         >
           <div style={{ display: 'flex', gap: '20px' }}>
             {[
-              { id: 'all', label: 'Backlog Tasks', count: metrics.activeCount + metrics.completedCount },
-              { id: 'recurrence', label: 'Recurring', count: metrics.recurrenceCount },
+              {
+                id: 'all',
+                label: 'Backlog Tasks',
+                count: metrics.activeCount + metrics.completedCount,
+              },
+              {
+                id: 'recurrence',
+                label: 'Recurring',
+                count: metrics.recurrenceCount,
+              },
               { id: 'trash', label: 'Trash', count: metrics.trashCount },
             ].map((tab) => (
               <button
@@ -466,7 +494,11 @@ const TaskManagement: React.FC = () => {
                   setDueDateTo('');
                 }}
                 className="btn btn-secondary"
-                style={{ marginTop: '8px', padding: '6px 16px', fontSize: '13px' }}
+                style={{
+                  marginTop: '8px',
+                  padding: '6px 16px',
+                  fontSize: '13px',
+                }}
               >
                 Clear filters
               </button>
@@ -624,7 +656,7 @@ const TaskManagement: React.FC = () => {
                               fontSize: '10px',
                               padding: '1px 6px',
                               borderRadius: '4px',
-                              backgroundColor: 'var(--bg-sidebar)',
+                              backgroundColor: 'var(--bg-app)',
                               border: '1px solid var(--border-color)',
                               color: 'var(--text-muted)',
                             }}
@@ -682,7 +714,8 @@ const TaskManagement: React.FC = () => {
                           }}
                         >
                           <Calendar size={12} />
-                          Due {new Date(task.dueDate).toLocaleDateString([], {
+                          Due{' '}
+                          {new Date(task.dueDate).toLocaleDateString([], {
                             month: 'short',
                             day: 'numeric',
                           })}
@@ -707,7 +740,11 @@ const TaskManagement: React.FC = () => {
                       <button
                         onClick={() => handleScheduleTask(task)}
                         className="btn btn-secondary"
-                        style={{ padding: '4px 8px', fontSize: '12px', gap: '4px' }}
+                        style={{
+                          padding: '4px 8px',
+                          fontSize: '12px',
+                          gap: '4px',
+                        }}
                         title="Schedule task on calendar"
                       >
                         <CalendarCheck size={13} />
@@ -743,7 +780,11 @@ const TaskManagement: React.FC = () => {
                     <button
                       onClick={() => recoverTask(task.taskId)}
                       className="btn btn-success"
-                      style={{ padding: '5px 10px', fontSize: '12px', gap: '4px' }}
+                      style={{
+                        padding: '5px 10px',
+                        fontSize: '12px',
+                        gap: '4px',
+                      }}
                     >
                       <RotateCcw size={13} />
                       <span>Recover</span>

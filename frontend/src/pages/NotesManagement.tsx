@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-  FileText,
-  Plus,
-  X,
-  AlertCircle,
-  PanelLeftOpen,
-} from 'lucide-react';
+import { FileText, Plus, X, AlertCircle, PanelLeftOpen } from 'lucide-react';
 import { useWorkspace } from '../hooks/useWorkspace';
 import { useNotes } from '../hooks/useNotes';
 import type { Note } from '../hooks/useNotes';
@@ -215,12 +209,11 @@ const NotesManagement: React.FC = () => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns:
-            isListCollapsed
-              ? 'auto 1fr'
-              : isCreating || isEditing || selectedNote
-                ? '320px 1fr'
-                : '1fr',
+          gridTemplateColumns: isListCollapsed
+            ? 'auto 1fr'
+            : isCreating || isEditing || selectedNote
+              ? '320px 1fr'
+              : '1fr',
           gap: '20px',
           alignItems: 'start',
           transition: 'all var(--transition-normal)',

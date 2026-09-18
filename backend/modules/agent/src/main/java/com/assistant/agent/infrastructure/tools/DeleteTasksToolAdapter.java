@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,18 +30,18 @@ public class DeleteTasksToolAdapter implements AgentToolContract {
   @Override
   public String getJsonSchema() {
     return """
-        {
-          "type": "object",
-          "properties": {
-            "taskIds": {
-              "type": "array",
-              "items": { "type": "string" },
-              "description": "Danh sách các ID của task cần xóa"
-            }
-          },
-          "required": ["taskIds"]
+    {
+      "type": "object",
+      "properties": {
+        "taskIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Danh sách các ID của task cần xóa"
         }
-        """;
+      },
+      "required": ["taskIds"]
+    }
+    """;
   }
 
   @Override
@@ -61,7 +60,8 @@ public class DeleteTasksToolAdapter implements AgentToolContract {
         ids.add(jsonNode.get("id").asText());
       }
 
-      return ToolExecutionResult.ok("Đã xóa thành công " + ids.size() + " công việc: " + String.join(", ", ids));
+      return ToolExecutionResult.ok(
+          "Đã xóa thành công " + ids.size() + " công việc: " + String.join(", ", ids));
     } catch (Exception e) {
       return ToolExecutionResult.error("Failed to execute delete_tasks tool: " + e.getMessage());
     }

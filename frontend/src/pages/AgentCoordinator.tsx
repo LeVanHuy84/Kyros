@@ -40,7 +40,17 @@ export const AgentCoordinator: React.FC = () => {
   } = useAgentChat();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', minHeight: 0, flex: 1, backgroundColor: 'var(--bg-app)' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        minHeight: 0,
+        flex: 1,
+        backgroundColor: 'var(--bg-app)',
+      }}
+    >
       <div
         style={{
           padding: '16px 20px',
@@ -161,7 +171,8 @@ export const AgentCoordinator: React.FC = () => {
             activeConversationId={activeConversationId}
             onSelectConversation={(id) => {
               setActiveConversationId(id);
-              if (activeWorkspace) loadConversationTurns(activeWorkspace.id, id);
+              if (activeWorkspace)
+                loadConversationTurns(activeWorkspace.id, id);
             }}
             onDeleteConversation={handleDeleteConversation}
           />

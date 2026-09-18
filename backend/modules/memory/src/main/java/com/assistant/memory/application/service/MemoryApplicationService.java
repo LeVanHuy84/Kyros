@@ -71,9 +71,12 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
 
     if (command.senderRole() == com.assistant.memory.domain.model.SenderRole.User) {
       String currentTitle = conversation.getTitle();
-      if (currentTitle == null || currentTitle.equalsIgnoreCase("New Conversation") || currentTitle.equalsIgnoreCase("Cuộc trò chuyện mới")) {
+      if (currentTitle == null
+          || currentTitle.equalsIgnoreCase("New Conversation")
+          || currentTitle.equalsIgnoreCase("Cuộc trò chuyện mới")) {
         String cleanText = command.messageContent().replaceAll("\\s+", " ").trim();
-        String generatedTitle = cleanText.length() > 30 ? cleanText.substring(0, 30) + "..." : cleanText;
+        String generatedTitle =
+            cleanText.length() > 30 ? cleanText.substring(0, 30) + "..." : cleanText;
         if (!generatedTitle.isEmpty()) {
           conversation.updateTitle(generatedTitle);
         }

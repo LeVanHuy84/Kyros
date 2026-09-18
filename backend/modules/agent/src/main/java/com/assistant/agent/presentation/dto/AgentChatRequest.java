@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.UUID;
 
 public record AgentChatRequest(
-    String prompt,
+    UUID conversationId,
     UUID userId,
+    String prompt,
     List<UUID> noteIds,
     String provider,
     String apiKey,
     String baseUrl,
-    String model
-) {}
+    String model) {}

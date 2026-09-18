@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, CalendarRange, RotateCcw } from 'lucide-react';
+import { Search, CalendarRange, RotateCcw } from 'lucide-react';
 
 interface TaskFiltersProps {
   searchQuery: string;
@@ -203,7 +203,9 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
               fontFamily: 'var(--font-sans)',
             }}
           />
-          <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>–</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
+            –
+          </span>
           <input
             type="date"
             value={dueDateTo}

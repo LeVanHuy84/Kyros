@@ -1,0 +1,152 @@
+/* Markdown Typography & Spacing Rules for Chat & Notes */
+.markdown-body {
+  line-height: 1.6;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  color: inherit;
+}
+
+/* Paragraph Spacing */
+.markdown-body p {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.markdown-body p:first-child {
+  margin-top: 0;
+}
+
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Ordered & Unordered Lists */
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-body ul {
+  list-style-type: disc;
+}
+
+.markdown-body ol {
+  list-style-type: decimal;
+}
+
+.markdown-body li {
+  margin-bottom: 4px;
+  line-height: 1.6;
+}
+
+.markdown-body li:last-child {
+  margin-bottom: 0;
+}
+
+/* Nested Lists */
+.markdown-body ul ul,
+.markdown-body ol ol,
+.markdown-body ul ol,
+.markdown-body ol ul {
+  padding-left: 1.25rem;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+/* Headings Hierarchy */
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-main);
+  margin-top: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
+.markdown-body h1:first-child,
+.markdown-body h2:first-child,
+.markdown-body h3:first-child,
+.markdown-body h4:first-child,
+.markdown-body h5:first-child,
+.markdown-body h6:first-child {
+  margin-top: 0;
+}
+
+.markdown-body h1 {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.markdown-body h2 {
+  font-size: 1.1rem;
+}
+
+.markdown-body h3 {
+  font-size: 1.025rem;
+}
+
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  font-size: 0.95rem;
+}
+
+/* Inline Code & Code Blocks */
+.markdown-body code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.875em;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.markdown-body pre {
+  margin: 0.75rem 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm, 6px);
+  background-color: var(--bg-app, #181825);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.markdown-body pre code {
+  padding: 0;
+  background-color: transparent;
+  font-size: 0.85em;
+  white-space: pre;
+}
+
+/* Blockquotes */
+.markdown-body blockquote {
+  margin: 0.75rem 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--color-primary);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Horizontal Rule */
+.markdown-body hr {
+  margin: 1rem 0;
+  border: none;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Links */
+.markdown-body a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown-body a:hover {
+  filter: brightness(1.2);
+}

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,18 +30,18 @@ public class DeleteEventsToolAdapter implements AgentToolContract {
   @Override
   public String getJsonSchema() {
     return """
-        {
-          "type": "object",
-          "properties": {
-            "eventIds": {
-              "type": "array",
-              "items": { "type": "string" },
-              "description": "Danh sách các ID sự kiện cần xóa"
-            }
-          },
-          "required": ["eventIds"]
+    {
+      "type": "object",
+      "properties": {
+        "eventIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Danh sách các ID sự kiện cần xóa"
         }
-        """;
+      },
+      "required": ["eventIds"]
+    }
+    """;
   }
 
   @Override
@@ -61,7 +60,8 @@ public class DeleteEventsToolAdapter implements AgentToolContract {
         ids.add(jsonNode.get("id").asText());
       }
 
-      return ToolExecutionResult.ok("Đã xóa thành công " + ids.size() + " sự kiện lịch: " + String.join(", ", ids));
+      return ToolExecutionResult.ok(
+          "Đã xóa thành công " + ids.size() + " sự kiện lịch: " + String.join(", ", ids));
     } catch (Exception e) {
       return ToolExecutionResult.error("Failed to execute delete_events tool: " + e.getMessage());
     }

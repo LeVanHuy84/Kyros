@@ -1,11 +1,7 @@
 package com.assistant.agent.domain.model;
 
 public record ToolExecutionResult(
-    boolean success,
-    String output,
-    boolean requiresApproval,
-    String approvalReason
-) {
+    boolean success, String output, boolean requiresApproval, String approvalReason) {
   public static ToolExecutionResult ok(String output) {
     return new ToolExecutionResult(true, output, false, null);
   }

@@ -22,7 +22,14 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
   const [showNotePicker, setShowNotePicker] = useState(false);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '4px' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        paddingTop: '4px',
+      }}
+    >
       {/* Selected Notes Chips Bar */}
       {selectedNotes.length > 0 && (
         <div
@@ -69,7 +76,9 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
               <button
                 type="button"
                 onClick={() =>
-                  setSelectedNotes((prev) => prev.filter((item) => item.id !== n.id))
+                  setSelectedNotes((prev) =>
+                    prev.filter((item) => item.id !== n.id)
+                  )
                 }
                 style={{
                   background: 'none',
@@ -92,7 +101,14 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         onSubmit={onSendMessage}
         style={{ display: 'flex', gap: '10px', position: 'relative' }}
       >
-        <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+        <div
+          style={{
+            position: 'relative',
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
           <input
             type="text"
             placeholder="Nhập câu lệnh (gõ @ hoặc bấm nút đính kèm Note để tạo task/lịch)..."
@@ -124,7 +140,10 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
               right: '10px',
               background: 'none',
               border: 'none',
-              color: selectedNotes.length > 0 ? 'var(--color-primary)' : 'var(--text-muted)',
+              color:
+                selectedNotes.length > 0
+                  ? 'var(--color-primary)'
+                  : 'var(--text-muted)',
               cursor: 'pointer',
               padding: '4px',
               borderRadius: '4px',
@@ -195,13 +214,17 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                 </div>
               ) : (
                 notes.map((n) => {
-                  const isSelected = selectedNotes.some((item) => item.id === n.id);
+                  const isSelected = selectedNotes.some(
+                    (item) => item.id === n.id
+                  );
                   return (
                     <div
                       key={n.id}
                       onClick={() => {
                         if (isSelected) {
-                          setSelectedNotes((prev) => prev.filter((item) => item.id !== n.id));
+                          setSelectedNotes((prev) =>
+                            prev.filter((item) => item.id !== n.id)
+                          );
                         } else {
                           setSelectedNotes((prev) => [...prev, n]);
                         }
@@ -212,8 +235,12 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                         borderRadius: 'var(--radius-sm)',
                         fontSize: '13px',
                         cursor: 'pointer',
-                        backgroundColor: isSelected ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
-                        color: isSelected ? 'var(--color-primary)' : 'var(--text-main)',
+                        backgroundColor: isSelected
+                          ? 'rgba(99, 102, 241, 0.1)'
+                          : 'transparent',
+                        color: isSelected
+                          ? 'var(--color-primary)'
+                          : 'var(--text-main)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -230,7 +257,10 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                         📝 <strong>{n.title}</strong>
                       </div>
                       {isSelected && (
-                        <CheckCircle2 size={14} style={{ color: 'var(--color-primary)' }} />
+                        <CheckCircle2
+                          size={14}
+                          style={{ color: 'var(--color-primary)' }}
+                        />
                       )}
                     </div>
                   );

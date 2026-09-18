@@ -6,5 +6,4 @@ public record AgentTurn(
     AgentAction action,
     String observation,
     boolean requiresApproval,
-    String approvalReason
-) {}
+    String approvalReason) {}

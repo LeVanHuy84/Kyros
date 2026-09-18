@@ -34,15 +34,15 @@ public class ListTasksToolAdapter implements AgentToolContract {
   @Override
   public String getJsonSchema() {
     return """
-        {
-          "type": "object",
-          "properties": {
-            "workspaceId": { "type": "string" },
-            "title": { "type": "string" }
-          },
-          "required": []
-        }
-        """;
+    {
+      "type": "object",
+      "properties": {
+        "workspaceId": { "type": "string" },
+        "title": { "type": "string" }
+      },
+      "required": []
+    }
+    """;
   }
 
   @Override
@@ -80,9 +80,10 @@ public class ListTasksToolAdapter implements AgentToolContract {
       try {
         wsUuid = UUID.fromString(workspaceIdStr);
       } catch (Exception e) {
-        wsUuid = com.assistant.kernel.context.WorkspaceContextHolder.get()
-            .map(com.assistant.kernel.domain.WorkspaceId::value)
-            .orElseGet(UUID::randomUUID);
+        wsUuid =
+            com.assistant.kernel.context.WorkspaceContextHolder.get()
+                .map(com.assistant.kernel.domain.WorkspaceId::value)
+                .orElseGet(UUID::randomUUID);
       }
 
       Object wsIdObj = wsConst.newInstance(wsUuid);
@@ -91,7 +92,8 @@ public class ListTasksToolAdapter implements AgentToolContract {
       Method ofMethod = pageReqClass.getMethod("of", int.class, int.class);
       Object pageable = ofMethod.invoke(null, 0, 10);
 
-      Object result = listMethod.invoke(todoService, wsIdObj, title, null, null, null, null, null, pageable);
+      Object result =
+          listMethod.invoke(todoService, wsIdObj, title, null, null, null, null, null, pageable);
       return ToolExecutionResult.ok("Tasks retrieved: " + objectMapper.writeValueAsString(result));
     } catch (Exception e) {
       return ToolExecutionResult.error("Failed to execute list_tasks tool: " + e.getMessage());

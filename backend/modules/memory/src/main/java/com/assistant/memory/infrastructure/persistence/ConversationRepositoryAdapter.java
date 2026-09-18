@@ -103,7 +103,8 @@ public class ConversationRepositoryAdapter implements ConversationRepository {
   @Override
   @Transactional
   public void delete(ConversationId conversationId, WorkspaceId workspaceId) {
-    conversationRepository.findByIdAndWorkspaceId(conversationId.value(), workspaceId.value())
+    conversationRepository
+        .findByIdAndWorkspaceId(conversationId.value(), workspaceId.value())
         .ifPresent(conversationRepository::delete);
   }
 

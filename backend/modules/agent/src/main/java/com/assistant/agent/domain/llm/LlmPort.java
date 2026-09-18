@@ -16,7 +16,14 @@ public interface LlmPort {
       String systemPrompt,
       String userPrompt,
       List<AgentToolContract> availableTools) {
-    return callLlm(baseUrl, apiKey, modelName, systemPrompt, userPrompt, java.util.Collections.emptyList(), availableTools);
+    return callLlm(
+        baseUrl,
+        apiKey,
+        modelName,
+        systemPrompt,
+        userPrompt,
+        java.util.Collections.emptyList(),
+        availableTools);
   }
 
   LlmResponse callLlm(

@@ -32,14 +32,14 @@ public class ListNotesToolAdapter implements AgentToolContract {
   @Override
   public String getJsonSchema() {
     return """
-        {
-          "type": "object",
-          "properties": {
-            "workspaceId": { "type": "string" }
-          },
-          "required": []
-        }
-        """;
+    {
+      "type": "object",
+      "properties": {
+        "workspaceId": { "type": "string" }
+      },
+      "required": []
+    }
+    """;
   }
 
   @Override
@@ -57,12 +57,14 @@ public class ListNotesToolAdapter implements AgentToolContract {
       try {
         wsUuid = UUID.fromString(workspaceIdStr);
       } catch (Exception e) {
-        wsUuid = com.assistant.kernel.context.WorkspaceContextHolder.get()
-            .map(com.assistant.kernel.domain.WorkspaceId::value)
-            .orElseGet(UUID::randomUUID);
+        wsUuid =
+            com.assistant.kernel.context.WorkspaceContextHolder.get()
+                .map(com.assistant.kernel.domain.WorkspaceId::value)
+                .orElseGet(UUID::randomUUID);
       }
 
-      com.assistant.kernel.domain.WorkspaceId wsId = new com.assistant.kernel.domain.WorkspaceId(wsUuid);
+      com.assistant.kernel.domain.WorkspaceId wsId =
+          new com.assistant.kernel.domain.WorkspaceId(wsUuid);
       Object notes = noteService.listNotes(wsId);
       return ToolExecutionResult.ok("Notes retrieved: " + objectMapper.writeValueAsString(notes));
     } catch (Exception e) {

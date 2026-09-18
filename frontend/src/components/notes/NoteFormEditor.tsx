@@ -147,11 +147,8 @@ export const NoteFormEditor: React.FC<NoteFormEditorProps> = ({
                 borderRadius: 'var(--radius-sm)',
                 border: 'none',
                 backgroundColor:
-                  formTab === 'edit'
-                    ? 'var(--color-primary)'
-                    : 'transparent',
-                color:
-                  formTab === 'edit' ? '#ffffff' : 'var(--text-muted)',
+                  formTab === 'edit' ? 'var(--color-primary)' : 'transparent',
+                color: formTab === 'edit' ? '#ffffff' : 'var(--text-muted)',
                 cursor: 'pointer',
               }}
             >
@@ -173,8 +170,7 @@ export const NoteFormEditor: React.FC<NoteFormEditorProps> = ({
                   formTab === 'preview'
                     ? 'var(--color-primary)'
                     : 'transparent',
-                color:
-                  formTab === 'preview' ? '#ffffff' : 'var(--text-muted)',
+                color: formTab === 'preview' ? '#ffffff' : 'var(--text-muted)',
                 cursor: 'pointer',
               }}
             >
@@ -312,16 +308,8 @@ export const NoteFormEditor: React.FC<NoteFormEditorProps> = ({
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={isSaving}
-        >
-          {isSaving
-            ? 'Saving...'
-            : isEditing
-              ? 'Save Changes'
-              : 'Create Note'}
+        <button type="submit" className="btn btn-primary" disabled={isSaving}>
+          {isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Note'}
         </button>
       </div>
     </form>

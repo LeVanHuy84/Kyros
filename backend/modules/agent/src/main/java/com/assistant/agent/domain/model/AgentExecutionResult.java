@@ -8,8 +8,7 @@ public record AgentExecutionResult(
     boolean pendingApproval,
     String approvalReason,
     String pendingToolName,
-    String pendingToolArguments
-) {
+    String pendingToolArguments) {
   public static AgentExecutionResult completed(String finalAnswer, List<AgentTurn> turns) {
     return new AgentExecutionResult(finalAnswer, turns, false, null, null, null);
   }

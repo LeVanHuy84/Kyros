@@ -165,7 +165,8 @@ public class ConversationController {
       @PathVariable("conversationId") UUID conversationId) {
     validateWorkspace(workspaceId);
 
-    memoryService.deleteConversation(new WorkspaceId(workspaceId), new ConversationId(conversationId));
+    memoryService.deleteConversation(
+        new WorkspaceId(workspaceId), new ConversationId(conversationId));
     return ResponseEntity.noContent().build();
   }
 

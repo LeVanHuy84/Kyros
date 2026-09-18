@@ -36,16 +36,16 @@ public class ListEventsToolAdapter implements AgentToolContract {
   @Override
   public String getJsonSchema() {
     return """
-        {
-          "type": "object",
-          "properties": {
-            "workspaceId": { "type": "string" },
-            "startTime": { "type": "string" },
-            "endTime": { "type": "string" }
-          },
-          "required": []
-        }
-        """;
+    {
+      "type": "object",
+      "properties": {
+        "workspaceId": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" }
+      },
+      "required": []
+    }
+    """;
   }
 
   @Override
@@ -65,12 +65,14 @@ public class ListEventsToolAdapter implements AgentToolContract {
         if (jsonNode.has("startTime") && !jsonNode.get("startTime").asText().isBlank()) {
           try {
             startTime = Instant.parse(jsonNode.get("startTime").asText());
-          } catch (Exception ignored) {}
+          } catch (Exception ignored) {
+          }
         }
         if (jsonNode.has("endTime") && !jsonNode.get("endTime").asText().isBlank()) {
           try {
             endTime = Instant.parse(jsonNode.get("endTime").asText());
-          } catch (Exception ignored) {}
+          } catch (Exception ignored) {
+          }
         }
       }
 
@@ -94,19 +96,22 @@ public class ListEventsToolAdapter implements AgentToolContract {
       try {
         wsUuid = UUID.fromString(workspaceIdStr);
       } catch (Exception e) {
-        wsUuid = com.assistant.kernel.context.WorkspaceContextHolder.get()
-            .map(com.assistant.kernel.domain.WorkspaceId::value)
-            .orElseGet(UUID::randomUUID);
+        wsUuid =
+            com.assistant.kernel.context.WorkspaceContextHolder.get()
+                .map(com.assistant.kernel.domain.WorkspaceId::value)
+                .orElseGet(UUID::randomUUID);
       }
 
       Object wsIdObj = wsConst.newInstance(wsUuid);
 
       Object result = listMethod.invoke(calendarService, wsIdObj, startTime, endTime);
-      
-      // Format timestamps clearly into Vietnam Local Time for LLM so it never confuses UTC ISO string
+
+      // Format timestamps clearly into Vietnam Local Time for LLM so it never confuses UTC ISO
+      // string
       String rawJson = objectMapper.writeValueAsString(result);
       JsonNode eventsNode = objectMapper.readTree(rawJson);
-      java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm (EEEE, 'múi giờ' z)");
+      java.time.format.DateTimeFormatter fmt =
+          java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm (EEEE, 'múi giờ' z)");
 
       StringBuilder formattedOutput = new StringBuilder();
       if (eventsNode.isArray()) {
@@ -121,10 +126,19 @@ public class ListEventsToolAdapter implements AgentToolContract {
           try {
             startVn = Instant.parse(startUtcStr).atZone(vnZone).format(fmt);
             endVn = Instant.parse(endUtcStr).atZone(vnZone).format(fmt);
-          } catch (Exception ignored) {}
+          } catch (Exception ignored) {
+          }
 
-          formattedOutput.append("- Sự kiện: \"").append(title).append("\" | Bắt đầu (Giờ VN): ").append(startVn)
-              .append(" | Kết thúc (Giờ VN): ").append(endVn).append(" | Trạng thái: ").append(status).append("\n");
+          formattedOutput
+              .append("- Sự kiện: \"")
+              .append(title)
+              .append("\" | Bắt đầu (Giờ VN): ")
+              .append(startVn)
+              .append(" | Kết thúc (Giờ VN): ")
+              .append(endVn)
+              .append(" | Trạng thái: ")
+              .append(status)
+              .append("\n");
         }
       }
 

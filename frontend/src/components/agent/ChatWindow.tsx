@@ -59,21 +59,45 @@ const AgentThoughtAccordion: React.FC<{
         >
           {isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
           <span>
-            🧠 Đã thực thi {stepCount} bước suy nghĩ & công cụ {isOpen ? '(Thu gọn)' : '(Xem chi tiết)'}
+            🧠 Đã thực thi {stepCount} bước suy nghĩ & công cụ{' '}
+            {isOpen ? '(Thu gọn)' : '(Xem chi tiết)'}
           </span>
         </button>
       ) : null}
 
       {showDetails && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: isStreaming ? '0' : '6px' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+            marginTop: isStreaming ? '0' : '6px',
+          }}
+        >
           {thoughtSteps?.map((step, sIdx) => (
-            <div key={sIdx} style={{ opacity: 0.8, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div
+              key={sIdx}
+              style={{
+                opacity: 0.8,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
               <Check size={11} style={{ color: '#10b981' }} />
               <span>{step}</span>
             </div>
           ))}
           {activeThoughtStatus && (
-            <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px', color: '#6366f1' }}>
+            <div
+              style={{
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: '#6366f1',
+              }}
+            >
               <Sparkles size={12} className="animate-spin" />
               <span>{activeThoughtStatus}</span>
             </div>
@@ -112,17 +136,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             backgroundColor:
               m.sender === 'user'
                 ? 'var(--color-primary)'
-                : 'var(--bg-card)',
+                : 'var(--bg-ai-bubble, var(--bg-card))',
             color: m.sender === 'user' ? '#fff' : 'var(--text-main)',
             border:
               m.sender === 'user'
                 ? 'none'
-                : '1px solid var(--border-color)',
+                : '1px solid var(--border-ai-bubble, var(--border-color))',
             padding: '12px 16px',
             borderRadius:
-              m.sender === 'user'
-                ? '16px 16px 4px 16px'
-                : '16px 16px 16px 4px',
+              m.sender === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
             fontSize: '14px',
             lineHeight: '1.6',
             boxShadow: 'var(--shadow-sm)',
@@ -138,7 +160,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
           {m.sender === 'agent' ? (
             <div className="markdown-body">
-              <ReactMarkdown>{m.text || (m.isStreaming && !m.activeThoughtStatus ? '...' : '')}</ReactMarkdown>
+              <ReactMarkdown>
+                {m.text ||
+                  (m.isStreaming && !m.activeThoughtStatus ? '...' : '')}
+              </ReactMarkdown>
             </div>
           ) : (
             <div>{m.text}</div>
@@ -160,8 +185,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         <div
           style={{
             alignSelf: 'flex-start',
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid var(--border-color)',
+            backgroundColor: 'var(--bg-ai-bubble, var(--bg-card))',
+            border: '1px solid var(--border-ai-bubble, var(--border-color))',
             padding: '10px 16px',
             borderRadius: '16px 16px 16px 4px',
             fontSize: '13px',

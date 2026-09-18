@@ -1,5 +1,6 @@
 import React from 'react';
-import { Cpu, Lock, Save } from 'lucide-react';
+import { Cpu, Lock, Settings, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export interface ByokConfig {
   provider: string;
@@ -19,12 +20,10 @@ interface ByokConfigModalProps {
 
 export const ByokConfigModal: React.FC<ByokConfigModalProps> = ({
   show,
-  byokConfig,
-  presets,
-  onProviderChange,
-  onConfigChange,
   onClose,
 }) => {
+  const navigate = useNavigate();
+
   if (!show) return null;
 
   return (
@@ -39,97 +38,89 @@ export const ByokConfigModal: React.FC<ByokConfigModalProps> = ({
         gap: '12px',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', fontSize: '14px' }}>
-        <Cpu size={16} style={{ color: 'var(--color-primary)' }} />
-        <span>Cấu hình AI Provider & API Key (BYOK):</span>
-        <span style={{ fontSize: '11px', color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <Lock size={12} /> AES-256 & HTTP Header Encrypted
-        </span>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-        <div>
-          <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Chọn Provider Presets:</label>
-          <select
-            value={byokConfig.provider}
-            onChange={(e) => onProviderChange(e.target.value)}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontWeight: '600',
+            fontSize: '14px',
+          }}
+        >
+          <Cpu size={16} style={{ color: 'var(--color-primary)' }} />
+          <span>Quản lý Cấu hình AI Provider (Backend Vault)</span>
+          <span
             style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: '6px',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-card)',
-              color: 'var(--text-main)',
+              fontSize: '11px',
+              color: 'var(--color-success)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
             }}
           >
-            {Object.entries(presets).map(([key, item]) => (
-              <option key={key} value={key}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+            <Lock size={12} /> AES-256 Vault Encrypted
+          </span>
         </div>
-
-        <div>
-          <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>API Key ({byokConfig.provider}):</label>
-          <input
-            type="password"
-            placeholder="Nhập API key cá nhân của bạn..."
-            value={byokConfig.apiKey}
-            onChange={(e) => onConfigChange({ ...byokConfig, apiKey: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: '6px',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-card)',
-              color: 'var(--text-main)',
-            }}
-          />
-        </div>
-
-        <div>
-          <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Base Endpoint URL:</label>
-          <input
-            type="text"
-            value={byokConfig.baseUrl}
-            onChange={(e) => onConfigChange({ ...byokConfig, baseUrl: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: '6px',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-card)',
-              color: 'var(--text-main)',
-            }}
-          />
-        </div>
-
-        <div>
-          <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Model Target:</label>
-          <input
-            type="text"
-            value={byokConfig.model}
-            onChange={(e) => onConfigChange({ ...byokConfig, model: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              borderRadius: '6px',
-              border: '1px solid var(--border-color)',
-              backgroundColor: 'var(--bg-card)',
-              color: 'var(--text-main)',
-            }}
-          />
-        </div>
+        <button
+          onClick={onClose}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+          }}
+        >
+          <X size={16} />
+        </button>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
+      <p
+        style={{
+          margin: 0,
+          fontSize: '13px',
+          color: 'var(--text-muted)',
+          lineHeight: '1.5',
+        }}
+      >
+        Để tăng cường bảo mật, toàn bộ cài đặt AI Provider & API Key đã được
+        chuyển sang mục{' '}
+        <strong style={{ color: 'var(--color-primary)' }}>
+          Settings &gt; AI Provider & Vault
+        </strong>
+        . API Key sẽ được mã hóa an toàn ở phía Server.
+      </p>
+
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          gap: '8px',
+          paddingTop: '4px',
+        }}
+      >
         <button
           className="btn btn-primary"
-          onClick={onClose}
-          style={{ padding: '4px 12px', fontSize: '12px', gap: '4px' }}
+          onClick={() => {
+            onClose();
+            navigate('/settings');
+          }}
+          style={{
+            padding: '6px 14px',
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}
         >
-          <Save size={13} /> Lưu & Đóng
+          <Settings size={14} /> Chuyển tới Cài đặt AI Vault
         </button>
       </div>
     </div>

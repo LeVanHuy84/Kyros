@@ -116,7 +116,9 @@ export const AppLayout: React.FC = () => {
       )}
       <div className="main-content">
         <TopNav onToggleSidebar={() => setSidebarOpen(true)} />
-        <main className={`content-body ${isFullViewPage ? 'content-body-full' : ''} fade-in-slide-up`}>
+        <main
+          className={`content-body ${isFullViewPage ? 'content-body-full' : ''} fade-in-slide-up`}
+        >
           <Outlet />
         </main>
       </div>

@@ -22,12 +22,13 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class AgentChatController {
 
   private final ReActOrchestratorService orchestratorService;
-  private final com.assistant.agent.infrastructure.memory.ConversationMemoryStore memoryStore;
-  private final com.assistant.memory.application.ports.in.ConversationHistoryPort conversationHistoryPort;
+  private final com.assistant.agent.domain.memory.ConversationMemoryPort memoryStore;
+  private final com.assistant.memory.application.ports.in.ConversationHistoryPort
+      conversationHistoryPort;
 
   public AgentChatController(
       ReActOrchestratorService orchestratorService,
-      com.assistant.agent.infrastructure.memory.ConversationMemoryStore memoryStore,
+      com.assistant.agent.domain.memory.ConversationMemoryPort memoryStore,
       com.assistant.memory.application.ports.in.ConversationHistoryPort conversationHistoryPort) {
     this.orchestratorService = orchestratorService;
     this.memoryStore = memoryStore;
@@ -35,9 +36,11 @@ public class AgentChatController {
   }
 
   @GetMapping("/history")
-  public ResponseEntity<java.util.List<com.assistant.agent.infrastructure.memory.ConversationMemoryStore.ChatMessageDto>> getHistory(
-      @PathVariable("workspaceId") UUID workspaceId,
-      @RequestParam(name = "conversationId", required = false) UUID conversationId) {
+  public ResponseEntity<
+          java.util.List<com.assistant.agent.domain.memory.ConversationMemoryPort.ChatMessageDto>>
+      getHistory(
+          @PathVariable("workspaceId") UUID workspaceId,
+          @RequestParam(name = "conversationId", required = false) UUID conversationId) {
     UUID targetId = conversationId != null ? conversationId : workspaceId;
     var inMemoryMessages = memoryStore.getMessages(targetId);
     if (!inMemoryMessages.isEmpty() || conversationId == null) {
@@ -46,17 +49,24 @@ public class AgentChatController {
 
     // Persistent fallback: query database turns from memory module
     try {
-      var dbTurns = conversationHistoryPort.getRecentTurns(
-          new com.assistant.kernel.domain.WorkspaceId(workspaceId),
-          new com.assistant.memory.domain.model.ConversationId(conversationId),
-          50);
-      java.util.List<com.assistant.agent.infrastructure.memory.ConversationMemoryStore.ChatMessageDto> fallbackList =
-          dbTurns.stream()
-              .map(t -> new com.assistant.agent.infrastructure.memory.ConversationMemoryStore.ChatMessageDto(
-                  t.role().toLowerCase(),
-                  t.content(),
-                  t.timestamp() != null ? t.timestamp().toEpochMilli() : System.currentTimeMillis()))
-              .collect(java.util.stream.Collectors.toList());
+      var dbTurns =
+          conversationHistoryPort.getRecentTurns(
+              new com.assistant.kernel.domain.WorkspaceId(workspaceId),
+              new com.assistant.memory.domain.model.ConversationId(conversationId),
+              50);
+      java.util.List<com.assistant.agent.domain.memory.ConversationMemoryPort.ChatMessageDto>
+          fallbackList =
+              dbTurns.stream()
+                  .map(
+                      t ->
+                          new com.assistant.agent.domain.memory.ConversationMemoryPort
+                              .ChatMessageDto(
+                              t.role().toLowerCase(),
+                              t.content(),
+                              t.timestamp() != null
+                                  ? t.timestamp().toEpochMilli()
+                                  : System.currentTimeMillis()))
+                  .collect(java.util.stream.Collectors.toList());
       return ResponseEntity.ok(fallbackList);
     } catch (Exception e) {
       return ResponseEntity.ok(java.util.Collections.emptyList());
@@ -72,14 +82,24 @@ public class AgentChatController {
       @RequestHeader(name = "X-AI-Base-Url", required = false) String headerBaseUrl,
       @RequestHeader(name = "X-AI-Model", required = false) String headerModel) {
     UUID userId = request.userId() != null ? request.userId() : UUID.randomUUID();
-    String apiKey = (headerApiKey != null && !headerApiKey.isBlank()) ? headerApiKey : request.apiKey();
-    String provider = (headerProvider != null && !headerProvider.isBlank()) ? headerProvider : request.provider();
-    String baseUrl = (headerBaseUrl != null && !headerBaseUrl.isBlank()) ? headerBaseUrl : request.baseUrl();
+    String apiKey =
+        (headerApiKey != null && !headerApiKey.isBlank()) ? headerApiKey : request.apiKey();
+    String provider =
+        (headerProvider != null && !headerProvider.isBlank()) ? headerProvider : request.provider();
+    String baseUrl =
+        (headerBaseUrl != null && !headerBaseUrl.isBlank()) ? headerBaseUrl : request.baseUrl();
     String model = (headerModel != null && !headerModel.isBlank()) ? headerModel : request.model();
 
     AgentExecutionResult result =
         orchestratorService.processUserPrompt(
-            workspaceId, userId, request.prompt(), request.noteIds(), provider, apiKey, baseUrl, model);
+            workspaceId,
+            userId,
+            request.prompt(),
+            request.noteIds(),
+            provider,
+            apiKey,
+            baseUrl,
+            model);
     return ResponseEntity.ok(result);
   }
 
@@ -97,7 +117,16 @@ public class AgentChatController {
     SseEmitter emitter = new SseEmitter(120_000L);
     UUID finalUserId = userId != null ? userId : UUID.randomUUID();
     orchestratorService.streamUserPrompt(
-        workspaceId, conversationId, finalUserId, prompt, noteIds, provider, apiKey, baseUrl, model, emitter);
+        workspaceId,
+        conversationId,
+        finalUserId,
+        prompt,
+        noteIds,
+        provider,
+        apiKey,
+        baseUrl,
+        model,
+        emitter);
     return emitter;
   }
 
