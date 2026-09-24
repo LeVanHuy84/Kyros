@@ -11,10 +11,6 @@ export interface ByokConfig {
 
 interface ByokConfigModalProps {
   show: boolean;
-  byokConfig: ByokConfig;
-  presets: Record<string, { baseUrl: string; model: string; name: string }>;
-  onProviderChange: (providerKey: string) => void;
-  onConfigChange: (newConfig: ByokConfig) => void;
   onClose: () => void;
 }
 

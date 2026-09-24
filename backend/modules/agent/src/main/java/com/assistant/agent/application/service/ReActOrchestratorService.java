@@ -118,15 +118,9 @@ public class ReActOrchestratorService {
       var saved = userAiConfigService.getDecryptedConfig(workspaceId, userId);
       if (saved.apiKey() != null && !saved.apiKey().isBlank()) {
         effApiKey = saved.apiKey();
-        if (effProvider == null || effProvider.isBlank()) {
-          effProvider = saved.provider();
-        }
-        if (effBaseUrl == null || effBaseUrl.isBlank()) {
-          effBaseUrl = saved.baseUrl();
-        }
-        if (effModel == null || effModel.isBlank()) {
-          effModel = saved.model();
-        }
+        effProvider = saved.provider();
+        effBaseUrl = saved.baseUrl();
+        effModel = saved.model();
       }
     }
 
@@ -156,7 +150,7 @@ public class ReActOrchestratorService {
                     step++,
                     new AgentThought(
                         "LLM ("
-                            + (provider != null ? provider : "Local LLM")
+                            + (effProvider != null ? effProvider : "Local LLM")
                             + ") chọn công cụ: "
                             + tc.name()),
                     new AgentAction(tc.name(), tc.argumentsJson()),
@@ -169,11 +163,23 @@ public class ReActOrchestratorService {
 
         return AgentExecutionResult.completed(
             "Phản hồi từ "
-                + (provider != null ? provider : "LLM")
+                + (effProvider != null ? effProvider : "LLM")
                 + ":\n"
                 + resultSummary.toString(),
             turns);
       } else if (llmResp.content() != null && !llmResp.content().isBlank()) {
+        if (llmResp.content().startsWith("Invocation Error")
+            || llmResp.content().startsWith("LLM Error")) {
+          return AgentExecutionResult.completed(
+              "⚠️ **[Lỗi kết nối AI ("
+                  + (effProvider != null ? effProvider : "LLM")
+                  + ")]**: "
+                  + llmResp.content()
+                  + "\n\n"
+                  + "*Gợi ý:* Vui lòng kiểm tra lại API Key và cấu hình trong mục **Settings > AI"
+                  + " Provider & Vault**.",
+              turns);
+        }
         return AgentExecutionResult.completed(llmResp.content(), turns);
       }
     }
@@ -313,15 +319,9 @@ public class ReActOrchestratorService {
               var saved = userAiConfigService.getDecryptedConfig(workspaceId, userId);
               if (saved.apiKey() != null && !saved.apiKey().isBlank()) {
                 effApiKey = saved.apiKey();
-                if (effProvider == null || effProvider.isBlank()) {
-                  effProvider = saved.provider();
-                }
-                if (effBaseUrl == null || effBaseUrl.isBlank()) {
-                  effBaseUrl = saved.baseUrl();
-                }
-                if (effModel == null || effModel.isBlank()) {
-                  effModel = saved.model();
-                }
+                effProvider = saved.provider();
+                effBaseUrl = saved.baseUrl();
+                effModel = saved.model();
               }
             }
 
@@ -450,11 +450,20 @@ public class ReActOrchestratorService {
                           + "Hãy đánh giá kết quả trên. Nếu cần thực hiện tiếp thao tác khác (như"
                           + " tạo lịch hay task), tiếp tục gọi công cụ. Nếu đã hoàn tất, hãy đưa ra"
                           + " câu trả lời cuối cùng cho người dùng.");
-                } else if (llmResp.content() != null
-                    && !llmResp.content().isBlank()
-                    && !llmResp.content().startsWith("Invocation Error")
-                    && !llmResp.content().startsWith("LLM Error")) {
-                  finalAnswerText = llmResp.content();
+                } else if (llmResp.content() != null && !llmResp.content().isBlank()) {
+                  if (llmResp.content().startsWith("Invocation Error")
+                      || llmResp.content().startsWith("LLM Error")) {
+                    finalAnswerText =
+                        "⚠️ **[Lỗi kết nối AI ("
+                            + (effProvider != null ? effProvider : "LLM")
+                            + ")]**: "
+                            + llmResp.content()
+                            + "\n\n"
+                            + "*Gợi ý:* Vui lòng kiểm tra lại API Key và cấu hình trong mục"
+                            + " **Settings > AI Provider & Vault**.";
+                  } else {
+                    finalAnswerText = llmResp.content();
+                  }
                   break;
                 } else {
                   break;

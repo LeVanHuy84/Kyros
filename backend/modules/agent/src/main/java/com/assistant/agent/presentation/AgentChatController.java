@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,6 +32,10 @@ public class AgentChatController {
     this.orchestratorService = orchestratorService;
     this.memoryStore = memoryStore;
     this.conversationHistoryPort = conversationHistoryPort;
+  }
+
+  private UUID resolveUserId(UUID fallback) {
+    return fallback != null ? fallback : UUID.fromString("00000000-0000-0000-0000-000000000001");
   }
 
   @GetMapping("/history")
@@ -61,7 +64,7 @@ public class AgentChatController {
                       t ->
                           new com.assistant.agent.domain.memory.ConversationMemoryPort
                               .ChatMessageDto(
-                              t.role().toLowerCase(),
+                              t.role().toLowerCase(java.util.Locale.ROOT),
                               t.content(),
                               t.timestamp() != null
                                   ? t.timestamp().toEpochMilli()
@@ -75,20 +78,8 @@ public class AgentChatController {
 
   @PostMapping("/chat")
   public ResponseEntity<AgentExecutionResult> processChat(
-      @PathVariable("workspaceId") UUID workspaceId,
-      @RequestBody AgentChatRequest request,
-      @RequestHeader(name = "X-AI-Api-Key", required = false) String headerApiKey,
-      @RequestHeader(name = "X-AI-Provider", required = false) String headerProvider,
-      @RequestHeader(name = "X-AI-Base-Url", required = false) String headerBaseUrl,
-      @RequestHeader(name = "X-AI-Model", required = false) String headerModel) {
-    UUID userId = request.userId() != null ? request.userId() : UUID.randomUUID();
-    String apiKey =
-        (headerApiKey != null && !headerApiKey.isBlank()) ? headerApiKey : request.apiKey();
-    String provider =
-        (headerProvider != null && !headerProvider.isBlank()) ? headerProvider : request.provider();
-    String baseUrl =
-        (headerBaseUrl != null && !headerBaseUrl.isBlank()) ? headerBaseUrl : request.baseUrl();
-    String model = (headerModel != null && !headerModel.isBlank()) ? headerModel : request.model();
+      @PathVariable("workspaceId") UUID workspaceId, @RequestBody AgentChatRequest request) {
+    UUID userId = resolveUserId(request.userId());
 
     AgentExecutionResult result =
         orchestratorService.processUserPrompt(
@@ -96,10 +87,10 @@ public class AgentChatController {
             userId,
             request.prompt(),
             request.noteIds(),
-            provider,
-            apiKey,
-            baseUrl,
-            model);
+            request.provider(),
+            request.apiKey(),
+            request.baseUrl(),
+            request.model());
     return ResponseEntity.ok(result);
   }
 
@@ -109,31 +100,18 @@ public class AgentChatController {
       @RequestParam("prompt") String prompt,
       @RequestParam(name = "noteIds", required = false) java.util.List<UUID> noteIds,
       @RequestParam(name = "conversationId", required = false) UUID conversationId,
-      @RequestParam(name = "userId", required = false) UUID userId,
-      @RequestHeader(name = "X-AI-Api-Key", required = false) String apiKey,
-      @RequestHeader(name = "X-AI-Provider", required = false) String provider,
-      @RequestHeader(name = "X-AI-Base-Url", required = false) String baseUrl,
-      @RequestHeader(name = "X-AI-Model", required = false) String model) {
+      @RequestParam(name = "userId", required = false) UUID userId) {
     SseEmitter emitter = new SseEmitter(120_000L);
-    UUID finalUserId = userId != null ? userId : UUID.randomUUID();
+    UUID finalUserId = resolveUserId(userId);
     orchestratorService.streamUserPrompt(
-        workspaceId,
-        conversationId,
-        finalUserId,
-        prompt,
-        noteIds,
-        provider,
-        apiKey,
-        baseUrl,
-        model,
-        emitter);
+        workspaceId, conversationId, finalUserId, prompt, noteIds, null, null, null, null, emitter);
     return emitter;
   }
 
   @PostMapping("/approve")
   public ResponseEntity<AgentExecutionResult> approveAction(
       @PathVariable("workspaceId") UUID workspaceId, @RequestBody AgentApproveRequest request) {
-    UUID userId = request.userId() != null ? request.userId() : UUID.randomUUID();
+    UUID userId = resolveUserId(request.userId());
     AgentExecutionResult result =
         orchestratorService.approveAndExecuteTool(
             workspaceId, userId, request.toolName(), request.argumentsJson());

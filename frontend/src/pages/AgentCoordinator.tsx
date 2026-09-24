@@ -2,7 +2,7 @@ import React from 'react';
 import { Bot, Radio, Key, Plus } from 'lucide-react';
 import { useWorkspace } from '../hooks/useWorkspace';
 import { useNotes } from '../hooks/useNotes';
-import { useAgentChat, PROVIDER_PRESETS } from '../hooks/useAgentChat';
+import { useAgentChat } from '../hooks/useAgentChat';
 import { ByokConfigModal } from '../components/agent/ByokConfigModal';
 import { ConversationSidebar } from '../components/agent/ConversationSidebar';
 import { ChatWindow } from '../components/agent/ChatWindow';
@@ -28,13 +28,10 @@ export const AgentCoordinator: React.FC = () => {
     setShowConfigModal,
     pendingApproval,
     setPendingApproval,
-    byokConfig,
     chatContainerRef,
     handleSendMessage,
     handleApproveAction,
     handleDeleteConversation,
-    handleProviderChange,
-    saveConfig,
     startNewConversation,
     loadConversationTurns,
   } = useAgentChat();
@@ -148,10 +145,6 @@ export const AgentCoordinator: React.FC = () => {
         {/* Modal BYOK Provider Config */}
         <ByokConfigModal
           show={showConfigModal}
-          byokConfig={byokConfig}
-          presets={PROVIDER_PRESETS}
-          onProviderChange={handleProviderChange}
-          onConfigChange={saveConfig}
           onClose={() => setShowConfigModal(false)}
         />
 

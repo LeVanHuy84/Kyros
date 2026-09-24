@@ -1,43 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { encryptApiKey, decryptApiKey } from '../utils/crypto';
 import { useWorkspace } from './useWorkspace';
 import apiClient from '../services/api-client';
-import type { ByokConfig } from '../components/agent/ByokConfigModal';
 import type { ConversationItem } from '../components/agent/ConversationSidebar';
 import type { MessageItem } from '../components/agent/ChatWindow';
 import type { PendingApprovalData } from '../components/agent/ApprovalBanner';
 import type { Note } from './useNotes';
-
-export const PROVIDER_PRESETS: Record<
-  string,
-  { baseUrl: string; model: string; name: string }
-> = {
-  groq: {
-    name: '🚀 Groq (Free Tier)',
-    baseUrl: 'https://api.groq.com/openai/v1',
-    model: 'llama-3.3-70b-versatile',
-  },
-  gemini: {
-    name: '✨ Google Gemini (Free Tier)',
-    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/',
-    model: 'gemini-1.5-flash',
-  },
-  xkiro: {
-    name: '🤖 xAI / XKiro',
-    baseUrl: 'https://api.xkiro.com/v1',
-    model: 'mistralai/mistral-small-2603',
-  },
-  ollama: {
-    name: '🦙 Local Ollama (Offline)',
-    baseUrl: 'http://localhost:11434/v1',
-    model: 'qwen2.5:1.5b',
-  },
-  openrouter: {
-    name: '🌐 OpenRouter / OpenAI',
-    baseUrl: 'https://openrouter.ai/api/v1',
-    model: 'openai/gpt-4o-mini',
-  },
-};
 
 export const getApiBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL;
@@ -73,13 +40,6 @@ export const useAgentChat = () => {
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const [byokConfig, setByokConfig] = useState<ByokConfig>({
-    provider: 'groq',
-    apiKey: '',
-    baseUrl: PROVIDER_PRESETS.groq.baseUrl,
-    model: PROVIDER_PRESETS.groq.model,
-  });
-
   // Auto-scroll chat window to bottom
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -87,28 +47,6 @@ export const useAgentChat = () => {
         chatContainerRef.current.scrollHeight;
     }
   }, [messages, isThinking]);
-
-  // Load saved BYOK config
-  useEffect(() => {
-    const loadConfig = async () => {
-      const saved = localStorage.getItem('kyros_byok_config_enc');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          const decryptedKey = await decryptApiKey(parsed.apiKeyEnc || '');
-          setByokConfig({
-            provider: parsed.provider || 'groq',
-            apiKey: decryptedKey,
-            baseUrl: parsed.baseUrl || PROVIDER_PRESETS.groq.baseUrl,
-            model: parsed.model || PROVIDER_PRESETS.groq.model,
-          });
-        } catch {
-          // ignore
-        }
-      }
-    };
-    loadConfig();
-  }, []);
 
   // Fetch backend conversations list when workspace changes
   useEffect(() => {
@@ -236,31 +174,6 @@ export const useAgentChat = () => {
     }
   };
 
-  const saveConfig = async (newConfig: ByokConfig) => {
-    setByokConfig(newConfig);
-    const encryptedKey = await encryptApiKey(newConfig.apiKey);
-    const toSave = {
-      provider: newConfig.provider,
-      apiKeyEnc: encryptedKey,
-      baseUrl: newConfig.baseUrl,
-      model: newConfig.model,
-    };
-    localStorage.setItem('kyros_byok_config_enc', JSON.stringify(toSave));
-  };
-
-  const handleProviderChange = (providerKey: string) => {
-    const preset = PROVIDER_PRESETS[providerKey];
-    if (preset) {
-      const updated = {
-        ...byokConfig,
-        provider: providerKey,
-        baseUrl: preset.baseUrl,
-        model: preset.model,
-      };
-      saveConfig(updated);
-    }
-  };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputTurn.trim()) return;
@@ -342,14 +255,8 @@ export const useAgentChat = () => {
     const token = localStorage.getItem('token');
 
     const secureHeaders: Record<string, string> = {
-      'X-AI-Provider': byokConfig.provider,
-      'X-AI-Base-Url': byokConfig.baseUrl,
-      'X-AI-Model': byokConfig.model,
       'X-Workspace-Id': currentWorkspaceId,
     };
-    if (byokConfig.apiKey) {
-      secureHeaders['X-AI-Api-Key'] = byokConfig.apiKey;
-    }
     if (token) {
       secureHeaders['Authorization'] = `Bearer ${token}`;
     }
@@ -698,13 +605,10 @@ export const useAgentChat = () => {
     setShowConfigModal,
     pendingApproval,
     setPendingApproval,
-    byokConfig,
     chatContainerRef,
     handleSendMessage,
     handleApproveAction,
     handleDeleteConversation,
-    handleProviderChange,
-    saveConfig,
     startNewConversation,
     loadConversationTurns,
   };

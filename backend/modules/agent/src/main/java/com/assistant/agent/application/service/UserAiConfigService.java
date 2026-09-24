@@ -77,6 +77,12 @@ public class UserAiConfigService {
   @Transactional(readOnly = true)
   public DecryptedAiConfig getDecryptedConfig(UUID workspaceId, UUID userId) {
     Optional<UserAiConfig> configOpt = repository.findByWorkspaceIdAndUserId(workspaceId, userId);
+    if (configOpt.isEmpty()
+        && !UUID.fromString("00000000-0000-0000-0000-000000000001").equals(userId)) {
+      configOpt =
+          repository.findByWorkspaceIdAndUserId(
+              workspaceId, UUID.fromString("00000000-0000-0000-0000-000000000001"));
+    }
     if (configOpt.isEmpty()) {
       return new DecryptedAiConfig(null, null, null, null);
     }
