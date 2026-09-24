@@ -39,6 +39,13 @@ export const PROVIDER_PRESETS: Record<
   },
 };
 
+export const getApiBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl) return '/api';
+  const clean = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+  return clean.endsWith('/api') ? clean : `${clean}/api`;
+};
+
 export const useAgentChat = () => {
   const { activeWorkspace } = useWorkspace();
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
@@ -369,8 +376,9 @@ export const useAgentChat = () => {
           noteIdParams.length > 0
             ? `&noteIds=${noteIdParams.map((id) => encodeURIComponent(id)).join('&noteIds=')}`
             : '';
+        const apiBase = getApiBaseUrl();
         const response = await fetch(
-          `/api/v1/workspaces/${currentWorkspaceId}/agent/chat/stream?prompt=${encodeURIComponent(userText)}${convParam}${notesParam}`,
+          `${apiBase}/v1/workspaces/${currentWorkspaceId}/agent/chat/stream?prompt=${encodeURIComponent(userText)}${convParam}${notesParam}`,
           { headers: secureHeaders }
         );
 
@@ -548,8 +556,9 @@ export const useAgentChat = () => {
       }
     } else {
       try {
+        const apiBase = getApiBaseUrl();
         const response = await fetch(
-          `/api/v1/workspaces/${currentWorkspaceId}/agent/chat`,
+          `${apiBase}/v1/workspaces/${currentWorkspaceId}/agent/chat`,
           {
             method: 'POST',
             headers: {
@@ -618,8 +627,9 @@ export const useAgentChat = () => {
     if (!pendingApproval || !activeWorkspace) return;
     setIsThinking(true);
     try {
+      const apiBase = getApiBaseUrl();
       const response = await fetch(
-        `/api/v1/workspaces/${activeWorkspace.id}/agent/approve`,
+        `${apiBase}/v1/workspaces/${activeWorkspace.id}/agent/approve`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
