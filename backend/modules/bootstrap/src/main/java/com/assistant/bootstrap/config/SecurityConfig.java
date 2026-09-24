@@ -60,14 +60,23 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(java.util.List.of(frontendUrl));
-    configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-    configuration.setAllowedHeaders(
-        java.util.List.of("Authorization", "Content-Type", "X-Workspace-Id", "Cache-Control"));
+    if (frontendUrl != null && !frontendUrl.isBlank()) {
+      configuration.setAllowedOriginPatterns(
+          java.util.List.of(
+              frontendUrl, "https://*.vercel.app", "http://localhost:*", "http://127.0.0.1:*"));
+    } else {
+      configuration.setAllowedOriginPatterns(
+          java.util.List.of("https://*.vercel.app", "http://localhost:*", "http://127.0.0.1:*"));
+    }
+    configuration.setAllowedMethods(
+        java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
+    configuration.setAllowedHeaders(java.util.List.of("*"));
+    configuration.setExposedHeaders(
+        java.util.List.of("Authorization", "Content-Type", "X-Workspace-Id"));
     configuration.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/api/**", configuration);
+    source.registerCorsConfiguration("/**", configuration);
     return source;
   }
 
