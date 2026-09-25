@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "agent": "AI Assistant",
+    "tasks": "Tasks & Focus",
+    "calendar": "Calendar",
+    "notes": "Notes Vault",
+    "memory": "Memory Vault",
+    "settings": "Settings",
+    "systemStatus": "Kyros OS Online",
+    "liveBadge": "Live"
+  },
+  "topNav": {
+    "searchPlaceholder": "Search or type a command...",
+    "searchShortcut": "Ctrl K",
+    "toggleSidebar": "Toggle sidebar navigation",
+    "workspaceTitle": "Workspace",
+    "defaultWorkspace": "Kyros Workspace",
+    "lightModeTooltip": "Switch to Light mode",
+    "darkModeTooltip": "Switch to Dark mode",
+    "notificationsTooltip": "Notifications",
+    "userProfile": "Executive Account",
+    "switchLangTooltip": "Chuyển sang Tiếng Việt"
+  },
+  "common": {
+    "online": "Online",
+    "offline": "Offline",
+    "loading": "Loading...",
+    "save": "Save changes",
+    "cancel": "Cancel",
+    "close": "Close"
+  }
+}

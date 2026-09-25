@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "agent": "Trợ lý AI",
+    "tasks": "Công việc",
+    "calendar": "Lịch biểu",
+    "notes": "Ghi chú",
+    "memory": "Ký ức AI",
+    "settings": "Cài đặt",
+    "systemStatus": "Kyros OS Trực tuyến",
+    "liveBadge": "Trực tiếp"
+  },
+  "topNav": {
+    "searchPlaceholder": "Tìm kiếm hoặc lệnh nhanh...",
+    "searchShortcut": "Ctrl K",
+    "toggleSidebar": "Thu gọn / Mở rộng menu",
+    "workspaceTitle": "Không gian làm việc",
+    "defaultWorkspace": "Kyros Workspace",
+    "lightModeTooltip": "Chuyển sang giao diện Sáng",
+    "darkModeTooltip": "Chuyển sang giao diện Tối",
+    "notificationsTooltip": "Thông báo",
+    "userProfile": "Tài khoản điều hành",
+    "switchLangTooltip": "Chuyển sang English"
+  },
+  "common": {
+    "online": "Trực tuyến",
+    "offline": "Ngoại tuyến",
+    "loading": "Đang tải...",
+    "save": "Lưu thay đổi",
+    "cancel": "Hủy bỏ",
+    "close": "Đóng"
+  }
+}

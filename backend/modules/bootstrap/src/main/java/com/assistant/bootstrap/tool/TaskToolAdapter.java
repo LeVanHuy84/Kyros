@@ -32,8 +32,8 @@ public class TaskToolAdapter implements AgentToolContract {
 
   @Override
   public String getDescription() {
-    return "Tạo mới hoặc cập nhật một hoặc nhiều công việc (Tasks). Nếu có 'id' thì là cập nhật,"
-        + " nếu không thì tạo mới.";
+    return "Create or update one or more tasks. If 'id' is provided, update existing task;"
+        + " otherwise create a new task.";
   }
 
   @Override
@@ -49,11 +49,11 @@ public class TaskToolAdapter implements AgentToolContract {
           "items": {
             "type": "object",
             "properties": {
-              "id": { "type": "string", "description": "ID của task nếu là cập nhật" },
-              "title": { "type": "string", "description": "Tiêu đề công việc" },
-              "description": { "type": "string", "description": "Mô tả chi tiết công việc" },
-              "dueDate": { "type": "string", "description": "Hạn chót công việc (ISO-8601)" },
-              "priority": { "type": "string", "description": "Độ ưu tiên: Low, Medium, High, Critical" }
+              "id": { "type": "string", "description": "Task ID if updating an existing task" },
+              "title": { "type": "string", "description": "Task title" },
+              "description": { "type": "string", "description": "Detailed description of the task" },
+              "dueDate": { "type": "string", "description": "Due date in ISO-8601 format" },
+              "priority": { "type": "string", "description": "Priority level: Low, Medium, High, Critical" }
             },
             "required": ["title"]
           }

@@ -1,15 +1,22 @@
 package com.assistant.agent.application.service;
 
 import com.assistant.agent.domain.llm.LlmPort;
+import com.assistant.agent.domain.memory.ConversationMemoryPort;
 import com.assistant.agent.domain.model.AgentAction;
 import com.assistant.agent.domain.model.AgentExecutionResult;
 import com.assistant.agent.domain.model.AgentThought;
 import com.assistant.agent.domain.model.AgentTurn;
 import com.assistant.agent.domain.model.ToolExecutionResult;
-import com.assistant.agent.domain.nlp.VietnameseDateTimeParser;
+import com.assistant.agent.domain.nlp.NaturalDateTimeParser;
 import com.assistant.agent.domain.tool.AgentToolContract;
+import com.assistant.kernel.context.WorkspaceContextHolder;
+import com.assistant.kernel.domain.WorkspaceId;
+import com.assistant.memory.application.dto.AppendTurnCommand;
+import com.assistant.memory.application.ports.in.ConversationHistoryPort;
+import com.assistant.memory.domain.model.ConversationId;
+import com.assistant.memory.domain.model.SenderRole;
+import com.assistant.memory.domain.repository.NoteRepository;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -20,9 +27,15 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+/**
+ * ReAct Orchestration Service that coordinates safety checks, context augmentation, LLM execution
+ * loops, tool calling, and fallback cognitive planning.
+ */
 @Service
 public class ReActOrchestratorService {
 
@@ -31,39 +44,89 @@ public class ReActOrchestratorService {
   private final Map<String, AgentToolContract> toolRegistry;
   private final List<AgentToolContract> toolList;
   private final LlmPort llmPort;
-  private final com.assistant.agent.domain.memory.ConversationMemoryPort memoryStore;
-  private final com.assistant.memory.application.ports.in.ConversationHistoryPort
-      conversationHistoryPort;
-  private final com.assistant.memory.domain.repository.NoteRepository noteRepository;
+  private final ConversationMemoryPort memoryStore;
+  private final ConversationHistoryPort conversationHistoryPort;
   private final UserAiConfigService userAiConfigService;
+  private final MessageSource messageSource;
+  private final AgentSafetyGuard safetyGuard;
+  private final AgentSystemPromptBuilder promptBuilder;
+  private final AgentContextAugmenter contextAugmenter;
+  private final AgentRulePlanner rulePlanner;
 
   @org.springframework.beans.factory.annotation.Autowired
   public ReActOrchestratorService(
       List<AgentToolContract> toolContracts,
       LlmPort llmPort,
-      com.assistant.agent.domain.memory.ConversationMemoryPort memoryStore,
-      com.assistant.memory.application.ports.in.ConversationHistoryPort conversationHistoryPort,
-      com.assistant.memory.domain.repository.NoteRepository noteRepository,
+      ConversationMemoryPort memoryStore,
+      ConversationHistoryPort conversationHistoryPort,
+      NoteRepository noteRepository,
       @org.springframework.beans.factory.annotation.Autowired(required = false)
-          UserAiConfigService userAiConfigService) {
-    this.toolList = toolContracts;
+          UserAiConfigService userAiConfigService,
+      @org.springframework.beans.factory.annotation.Autowired(required = false)
+          MessageSource messageSource,
+      @org.springframework.beans.factory.annotation.Autowired(required = false)
+          AgentSafetyGuard safetyGuard,
+      @org.springframework.beans.factory.annotation.Autowired(required = false)
+          AgentSystemPromptBuilder promptBuilder,
+      @org.springframework.beans.factory.annotation.Autowired(required = false)
+          AgentContextAugmenter contextAugmenter,
+      @org.springframework.beans.factory.annotation.Autowired(required = false)
+          AgentRulePlanner rulePlanner) {
+    this.toolList = toolContracts != null ? toolContracts : List.of();
     this.toolRegistry =
-        toolContracts.stream()
+        this.toolList.stream()
             .collect(Collectors.toMap(AgentToolContract::getName, Function.identity()));
     this.llmPort = llmPort;
     this.memoryStore = memoryStore;
     this.conversationHistoryPort = conversationHistoryPort;
-    this.noteRepository = noteRepository;
     this.userAiConfigService = userAiConfigService;
+    this.messageSource = messageSource;
+    this.safetyGuard = safetyGuard != null ? safetyGuard : new AgentSafetyGuard(messageSource);
+    this.promptBuilder = promptBuilder != null ? promptBuilder : new AgentSystemPromptBuilder();
+    this.contextAugmenter =
+        contextAugmenter != null ? contextAugmenter : new AgentContextAugmenter(noteRepository);
+    this.rulePlanner = rulePlanner != null ? rulePlanner : new AgentRulePlanner(messageSource);
   }
 
   public ReActOrchestratorService(
       List<AgentToolContract> toolContracts,
       LlmPort llmPort,
-      com.assistant.agent.domain.memory.ConversationMemoryPort memoryStore,
-      com.assistant.memory.application.ports.in.ConversationHistoryPort conversationHistoryPort,
-      com.assistant.memory.domain.repository.NoteRepository noteRepository) {
-    this(toolContracts, llmPort, memoryStore, conversationHistoryPort, noteRepository, null);
+      ConversationMemoryPort memoryStore,
+      ConversationHistoryPort conversationHistoryPort,
+      NoteRepository noteRepository,
+      UserAiConfigService userAiConfigService) {
+    this(
+        toolContracts,
+        llmPort,
+        memoryStore,
+        conversationHistoryPort,
+        noteRepository,
+        userAiConfigService,
+        null,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  public ReActOrchestratorService(
+      List<AgentToolContract> toolContracts,
+      LlmPort llmPort,
+      ConversationMemoryPort memoryStore,
+      ConversationHistoryPort conversationHistoryPort,
+      NoteRepository noteRepository) {
+    this(
+        toolContracts,
+        llmPort,
+        memoryStore,
+        conversationHistoryPort,
+        noteRepository,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 
   public AgentExecutionResult processUserPrompt(
@@ -75,154 +138,28 @@ public class ReActOrchestratorService {
       String apiKey,
       String baseUrl,
       String model) {
-    List<AgentTurn> turns = new ArrayList<>();
-    String lowerPrompt = prompt.toLowerCase(Locale.ROOT);
+    Locale locale = LocaleContextHolder.getLocale();
+    WorkspaceId activeWsId = new WorkspaceId(workspaceId);
+    String augmentedPrompt = contextAugmenter.augmentWithNotes(prompt, noteIds, activeWsId);
 
-    String augmentedPrompt = prompt;
-    if (noteIds != null && !noteIds.isEmpty()) {
-      StringBuilder noteContext =
-          new StringBuilder("\n\n[Dữ liệu ghi chú được đính kèm (@Note)]:\n");
-      for (UUID noteId : noteIds) {
-        noteContext.append("- ID Note: ").append(noteId.toString()).append("\n");
-      }
-      augmentedPrompt += noteContext.toString();
+    // 1. Safety Guard Evaluation
+    var safetyResult = safetyGuard.evaluatePrompt(workspaceId, prompt, locale);
+    if (safetyResult.isDestructive()) {
+      return safetyGuard.createApprovalResult(safetyResult);
     }
 
-    // Safety interception for destructive actions
-    if (lowerPrompt.contains("xóa") || lowerPrompt.contains("delete")) {
-      String toolName =
-          lowerPrompt.contains("lịch") || lowerPrompt.contains("event")
-              ? "delete_events"
-              : "delete_tasks";
-      String approvalReason = "Thao tác xóa dữ liệu cần sự xác nhận của người dùng.";
-      String argsJson =
-          String.format("{\"workspaceId\":\"%s\",\"target\":\"%s\"}", workspaceId, prompt);
-
-      AgentTurn pendingTurn =
-          new AgentTurn(
-              1,
-              new AgentThought(
-                  "Phát hiện thao tác nguy hiểm ("
-                      + toolName
-                      + "), tạm dừng để xin phê duyệt từ người dùng."),
-              new AgentAction(toolName, argsJson),
-              "Chờ xác nhận của người dùng.",
-              true,
-              approvalReason);
-      turns.add(pendingTurn);
-
-      return AgentExecutionResult.requiresApproval(turns, approvalReason, toolName, argsJson);
-    }
-
-    String effApiKey = apiKey;
-    String effProvider = provider;
-    String effBaseUrl = baseUrl;
-    String effModel = model;
-
-    if ((effApiKey == null || effApiKey.isBlank()) && userAiConfigService != null) {
-      var saved = userAiConfigService.getDecryptedConfig(workspaceId, userId);
-      if (saved.apiKey() != null && !saved.apiKey().isBlank()) {
-        effApiKey = saved.apiKey();
-        effProvider = saved.provider();
-        effBaseUrl = saved.baseUrl();
-        effModel = saved.model();
+    // 2. Custom LLM Execution Loop
+    EffectiveAiConfig config =
+        resolveEffectiveConfig(workspaceId, userId, provider, apiKey, baseUrl, model);
+    if (config.hasCustomConfig()) {
+      AgentExecutionResult llmResult = executeLlmOrchestration(augmentedPrompt, config, locale);
+      if (llmResult != null) {
+        return llmResult;
       }
     }
 
-    boolean hasCustomLlmConfig =
-        (effApiKey != null && !effApiKey.isBlank())
-            || (effBaseUrl != null && !effBaseUrl.isBlank());
-
-    if (hasCustomLlmConfig) {
-      ZonedDateTime nowLocal = ZonedDateTime.now(VietnameseDateTimeParser.VIETNAM_ZONE);
-      String systemPrompt = buildSystemPrompt(nowLocal, prompt);
-
-      LlmPort.LlmResponse llmResp =
-          llmPort.callLlm(effBaseUrl, effApiKey, effModel, systemPrompt, augmentedPrompt, toolList);
-
-      if (llmResp.toolCalls() != null && !llmResp.toolCalls().isEmpty()) {
-        StringBuilder resultSummary = new StringBuilder();
-        int step = 1;
-        for (LlmPort.ToolCall tc : llmResp.toolCalls()) {
-          if (toolRegistry.containsKey(tc.name())) {
-            AgentToolContract tool = toolRegistry.get(tc.name());
-            ToolExecutionResult execRes = tool.execute(tc.argumentsJson());
-
-            turns.add(
-                new AgentTurn(
-                    step++,
-                    new AgentThought(
-                        "LLM ("
-                            + (effProvider != null ? effProvider : "LLM")
-                            + ") thực thi công cụ: "
-                            + tc.name()),
-                    new AgentAction(tc.name(), tc.argumentsJson()),
-                    execRes.output(),
-                    false,
-                    null));
-            resultSummary.append("- ").append(execRes.output()).append("\n");
-          }
-        }
-
-        return AgentExecutionResult.completed(
-            "Phản hồi từ "
-                + (effProvider != null ? effProvider : "LLM")
-                + ":\n"
-                + resultSummary.toString(),
-            turns);
-      } else if (llmResp.content() != null && !llmResp.content().isBlank()) {
-        if (llmResp.content().startsWith("Invocation Error")
-            || llmResp.content().startsWith("LLM Error")) {
-          return AgentExecutionResult.completed(
-              "⚠️ **[Lỗi kết nối AI ("
-                  + (effProvider != null ? effProvider : "LLM")
-                  + ")]**: "
-                  + llmResp.content()
-                  + "\n\n"
-                  + "*Gợi ý:* Vui lòng kiểm tra lại API Key và cấu hình trong mục **Settings > AI"
-                  + " Provider & Vault**.",
-              turns);
-        }
-        return AgentExecutionResult.completed(llmResp.content(), turns);
-      }
-    }
-
-    // Fallback: Rule-based ReAct cognitive engine with Vietnamese DateTime NLP
-    List<AgentAction> plannedActions = planActions(workspaceId, userId, augmentedPrompt);
-    int step = 1;
-    for (AgentAction action : plannedActions) {
-      if (step > MAX_TURNS) {
-        break;
-      }
-
-      AgentToolContract tool = toolRegistry.get(action.toolName());
-      if (tool == null) {
-        continue;
-      }
-
-      AgentThought thought =
-          new AgentThought("Sử dụng công cụ " + tool.getName() + " để thực hiện yêu cầu.");
-      ToolExecutionResult result = tool.execute(action.argumentsJson());
-
-      turns.add(
-          new AgentTurn(
-              step++,
-              thought,
-              action,
-              result.output() != null ? result.output() : result.approvalReason(),
-              result.requiresApproval(),
-              result.approvalReason()));
-    }
-
-    String summaryAnswer =
-        turns.isEmpty()
-            ? "Tôi đã tiếp nhận yêu cầu: \"" + prompt + "\". Hệ thống đã sẵn sàng hỗ trợ bạn."
-            : "Đã hoàn thành các bước xử lý agentic. Chi tiết các thao tác đã thực thi:\n"
-                + turns.stream()
-                    .map(t -> "- Bước " + t.stepNumber() + ": " + t.observation())
-                    .collect(Collectors.joining("\n"));
-
-    return AgentExecutionResult.completed(summaryAnswer, turns);
+    // 3. Fallback: Rule-based Cognitive Planner
+    return executeRuleBasedPlan(workspaceId, userId, augmentedPrompt, prompt, locale);
   }
 
   public AgentExecutionResult processUserPrompt(
@@ -251,320 +188,78 @@ public class ReActOrchestratorService {
       String baseUrl,
       String model,
       SseEmitter emitter) {
-    com.assistant.kernel.domain.WorkspaceId activeWsId =
-        new com.assistant.kernel.domain.WorkspaceId(workspaceId);
-
+    WorkspaceId activeWsId = new WorkspaceId(workspaceId);
     UUID targetMemoryId = conversationId != null ? conversationId : workspaceId;
+    Locale callerLocale = LocaleContextHolder.getLocale();
 
     CompletableFuture.runAsync(
         () -> {
           try {
-            com.assistant.kernel.context.WorkspaceContextHolder.set(activeWsId);
+            WorkspaceContextHolder.set(activeWsId);
+            LocaleContextHolder.setLocale(callerLocale);
 
-            String lowerPrompt = prompt.toLowerCase(Locale.ROOT);
-
-            if (lowerPrompt.contains("xóa") || lowerPrompt.contains("delete")) {
-              String toolName =
-                  lowerPrompt.contains("lịch") || lowerPrompt.contains("event")
-                      ? "delete_events"
-                      : "delete_tasks";
-              String approvalReason = "Thao tác xóa dữ liệu cần sự xác nhận của người dùng.";
-              String argsJson =
-                  String.format("{\"workspaceId\":\"%s\",\"target\":\"%s\"}", workspaceId, prompt);
-
+            // 1. Safety Guard
+            var safetyResult = safetyGuard.evaluatePrompt(workspaceId, prompt, callerLocale);
+            if (safetyResult.isDestructive()) {
               emitter.send(
                   SseEmitter.event()
                       .name("approval")
                       .data(
                           String.format(
                               "{\"pendingApproval\":true,\"toolName\":\"%s\",\"reason\":\"%s\",\"argumentsJson\":%s}",
-                              toolName, approvalReason, objectMapperEscape(argsJson))));
+                              safetyResult.toolName(),
+                              safetyResult.approvalReason(),
+                              objectMapperEscape(safetyResult.argumentsJson()))));
               emitter.complete();
               return;
             }
 
-            String augmentedPrompt = prompt;
-            if (noteIds != null && !noteIds.isEmpty()) {
-              StringBuilder noteContext =
-                  new StringBuilder("\n\n[Dữ liệu ghi chú được đính kèm (@Note)]:\n");
-              for (UUID noteId : noteIds) {
-                try {
-                  var noteOpt =
-                      noteRepository.findById(
-                          activeWsId, new com.assistant.memory.domain.model.NoteId(noteId));
-                  if (noteOpt.isPresent()) {
-                    var note = noteOpt.get();
-                    noteContext
-                        .append("--- Ghi chú: \"")
-                        .append(note.getTitle())
-                        .append("\" (ID: ")
-                        .append(note.getId().value())
-                        .append(") ---\n");
-                    noteContext
-                        .append(note.getContent() != null ? note.getContent() : "")
-                        .append("\n\n");
-                  } else {
-                    noteContext.append("- ID Note: ").append(noteId.toString()).append("\n");
-                  }
-                } catch (Exception e) {
-                  noteContext.append("- ID Note: ").append(noteId.toString()).append("\n");
-                }
-              }
-              augmentedPrompt += noteContext.toString();
-            }
+            String augmentedPrompt = contextAugmenter.augmentWithNotes(prompt, noteIds, activeWsId);
+            EffectiveAiConfig config =
+                resolveEffectiveConfig(workspaceId, userId, provider, apiKey, baseUrl, model);
 
-            String effApiKey = apiKey;
-            String effProvider = provider;
-            String effBaseUrl = baseUrl;
-            String effModel = model;
-
-            if ((effApiKey == null || effApiKey.isBlank()) && userAiConfigService != null) {
-              var saved = userAiConfigService.getDecryptedConfig(workspaceId, userId);
-              if (saved.apiKey() != null && !saved.apiKey().isBlank()) {
-                effApiKey = saved.apiKey();
-                effProvider = saved.provider();
-                effBaseUrl = saved.baseUrl();
-                effModel = saved.model();
-              }
-            }
-
-            boolean hasCustomLlmConfig =
-                (effApiKey != null && !effApiKey.isBlank())
-                    || (effBaseUrl != null && !effBaseUrl.isBlank());
-
-            if (conversationId != null && memoryStore.getMessages(targetMemoryId).isEmpty()) {
-              try {
-                var existingTurns =
-                    conversationHistoryPort.getRecentTurns(
-                        activeWsId,
-                        new com.assistant.memory.domain.model.ConversationId(conversationId),
-                        20);
-                for (var t : existingTurns) {
-                  String roleStr =
-                      ("user".equalsIgnoreCase(t.role()) || "User".equalsIgnoreCase(t.role()))
-                          ? "user"
-                          : "assistant";
-                  memoryStore.addMessage(targetMemoryId, roleStr, t.content());
-                }
-              } catch (Exception ignored) {
-              }
-            }
-
-            memoryStore.addMessage(targetMemoryId, "user", prompt);
-            if (conversationId != null) {
-              try {
-                conversationHistoryPort.appendMessage(
-                    new com.assistant.memory.application.dto.AppendTurnCommand(
-                        activeWsId,
-                        new com.assistant.memory.domain.model.ConversationId(conversationId),
-                        com.assistant.memory.domain.model.SenderRole.User,
-                        prompt));
-              } catch (Exception ignored) {
-              }
-            }
+            syncConversationMemory(activeWsId, targetMemoryId, conversationId, prompt);
             List<Map<String, String>> history =
                 memoryStore.getLlmFormattedHistory(targetMemoryId, 10);
 
-            if (hasCustomLlmConfig) {
-              emitter.send(
-                  SseEmitter.event()
-                      .name("thought")
-                      .data(
-                          "Đang kết nối tới "
-                              + (effProvider != null ? effProvider : "Local Ollama")
-                              + " ("
-                              + (effModel != null ? effModel : "default")
-                              + ")..."));
-
-              ZonedDateTime nowLocal = ZonedDateTime.now(VietnameseDateTimeParser.VIETNAM_ZONE);
-              String systemPrompt = buildSystemPrompt(nowLocal, prompt);
-
-              StringBuilder accumulativeContext = new StringBuilder(augmentedPrompt);
-              StringBuilder finalExecutionSummary = new StringBuilder();
-              String finalAnswerText = null;
-              boolean streamTokensEmitted = false;
-
-              Set<String> executedActionSignatures = new HashSet<>();
-              for (int turn = 1; turn <= MAX_TURNS; turn++) {
-                final int currentTurn = turn;
-                // For the last turn or final answer, stream tokens directly to SSE emitter
-                LlmPort.LlmResponse llmResp =
-                    llmPort.streamLlm(
-                        effBaseUrl,
-                        effApiKey,
-                        effModel,
-                        systemPrompt,
-                        accumulativeContext.toString(),
-                        history,
-                        toolList,
-                        chunk -> {
-                          try {
-                            emitter.send(SseEmitter.event().name("chunk").data(chunk));
-                          } catch (Exception ignored) {
-                          }
-                        });
-
-                if (llmResp.toolCalls() != null && !llmResp.toolCalls().isEmpty()) {
-                  StringBuilder turnLogs = new StringBuilder();
-                  boolean hasNewAction = false;
-
-                  for (LlmPort.ToolCall tc : llmResp.toolCalls()) {
-                    if (toolRegistry.containsKey(tc.name())) {
-                      String sig = tc.name() + ":" + tc.argumentsJson().replaceAll("\\s+", "");
-                      if (executedActionSignatures.contains(sig)) {
-                        continue;
-                      }
-                      executedActionSignatures.add(sig);
-                      hasNewAction = true;
-
-                      AgentToolContract tool = toolRegistry.get(tc.name());
-                      emitter.send(
-                          SseEmitter.event()
-                              .name("thought")
-                              .data(
-                                  "Bước "
-                                      + currentTurn
-                                      + ": LLM thực thi công cụ "
-                                      + tool.getName()));
-                      ToolExecutionResult execRes;
-                      try {
-                        execRes = tool.execute(tc.argumentsJson());
-                      } catch (Exception ex) {
-                        execRes =
-                            ToolExecutionResult.error(
-                                "Lỗi khi chạy công cụ " + tool.getName() + ": " + ex.getMessage());
-                      }
-
-                      emitter.send(
-                          SseEmitter.event()
-                              .name("observation")
-                              .data("Kết quả (" + tool.getName() + "): " + execRes.output()));
-                      turnLogs
-                          .append("Tool ")
-                          .append(tool.getName())
-                          .append(" returned: ")
-                          .append(execRes.output())
-                          .append("\n");
-                    }
-                  }
-
-                  if (!hasNewAction) {
-                    // All requested tool calls were duplicate / already executed
-                    break;
-                  }
-
-                  finalExecutionSummary.append(turnLogs);
-                  accumulativeContext
-                      .append("\n\n[Kết quả thực thi công cụ ở Bước ")
-                      .append(turn)
-                      .append("]:\n")
-                      .append(turnLogs);
-                  accumulativeContext.append(
-                      "\n"
-                          + "[LƯU Ý]: Các công cụ trên ĐÃ THỰC THI THÀNH CÔNG VÀ ĐÃ ĐƯỢC LƯU VÀO HỆ"
-                          + " THỐNG. KHÔNG ĐƯỢC GỌI LẠI CÔNG CỤ TRÙNG LẶP. Hãy trả lời câu hỏi của"
-                          + " người dùng và tóm tắt kết quả thân thiện bằng tiếng Việt.");
-                } else if (llmResp.content() != null && !llmResp.content().isBlank()) {
-                  streamTokensEmitted = true;
-                  if (llmResp.content().startsWith("Invocation Error")
-                      || llmResp.content().startsWith("LLM Error")) {
-                    finalAnswerText =
-                        "⚠️ **[Lỗi kết nối AI ("
-                            + (effProvider != null ? effProvider : "LLM")
-                            + ")]**: "
-                            + llmResp.content()
-                            + "\n\n"
-                            + "*Gợi ý:* Vui lòng kiểm tra lại API Key và cấu hình trong mục"
-                            + " **Settings > AI Provider & Vault**.";
-                  } else {
-                    finalAnswerText = llmResp.content();
-                  }
-                  break;
-                } else {
-                  break;
-                }
-              }
-
-              if (finalAnswerText == null || finalAnswerText.isBlank()) {
-                finalAnswerText =
-                    finalExecutionSummary.length() > 0
-                        ? "Đã hoàn thành các thao tác trên hệ thống:\n\n"
-                            + finalExecutionSummary.toString()
-                        : "Hệ thống đã tiếp nhận yêu cầu của bạn.";
-                if (!streamTokensEmitted) {
-                  emitter.send(SseEmitter.event().name("chunk").data(finalAnswerText));
-                }
-              }
-
-              memoryStore.addMessage(targetMemoryId, "assistant", finalAnswerText);
-              if (conversationId != null) {
-                try {
-                  conversationHistoryPort.appendMessage(
-                      new com.assistant.memory.application.dto.AppendTurnCommand(
-                          activeWsId,
-                          new com.assistant.memory.domain.model.ConversationId(conversationId),
-                          com.assistant.memory.domain.model.SenderRole.Agent,
-                          finalAnswerText));
-                } catch (Exception ignored) {
-                }
-              }
-
-              emitter.send(SseEmitter.event().name("completed").data("Hoàn tất."));
-              emitter.complete();
+            if (config.hasCustomConfig()) {
+              streamLlmOrchestration(
+                  activeWsId,
+                  targetMemoryId,
+                  conversationId,
+                  prompt,
+                  augmentedPrompt,
+                  history,
+                  config,
+                  callerLocale,
+                  emitter);
               return;
             }
 
-            // Fall through to planActions rule-based engine if no custom LLM config
-            List<AgentAction> plannedActions = planActions(workspaceId, userId, augmentedPrompt);
-            if (plannedActions.isEmpty()) {
-              String fallbackReply =
-                  "Tôi đã tiếp nhận yêu cầu: \"" + prompt + "\". Hệ thống sẵn sàng hỗ trợ bạn.";
-              memoryStore.addMessage(targetMemoryId, "assistant", fallbackReply);
-              emitter.send(SseEmitter.event().name("chunk").data(fallbackReply));
-              emitter.complete();
-              return;
-            }
+            // Fallback Rule-based execution
+            streamRuleBasedPlan(
+                activeWsId,
+                targetMemoryId,
+                conversationId,
+                workspaceId,
+                userId,
+                prompt,
+                augmentedPrompt,
+                callerLocale,
+                emitter);
 
-            int step = 1;
-            StringBuilder resultSummary = new StringBuilder();
-            for (AgentAction action : plannedActions) {
-              AgentToolContract tool = toolRegistry.get(action.toolName());
-              if (tool != null) {
-                emitter.send(
-                    SseEmitter.event()
-                        .name("thought")
-                        .data(
-                            "Step " + step + ": Đang thực thi công cụ " + tool.getName() + "..."));
-                ToolExecutionResult result = tool.execute(action.argumentsJson());
-                emitter.send(
-                    SseEmitter.event()
-                        .name("observation")
-                        .data("Kết quả " + tool.getName() + ": " + result.output()));
-                resultSummary.append(result.output()).append("\n");
-                step++;
-              }
-            }
-
-            String summaryAnswer =
-                "Đã hoàn thành các yêu cầu của bạn:\n" + resultSummary.toString().trim();
-            memoryStore.addMessage(targetMemoryId, "assistant", summaryAnswer);
-            emitter.send(SseEmitter.event().name("chunk").data(summaryAnswer));
-            emitter.send(
-                SseEmitter.event()
-                    .name("completed")
-                    .data("Đã hoàn thành tất cả các bước xử lý Agentic."));
-            emitter.complete();
           } catch (Exception e) {
             try {
               emitter.send(
                   SseEmitter.event()
                       .name("chunk")
-                      .data("\n\n⚠️ **[Lỗi hệ thống]**: " + e.getMessage()));
+                      .data("\n\n⚠️ **[System Error]**: " + e.getMessage()));
               emitter.complete();
             } catch (Exception ignored) {
             }
           } finally {
-            com.assistant.kernel.context.WorkspaceContextHolder.clear();
+            WorkspaceContextHolder.clear();
+            LocaleContextHolder.resetLocaleContext();
           }
         });
   }
@@ -575,176 +270,504 @@ public class ReActOrchestratorService {
 
   public AgentExecutionResult approveAndExecuteTool(
       UUID workspaceId, UUID userId, String toolName, String argumentsJson) {
+    Locale locale = LocaleContextHolder.getLocale();
     List<AgentTurn> turns = new ArrayList<>();
     AgentToolContract tool = toolRegistry.get(toolName);
 
     if (tool == null) {
       return AgentExecutionResult.completed(
-          "Lỗi: Không tìm thấy công cụ phê duyệt (" + toolName + ").", turns);
+          msg(
+              "agent.approval.tool_not_found",
+              new Object[] {toolName},
+              "Error: Tool not found for approval (" + toolName + ").",
+              locale),
+          turns);
     }
 
     ToolExecutionResult result = tool.execute(argumentsJson);
     turns.add(
         new AgentTurn(
             1,
-            new AgentThought("Thực thi công cụ sau khi được phê duyệt: " + toolName),
+            new AgentThought(
+                msg(
+                    "agent.thought.executing_tool",
+                    new Object[] {toolName},
+                    "Executing tool after approval: " + toolName,
+                    locale)),
             new AgentAction(toolName, argumentsJson),
             result.output(),
             false,
             null));
 
     return AgentExecutionResult.completed(
-        "Đã phê duyệt và thực thi thành công thao tác " + toolName + ".", turns);
+        msg(
+            "agent.approval.success",
+            new Object[] {toolName},
+            "Successfully approved and executed " + toolName + ".",
+            locale),
+        turns);
   }
 
-  private String buildSystemPrompt(ZonedDateTime nowLocal, String userPrompt) {
-    String currentLocalTimeStr =
-        nowLocal.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss (EEEE, 'múi giờ' z)"));
+  private AgentExecutionResult executeLlmOrchestration(
+      String augmentedPrompt, EffectiveAiConfig config, Locale locale) {
+    List<AgentTurn> turns = new ArrayList<>();
+    ZonedDateTime nowLocal = ZonedDateTime.now(NaturalDateTimeParser.DEFAULT_ZONE);
+    String systemPrompt = promptBuilder.buildSystemPrompt(nowLocal, augmentedPrompt);
 
-    var parsedNlp = VietnameseDateTimeParser.parse(userPrompt, nowLocal);
-    String nlpHint = "";
-    if (parsedNlp.hasExplicitDate() || parsedNlp.hasExplicitTime()) {
-      nlpHint =
-          "\n[VIETNAMESE NLP PRE-PARSED TIME HINT]:"
-              + "\n- StartTime (ISO-8601): "
-              + parsedNlp.startTime().toInstant().toString()
-              + "\n- EndTime (ISO-8601): "
-              + parsedNlp.endTime().toInstant().toString()
-              + "\n- Cleaned Topic: "
-              + parsedNlp.cleanedTitle()
-              + "\n"
-              + "(Use these accurate ISO timestamps when calling `upsert_events` or"
-              + " `upsert_tasks`)";
+    LlmPort.LlmResponse llmResp =
+        llmPort.callLlm(
+            config.baseUrl(),
+            config.apiKey(),
+            config.model(),
+            systemPrompt,
+            augmentedPrompt,
+            toolList);
+
+    if (llmResp.toolCalls() != null && !llmResp.toolCalls().isEmpty()) {
+      StringBuilder resultSummary = new StringBuilder();
+      int step = 1;
+      for (LlmPort.ToolCall tc : llmResp.toolCalls()) {
+        if (toolRegistry.containsKey(tc.name())) {
+          AgentToolContract tool = toolRegistry.get(tc.name());
+          ToolExecutionResult execRes = tool.execute(tc.argumentsJson());
+
+          turns.add(
+              new AgentTurn(
+                  step++,
+                  new AgentThought(
+                      "LLM ("
+                          + config.displayName()
+                          + ") "
+                          + msg(
+                              "agent.thought.executing_tool",
+                              new Object[] {tc.name()},
+                              "executing tool: " + tc.name(),
+                              locale)),
+                  new AgentAction(tc.name(), tc.argumentsJson()),
+                  execRes.output(),
+                  false,
+                  null));
+          resultSummary.append("- ").append(execRes.output()).append("\n");
+        }
+      }
+
+      String prefix =
+          msg(
+              "agent.llm.response_prefix",
+              new Object[] {config.displayName(), resultSummary.toString()},
+              "Response from " + config.displayName() + ":\n" + resultSummary.toString(),
+              locale);
+      return AgentExecutionResult.completed(prefix, turns);
+    } else if (llmResp.content() != null && !llmResp.content().isBlank()) {
+      if (llmResp.content().startsWith("Invocation Error")
+          || llmResp.content().startsWith("LLM Error")) {
+        String hint =
+            msg(
+                "agent.llm.error_hint",
+                null,
+                "\n\n"
+                    + "*Hint:* Please check your API Key and configuration in **Settings > AI"
+                    + " Provider & Vault**.",
+                locale);
+        return AgentExecutionResult.completed(
+            "⚠️ **[AI Error (" + config.displayName() + ")]**: " + llmResp.content() + hint, turns);
+      }
+      return AgentExecutionResult.completed(llmResp.content(), turns);
     }
 
-    return "You are Kyros AI Executive Assistant, an intelligent, professional AI capable of"
-        + " orchestrating schedules, tasks, and notes.\n"
-        + "Current Local Time: "
-        + currentLocalTimeStr
-        + nlpHint
-        + "\n"
-        + "Always convert event timestamps into local Vietnam time (UTC+7 / Asia/Ho_Chi_Minh) when"
-        + " responding.\n"
-        + "FORMATTING GUIDELINES:\n"
-        + "- Always respond with clean, beautifully formatted, professional Markdown in natural"
-        + " Vietnamese.\n"
-        + "- Do NOT insert extra spaces between letters, words, or markdown asterisks (e.g., write"
-        + " **Hôm nay** NOT ** Hôm nay **).\n"
-        + "- Use bold headers, bullet lists, emojis (📅, ⏰, 🎯, ✅), and clear spacing for"
-        + " readability.\n"
-        + "AVAILABLE MUTATION & QUERY TOOLS:\n"
-        + "- upsert_events: Create or update calendar events. Parameters: {\"workspaceId\":\"...\","
-        + " \"events\": [{\"title\":\"...\", \"description\":\"...\", \"startTime\":\"ISO-8601\","
-        + " \"endTime\":\"ISO-8601\"}]}\n"
-        + "- upsert_tasks: Create or update tasks. Parameters: {\"workspaceId\":\"...\", \"tasks\":"
-        + " [{\"title\":\"...\", \"description\":\"...\", \"dueDate\":\"ISO-8601\"}]}\n"
-        + "- list_events, list_tasks, list_notes, delete_events, delete_tasks.\n"
-        + "CRITICAL INSTRUCTION: When the user asks to schedule, plan, or create calendar events or"
-        + " tasks (e.g. 'lên lịch', 'họp', 'tạo task', 'chuẩn bị slide'), YOU MUST CALL"
-        + " `upsert_events` OR `upsert_tasks` TOOLS directly to persist them into the system. Do"
-        + " NOT just output text schedules without calling tools.";
+    return null;
   }
 
-  private List<AgentAction> planActions(UUID workspaceId, UUID userId, String prompt) {
-    List<AgentAction> actions = new ArrayList<>();
-    String lower = prompt.toLowerCase(Locale.ROOT);
+  private void streamLlmOrchestration(
+      WorkspaceId activeWsId,
+      UUID targetMemoryId,
+      UUID conversationId,
+      String originalPrompt,
+      String augmentedPrompt,
+      List<Map<String, String>> history,
+      EffectiveAiConfig config,
+      Locale locale,
+      SseEmitter emitter)
+      throws Exception {
+    String connMsg =
+        msg(
+            "agent.thought.connecting_llm",
+            new Object[] {
+              config.displayName(), config.model() != null ? config.model() : "default"
+            },
+            "Connecting to "
+                + config.displayName()
+                + " ("
+                + (config.model() != null ? config.model() : "default")
+                + ")...",
+            locale);
+    emitter.send(SseEmitter.event().name("thought").data(connMsg));
 
-    boolean isQuery =
-        lower.contains("có")
-            || lower.contains("xem")
-            || lower.contains("tra cứu")
-            || lower.contains("lấy")
-            || lower.contains("gì")
-            || lower.contains("danh sách")
-            || lower.contains("báo cáo");
+    ZonedDateTime nowLocal = ZonedDateTime.now(NaturalDateTimeParser.DEFAULT_ZONE);
+    String systemPrompt = promptBuilder.buildSystemPrompt(nowLocal, originalPrompt);
 
-    if (isQuery) {
-      if (lower.contains("lịch") || lower.contains("họp") || lower.contains("sự kiện")) {
-        actions.add(
-            new AgentAction("list_events", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
-      }
-      if (lower.contains("task") || lower.contains("nhiệm vụ") || lower.contains("công việc")) {
-        actions.add(
-            new AgentAction("list_tasks", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
-      }
-      if (lower.contains("note") || lower.contains("ghi chú")) {
-        actions.add(
-            new AgentAction("list_notes", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
-      }
-      if (!actions.isEmpty()) {
-        return actions;
+    StringBuilder accumulativeContext = new StringBuilder(augmentedPrompt);
+    StringBuilder finalExecutionSummary = new StringBuilder();
+    String finalAnswerText = null;
+    boolean streamTokensEmitted = false;
+
+    Set<String> executedActionSignatures = new HashSet<>();
+    for (int turn = 1; turn <= MAX_TURNS; turn++) {
+      final int currentTurn = turn;
+      LlmPort.LlmResponse llmResp =
+          llmPort.streamLlm(
+              config.baseUrl(),
+              config.apiKey(),
+              config.model(),
+              systemPrompt,
+              accumulativeContext.toString(),
+              history,
+              toolList,
+              chunk -> {
+                try {
+                  emitter.send(SseEmitter.event().name("chunk").data(chunk));
+                } catch (Exception ignored) {
+                }
+              });
+
+      if (llmResp.toolCalls() != null && !llmResp.toolCalls().isEmpty()) {
+        StringBuilder turnLogs = new StringBuilder();
+        boolean hasNewAction = false;
+
+        for (LlmPort.ToolCall tc : llmResp.toolCalls()) {
+          if (toolRegistry.containsKey(tc.name())) {
+            String sig = tc.name() + ":" + tc.argumentsJson().replaceAll("\\s+", "");
+            if (executedActionSignatures.contains(sig)) {
+              continue;
+            }
+            executedActionSignatures.add(sig);
+            hasNewAction = true;
+
+            AgentToolContract tool = toolRegistry.get(tc.name());
+            emitter.send(
+                SseEmitter.event()
+                    .name("thought")
+                    .data(
+                        msg(
+                            "agent.thought.step_executing_tool",
+                            new Object[] {currentTurn, tool.getName()},
+                            "Step " + currentTurn + ": LLM executing tool " + tool.getName(),
+                            locale)));
+            ToolExecutionResult execRes;
+            try {
+              execRes = tool.execute(tc.argumentsJson());
+            } catch (Exception ex) {
+              execRes =
+                  ToolExecutionResult.error(
+                      msg(
+                          "agent.observation.tool_error",
+                          new Object[] {tool.getName(), ex.getMessage()},
+                          "Error executing tool " + tool.getName() + ": " + ex.getMessage(),
+                          locale));
+            }
+
+            emitter.send(
+                SseEmitter.event()
+                    .name("observation")
+                    .data(
+                        msg(
+                            "agent.observation.tool_result",
+                            new Object[] {tool.getName(), execRes.output()},
+                            "Result (" + tool.getName() + "): " + execRes.output(),
+                            locale)));
+            turnLogs
+                .append("Tool ")
+                .append(tool.getName())
+                .append(" returned: ")
+                .append(execRes.output())
+                .append("\n");
+          }
+        }
+
+        if (!hasNewAction) {
+          break;
+        }
+
+        finalExecutionSummary.append(turnLogs);
+        accumulativeContext
+            .append("\n\n[Tool execution output at Step ")
+            .append(turn)
+            .append("]:\n")
+            .append(turnLogs);
+        accumulativeContext.append(
+            "\n"
+                + "[INSTRUCTION]: The tools above succeeded and modified the system. DO NOT call"
+                + " duplicate tools. Provide a clean summary in the user's language.");
+      } else if (llmResp.content() != null && !llmResp.content().isBlank()) {
+        streamTokensEmitted = true;
+        if (llmResp.content().startsWith("Invocation Error")
+            || llmResp.content().startsWith("LLM Error")) {
+          String hint =
+              msg(
+                  "agent.llm.error_hint",
+                  null,
+                  "\n\n"
+                      + "*Hint:* Please check your API Key and configuration in **Settings > AI"
+                      + " Provider & Vault**.",
+                  locale);
+          finalAnswerText =
+              "⚠️ **[AI Error (" + config.displayName() + ")]**: " + llmResp.content() + hint;
+        } else {
+          finalAnswerText = llmResp.content();
+        }
+        break;
+      } else {
+        break;
       }
     }
 
-    // Check for note creation
-    if ((lower.contains("note") || lower.contains("ghi chú"))
-        && (lower.contains("tạo") || lower.contains("thêm") || lower.contains("lưu"))) {
-      String title = "Ghi chú từ Agent";
-      String content = prompt;
-      String args =
-          String.format(
-              "{\"workspaceId\":\"%s\",\"userId\":\"%s\",\"title\":\"%s\",\"content\":\"%s\"}",
-              workspaceId, userId, title, content);
-      actions.add(new AgentAction("create_note", args));
-    }
-
-    // Check for multi-tool (both task & event) or event/task individually
-    boolean hasEventIntent =
-        lower.contains("lịch")
-            || lower.contains("họp")
-            || lower.contains("hẹn")
-            || lower.contains("meeting")
-            || lower.contains("chiều nay")
-            || lower.contains("sáng nay")
-            || lower.contains("ngày mai")
-            || lower.contains("sáng mai")
-            || lower.contains("chiều mai")
-            || lower.contains("tối mai");
-
-    boolean hasTaskIntent =
-        lower.contains("task")
-            || lower.contains("nhiệm vụ")
-            || lower.contains("công việc")
-            || lower.contains("chuẩn bị")
-            || lower.contains("làm slide")
-            || lower.contains("viết báo cáo")
-            || (lower.contains("tạo") && !hasEventIntent);
-
-    var parsedNlp = VietnameseDateTimeParser.parse(prompt);
-
-    if (hasEventIntent) {
-      String eventTitle = parsedNlp.cleanedTitle();
-      if (eventTitle.isEmpty() || eventTitle.length() < 3) {
-        eventTitle = prompt;
+    if (finalAnswerText == null || finalAnswerText.isBlank()) {
+      finalAnswerText =
+          finalExecutionSummary.length() > 0
+              ? msg(
+                  "agent.fallback.completed_operations",
+                  new Object[] {finalExecutionSummary.toString()},
+                  "Completed system operations:\n\n" + finalExecutionSummary.toString(),
+                  locale)
+              : msg(
+                  "agent.fallback.received_request",
+                  new Object[] {originalPrompt},
+                  "The system has received your request.",
+                  locale);
+      if (!streamTokensEmitted) {
+        emitter.send(SseEmitter.event().name("chunk").data(finalAnswerText));
       }
-      String start = parsedNlp.startTime().toInstant().toString();
-      String end = parsedNlp.endTime().toInstant().toString();
-
-      String args =
-          String.format(
-              "{\"workspaceId\":\"%s\",\"events\":[{\"title\":\"%s\",\"startTime\":\"%s\",\"endTime\":\"%s\"}]}",
-              workspaceId, eventTitle, start, end);
-      actions.add(new AgentAction("upsert_events", args));
     }
 
-    if (hasTaskIntent) {
-      String taskTitle =
-          prompt
-              .replaceAll("(?i)^(thêm|tạo|cho tôi|nhiệm vụ|task|giúp tôi|hãy)\\s*", "")
-              .replaceAll("(?i)(và lên lịch.*|đặt lịch.*|họp.*)$", "")
-              .trim();
-      if (taskTitle.isEmpty()) {
-        taskTitle = prompt;
+    persistFinalAnswer(activeWsId, targetMemoryId, conversationId, finalAnswerText);
+    emitter.send(
+        SseEmitter.event()
+            .name("completed")
+            .data(msg("agent.status.completed", null, "Completed.", locale)));
+    emitter.complete();
+  }
+
+  private AgentExecutionResult executeRuleBasedPlan(
+      UUID workspaceId, UUID userId, String augmentedPrompt, String prompt, Locale locale) {
+    List<AgentAction> plannedActions =
+        rulePlanner.planActions(workspaceId, userId, augmentedPrompt, locale);
+    List<AgentTurn> turns = new ArrayList<>();
+    int step = 1;
+    for (AgentAction action : plannedActions) {
+      if (step > MAX_TURNS) {
+        break;
       }
-      String due = parsedNlp.startTime().toInstant().toString();
-      String args =
-          String.format(
-              "{\"workspaceId\":\"%s\",\"userId\":\"%s\",\"tasks\":[{\"title\":\"%s\",\"dueDate\":\"%s\"}]}",
-              workspaceId, userId, taskTitle, due);
-      actions.add(new AgentAction("upsert_tasks", args));
+
+      AgentToolContract tool = toolRegistry.get(action.toolName());
+      if (tool == null) {
+        continue;
+      }
+
+      AgentThought thought =
+          new AgentThought(
+              msg(
+                  "agent.thought.using_tool",
+                  new Object[] {tool.getName()},
+                  "Using tool " + tool.getName() + " to process the request.",
+                  locale));
+      ToolExecutionResult result = tool.execute(action.argumentsJson());
+
+      turns.add(
+          new AgentTurn(
+              step++,
+              thought,
+              action,
+              result.output() != null ? result.output() : result.approvalReason(),
+              result.requiresApproval(),
+              result.approvalReason()));
     }
 
-    return actions;
+    String summaryAnswer =
+        turns.isEmpty()
+            ? msg(
+                "agent.fallback.received_request",
+                new Object[] {prompt},
+                "Received request: \"" + prompt + "\". The system is ready to assist you.",
+                locale)
+            : msg(
+                "agent.fallback.steps_summary",
+                new Object[] {
+                  turns.stream()
+                      .map(
+                          t ->
+                              "- "
+                                  + msg(
+                                      "agent.thought.step_executing_tool",
+                                      new Object[] {t.stepNumber(), t.action().toolName()},
+                                      "Step " + t.stepNumber() + ": " + t.observation(),
+                                      locale))
+                      .collect(Collectors.joining("\n"))
+                },
+                "Completed agentic processing steps. Details:\n"
+                    + turns.stream()
+                        .map(t -> "- Step " + t.stepNumber() + ": " + t.observation())
+                        .collect(Collectors.joining("\n")),
+                locale);
+
+    return AgentExecutionResult.completed(summaryAnswer, turns);
+  }
+
+  private void streamRuleBasedPlan(
+      WorkspaceId activeWsId,
+      UUID targetMemoryId,
+      UUID conversationId,
+      UUID workspaceId,
+      UUID userId,
+      String prompt,
+      String augmentedPrompt,
+      Locale locale,
+      SseEmitter emitter)
+      throws Exception {
+    List<AgentAction> plannedActions =
+        rulePlanner.planActions(workspaceId, userId, augmentedPrompt, locale);
+    if (plannedActions.isEmpty()) {
+      String fallbackReply =
+          msg(
+              "agent.fallback.received_request",
+              new Object[] {prompt},
+              "Received request: \"" + prompt + "\". The system is ready to assist you.",
+              locale);
+      memoryStore.addMessage(targetMemoryId, "assistant", fallbackReply);
+      emitter.send(SseEmitter.event().name("chunk").data(fallbackReply));
+      emitter.complete();
+      return;
+    }
+
+    int step = 1;
+    StringBuilder resultSummary = new StringBuilder();
+    for (AgentAction action : plannedActions) {
+      AgentToolContract tool = toolRegistry.get(action.toolName());
+      if (tool != null) {
+        emitter.send(
+            SseEmitter.event()
+                .name("thought")
+                .data(
+                    msg(
+                        "agent.thought.step_executing_tool",
+                        new Object[] {step, tool.getName()},
+                        "Step " + step + ": Executing tool " + tool.getName() + "...",
+                        locale)));
+        ToolExecutionResult result = tool.execute(action.argumentsJson());
+        emitter.send(
+            SseEmitter.event()
+                .name("observation")
+                .data(
+                    msg(
+                        "agent.observation.tool_result",
+                        new Object[] {tool.getName(), result.output()},
+                        "Result (" + tool.getName() + "): " + result.output(),
+                        locale)));
+        resultSummary.append(result.output()).append("\n");
+        step++;
+      }
+    }
+
+    String summaryAnswer =
+        msg(
+            "agent.fallback.completed_operations",
+            new Object[] {resultSummary.toString().trim()},
+            "Completed your requests:\n" + resultSummary.toString().trim(),
+            locale);
+    persistFinalAnswer(activeWsId, targetMemoryId, conversationId, summaryAnswer);
+    emitter.send(SseEmitter.event().name("chunk").data(summaryAnswer));
+    emitter.send(
+        SseEmitter.event()
+            .name("completed")
+            .data(
+                msg(
+                    "agent.status.completed",
+                    null,
+                    "Completed all agentic processing steps.",
+                    locale)));
+    emitter.complete();
+  }
+
+  private void syncConversationMemory(
+      WorkspaceId activeWsId, UUID targetMemoryId, UUID conversationId, String prompt) {
+    if (conversationId != null && memoryStore.getMessages(targetMemoryId).isEmpty()) {
+      try {
+        var existingTurns =
+            conversationHistoryPort.getRecentTurns(
+                activeWsId, new ConversationId(conversationId), 20);
+        for (var t : existingTurns) {
+          String roleStr =
+              ("user".equalsIgnoreCase(t.role()) || "User".equalsIgnoreCase(t.role()))
+                  ? "user"
+                  : "assistant";
+          memoryStore.addMessage(targetMemoryId, roleStr, t.content());
+        }
+      } catch (Exception ignored) {
+      }
+    }
+
+    memoryStore.addMessage(targetMemoryId, "user", prompt);
+    if (conversationId != null) {
+      try {
+        conversationHistoryPort.appendMessage(
+            new AppendTurnCommand(
+                activeWsId, new ConversationId(conversationId), SenderRole.User, prompt));
+      } catch (Exception ignored) {
+      }
+    }
+  }
+
+  private void persistFinalAnswer(
+      WorkspaceId activeWsId, UUID targetMemoryId, UUID conversationId, String finalAnswerText) {
+    memoryStore.addMessage(targetMemoryId, "assistant", finalAnswerText);
+    if (conversationId != null) {
+      try {
+        conversationHistoryPort.appendMessage(
+            new AppendTurnCommand(
+                activeWsId, new ConversationId(conversationId), SenderRole.Agent, finalAnswerText));
+      } catch (Exception ignored) {
+      }
+    }
+  }
+
+  private EffectiveAiConfig resolveEffectiveConfig(
+      UUID workspaceId, UUID userId, String provider, String apiKey, String baseUrl, String model) {
+    String effApiKey = apiKey;
+    String effProvider = provider;
+    String effBaseUrl = baseUrl;
+    String effModel = model;
+
+    if ((effApiKey == null || effApiKey.isBlank()) && userAiConfigService != null) {
+      var saved = userAiConfigService.getDecryptedConfig(workspaceId, userId);
+      if (saved.apiKey() != null && !saved.apiKey().isBlank()) {
+        effApiKey = saved.apiKey();
+        effProvider = saved.provider();
+        effBaseUrl = saved.baseUrl();
+        effModel = saved.model();
+      }
+    }
+
+    return new EffectiveAiConfig(effProvider, effApiKey, effBaseUrl, effModel);
+  }
+
+  private record EffectiveAiConfig(String provider, String apiKey, String baseUrl, String model) {
+    public boolean hasCustomConfig() {
+      return (apiKey != null && !apiKey.isBlank()) || (baseUrl != null && !baseUrl.isBlank());
+    }
+
+    public String displayName() {
+      return provider != null && !provider.isBlank() ? provider : "LLM";
+    }
+  }
+
+  private String msg(String code, Object[] args, String defaultMessage, Locale locale) {
+    if (messageSource == null) {
+      if (args != null && args.length > 0) {
+        return java.text.MessageFormat.format(defaultMessage, args);
+      }
+      return defaultMessage;
+    }
+    Locale effLocale = locale != null ? locale : LocaleContextHolder.getLocale();
+    return messageSource.getMessage(code, args, defaultMessage, effLocale);
   }
 
   private String objectMapperEscape(String raw) {

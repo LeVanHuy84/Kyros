@@ -31,8 +31,8 @@ public class CalendarToolAdapter implements AgentToolContract {
 
   @Override
   public String getDescription() {
-    return "Tạo mới hoặc cập nhật một hoặc nhiều sự kiện trên lịch (Calendar Events). Nếu có 'id'"
-        + " thì là cập nhật, không có 'id' thì tạo mới.";
+    return "Create or update one or more calendar events. If 'id' is provided, update existing"
+        + " event; otherwise create a new event.";
   }
 
   @Override
@@ -47,11 +47,11 @@ public class CalendarToolAdapter implements AgentToolContract {
           "items": {
             "type": "object",
             "properties": {
-              "id": { "type": "string", "description": "ID sự kiện nếu là cập nhật" },
-              "title": { "type": "string", "description": "Tiêu đề sự kiện" },
-              "description": { "type": "string", "description": "Mô tả chi tiết" },
-              "startTime": { "type": "string", "description": "Thời gian bắt đầu (ISO-8601 hoặc HH:mm)" },
-              "endTime": { "type": "string", "description": "Thời gian kết thúc (ISO-8601 hoặc HH:mm)" }
+              "id": { "type": "string", "description": "Event ID if updating an existing event" },
+              "title": { "type": "string", "description": "Event title" },
+              "description": { "type": "string", "description": "Detailed description of the event" },
+              "startTime": { "type": "string", "description": "Start time in ISO-8601 format" },
+              "endTime": { "type": "string", "description": "End time in ISO-8601 format" }
             },
             "required": ["title", "startTime"]
           }
