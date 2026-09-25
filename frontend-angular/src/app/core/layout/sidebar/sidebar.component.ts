@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { KyrosLogoComponent } from '@shared/components/logo/kyros-logo.component';
 import { AppIconComponent, AppIconName } from '@shared/components/icon/icon.component';
+import { LanguageService } from '@core/services/language.service';
 
-interface NavItem {
+export interface NavItem {
   label: string;
   route: string;
   iconName: AppIconName;
@@ -22,12 +23,20 @@ interface NavItem {
 export class SidebarComponent {
   collapsed = input<boolean>(false);
 
-  readonly navItems: NavItem[] = [
-    { label: 'Trợ lý AI (Agent)', route: '/agent', iconName: 'sparkles', badge: 'Live' },
-    { label: 'Công việc (Tasks)', route: '/tasks', iconName: 'check-square' },
-    { label: 'Lịch biểu (Calendar)', route: '/calendar', iconName: 'calendar' },
-    { label: 'Ghi chú (Notes)', route: '/notes', iconName: 'file-text' },
-    { label: 'Ký ức AI (Memory)', route: '/memory', iconName: 'brain' },
-    { label: 'Cài đặt (Settings)', route: '/settings', iconName: 'settings' },
-  ];
+  readonly languageService = inject(LanguageService);
+
+  /**
+   * Computed reactive navigation menu that dynamically translates upon language changes.
+   */
+  readonly navItems = computed<NavItem[]>(() => {
+    const t = this.languageService.t().nav;
+    return [
+      { label: t.agent, route: '/agent', iconName: 'sparkles', badge: t.liveBadge },
+      { label: t.tasks, route: '/tasks', iconName: 'check-square' },
+      { label: t.calendar, route: '/calendar', iconName: 'calendar' },
+      { label: t.notes, route: '/notes', iconName: 'file-text' },
+      { label: t.memory, route: '/memory', iconName: 'brain' },
+      { label: t.settings, route: '/settings', iconName: 'settings' },
+    ];
+  });
 }

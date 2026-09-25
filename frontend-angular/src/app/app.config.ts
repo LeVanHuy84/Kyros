@@ -6,6 +6,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { routes } from './app.routes';
 import { authInterceptor } from '@core/interceptors/auth.interceptor';
 import { workspaceInterceptor } from '@core/interceptors/workspace.interceptor';
+import { languageInterceptor } from '@core/interceptors/language.interceptor';
 import { errorInterceptor } from '@core/interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -14,7 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authInterceptor, workspaceInterceptor, errorInterceptor])
+      withInterceptors([authInterceptor, workspaceInterceptor, languageInterceptor, errorInterceptor])
     ),
     provideAnimationsAsync(),
   ],

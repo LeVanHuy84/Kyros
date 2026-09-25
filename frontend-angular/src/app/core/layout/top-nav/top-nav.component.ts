@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, output } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '@core/services/theme.service';
 import { WorkspaceContextService } from '@core/services/workspace-context.service';
+import { LanguageService } from '@core/services/language.service';
 import { AvatarComponent } from '@shared/components/avatar/avatar.component';
 import { AppIconComponent } from '@shared/components/icon/icon.component';
 
@@ -16,6 +17,8 @@ import { AppIconComponent } from '@shared/components/icon/icon.component';
 export class TopNavComponent {
   readonly themeService = inject(ThemeService);
   readonly workspaceService = inject(WorkspaceContextService);
+  readonly languageService = inject(LanguageService);
 
   toggleSidebar = output<void>();
+  searchClicked = output<void>();
 }

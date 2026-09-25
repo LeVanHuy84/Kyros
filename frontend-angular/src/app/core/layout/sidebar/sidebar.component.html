@@ -6,7 +6,7 @@
 
   <!-- Navigation Menu -->
   <nav class="nav-menu">
-    @for (item of navItems; track item.route) {
+    @for (item of navItems(); track item.route) {
       <a
         [routerLink]="item.route"
         routerLinkActive="active"
@@ -29,7 +29,7 @@
     <div class="agent-status" [class.collapsed]="collapsed()">
       <span class="status-indicator"></span>
       @if (!collapsed()) {
-        <span class="status-text">Kyros OS Online</span>
+        <span class="status-text">{{ languageService.t().nav.systemStatus }}</span>
       }
     </div>
   </div>

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { WorkspaceContextService } from './workspace-context.service';
+import { LanguageService } from './language.service';
 
 export interface SseEvent<T = string> {
   event?: string;
@@ -13,6 +14,7 @@ export interface SseEvent<T = string> {
 })
 export class SseService {
   private readonly workspaceService = inject(WorkspaceContextService);
+  private readonly languageService = inject(LanguageService);
 
   /**
    * Connects to an SSE endpoint using fetch and ReadableStream to support custom HTTP headers.
@@ -22,6 +24,7 @@ export class SseService {
       const abortController = new AbortController();
       const headers: Record<string, string> = {
         Accept: 'text/event-stream',
+        'Accept-Language': this.languageService.currentLanguage(),
         ...initHeaders,
       };
 

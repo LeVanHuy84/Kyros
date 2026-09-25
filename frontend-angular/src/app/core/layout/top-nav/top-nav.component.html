@@ -1,22 +1,46 @@
 <header class="top-nav">
   <div class="nav-left">
-    <button class="menu-toggle-btn" (click)="toggleSidebar.emit()" aria-label="Toggle navigation" title="Thu gọn / Mở rộng menu">
+    <button
+      class="menu-toggle-btn"
+      (click)="toggleSidebar.emit()"
+      [attr.aria-label]="languageService.t().topNav.toggleSidebar"
+      [title]="languageService.t().topNav.toggleSidebar"
+    >
       <app-icon name="menu" [size]="18"></app-icon>
     </button>
-    <div class="workspace-badge">
+
+    <div class="workspace-badge" [title]="languageService.t().topNav.workspaceTitle">
       <app-icon name="building" [size]="15" class="workspace-icon"></app-icon>
       <span class="workspace-name">
-        {{ workspaceService.activeWorkspace()?.name || 'Kyros Workspace' }}
+        {{ workspaceService.activeWorkspace()?.name || languageService.t().topNav.defaultWorkspace }}
       </span>
     </div>
+
+    <!-- Quick Command Palette / Search Trigger -->
+    <button class="search-trigger-btn" (click)="searchClicked.emit()" [title]="languageService.t().topNav.searchPlaceholder">
+      <app-icon name="search" [size]="15" class="search-icon"></app-icon>
+      <span class="search-placeholder">{{ languageService.t().topNav.searchPlaceholder }}</span>
+      <kbd class="search-shortcut">{{ languageService.t().topNav.searchShortcut }}</kbd>
+    </button>
   </div>
 
   <div class="nav-right">
+    <!-- Language Switcher -->
+    <button
+      class="lang-switch-btn"
+      (click)="languageService.toggleLanguage()"
+      [title]="languageService.t().topNav.switchLangTooltip"
+      aria-label="Switch Language"
+    >
+      <span class="lang-flag">{{ languageService.currentLanguage() === 'vi' ? '🇻🇳' : '🇬🇧' }}</span>
+      <span class="lang-code">{{ languageService.currentLanguage().toUpperCase() }}</span>
+    </button>
+
     <!-- Theme Toggle -->
     <button
       class="nav-icon-btn"
       (click)="themeService.toggleTheme()"
-      [title]="themeService.isDark() ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'"
+      [title]="themeService.isDark() ? languageService.t().topNav.lightModeTooltip : languageService.t().topNav.darkModeTooltip"
       aria-label="Toggle theme"
     >
       @if (themeService.isDark()) {
@@ -27,7 +51,11 @@
     </button>
 
     <!-- Notification Bell -->
-    <button class="nav-icon-btn" title="Thông báo" aria-label="Notifications">
+    <button
+      class="nav-icon-btn"
+      [title]="languageService.t().topNav.notificationsTooltip"
+      aria-label="Notifications"
+    >
       <app-icon name="bell" [size]="18"></app-icon>
       <span class="notification-dot"></span>
     </button>
@@ -35,7 +63,7 @@
     <div class="divider"></div>
 
     <!-- User Profile -->
-    <div class="user-profile">
+    <div class="user-profile" [title]="languageService.t().topNav.userProfile">
       <app-avatar [name]="'Executive User'" [size]="32"></app-avatar>
     </div>
   </div>
