@@ -1,5 +1,5 @@
-import React from 'react';
-import { Bot, Radio, Key, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bot, Radio, Key, Plus, SunMedium } from 'lucide-react';
 import { useWorkspace } from '../hooks/useWorkspace';
 import { useNotes } from '../hooks/useNotes';
 import { useAgentChat } from '../hooks/useAgentChat';
@@ -8,10 +8,12 @@ import { ConversationSidebar } from '../components/agent/ConversationSidebar';
 import { ChatWindow } from '../components/agent/ChatWindow';
 import { ApprovalBanner } from '../components/agent/ApprovalBanner';
 import { ChatInputArea } from '../components/agent/ChatInputArea';
+import { ExecutiveBriefingModal } from '../components/agent/ExecutiveBriefingModal';
 
 export const AgentCoordinator: React.FC = () => {
   const { activeWorkspace } = useWorkspace();
   const { notes } = useNotes();
+  const [showBriefingModal, setShowBriefingModal] = useState(false);
   const {
     conversations,
     activeConversationId,
@@ -101,6 +103,22 @@ export const AgentCoordinator: React.FC = () => {
             </h3>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowBriefingModal(true)}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                gap: '6px',
+                borderColor: 'rgba(245, 158, 11, 0.4)',
+                backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                color: '#d97706',
+              }}
+              title="Xem bản tin điều hành tóm tắt lịch trình & nhiệm vụ trong ngày"
+            >
+              <SunMedium size={14} />
+              <span>Bản tin điều hành</span>
+            </button>
             {activeWorkspace && (
               <button
                 className="btn btn-secondary"
@@ -146,6 +164,12 @@ export const AgentCoordinator: React.FC = () => {
         <ByokConfigModal
           show={showConfigModal}
           onClose={() => setShowConfigModal(false)}
+        />
+
+        {/* Modal Executive Briefing */}
+        <ExecutiveBriefingModal
+          isOpen={showBriefingModal}
+          onClose={() => setShowBriefingModal(false)}
         />
 
         {/* Main Conversation & Chat Body */}

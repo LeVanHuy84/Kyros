@@ -18,6 +18,39 @@ interface ChatWindowProps {
   chatContainerRef: RefObject<HTMLDivElement | null>;
 }
 
+const getToolBadge = (stepText: string) => {
+  const lower = stepText.toLowerCase();
+  if (lower.includes('calendar') || lower.includes('lịch') || lower.includes('event')) {
+    return (
+      <span className="tool-badge tool-badge-calendar">
+        📅 Calendar Tool
+      </span>
+    );
+  }
+  if (lower.includes('task') || lower.includes('todo') || lower.includes('công việc')) {
+    return (
+      <span className="tool-badge tool-badge-task">
+        ✅ Task Tool
+      </span>
+    );
+  }
+  if (lower.includes('memory') || lower.includes('note') || lower.includes('ghi chú') || lower.includes('semantic')) {
+    return (
+      <span className="tool-badge tool-badge-memory">
+        🧠 Memory Tool
+      </span>
+    );
+  }
+  if (lower.startsWith('🔧') || lower.includes('tool:')) {
+    return (
+      <span className="tool-badge tool-badge-generic">
+        ⚡ Agent Tool
+      </span>
+    );
+  }
+  return null;
+};
+
 const AgentThoughtAccordion: React.FC<{
   activeThoughtStatus?: string;
   thoughtSteps?: string[];
@@ -36,9 +69,11 @@ const AgentThoughtAccordion: React.FC<{
       style={{
         fontSize: '12px',
         color: 'var(--text-muted)',
-        marginBottom: '8px',
-        paddingBottom: '6px',
-        borderBottom: '1px dashed var(--border-color)',
+        marginBottom: '10px',
+        padding: '8px 12px',
+        backgroundColor: 'rgba(99, 102, 241, 0.05)',
+        borderRadius: '8px',
+        border: '1px dashed rgba(99, 102, 241, 0.25)',
       }}
     >
       {!isStreaming ? (
@@ -47,20 +82,23 @@ const AgentThoughtAccordion: React.FC<{
           style={{
             background: 'none',
             border: 'none',
-            color: 'var(--text-muted)',
+            color: 'var(--color-primary, #6366f1)',
             cursor: 'pointer',
             padding: '2px 0',
-            fontSize: '11px',
+            fontSize: '12px',
+            fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
-            gap: '4px',
-            opacity: 0.85,
+            gap: '6px',
+            width: '100%',
           }}
         >
-          {isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+          {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           <span>
-            🧠 Đã thực thi {stepCount} bước suy nghĩ & công cụ{' '}
-            {isOpen ? '(Thu gọn)' : '(Xem chi tiết)'}
+            🧠 Quá trình suy luận & công cụ ({stepCount} bước){' '}
+            <span style={{ fontSize: '11px', fontWeight: 400, opacity: 0.8 }}>
+              {isOpen ? '(Thu gọn)' : '(Xem chi tiết)'}
+            </span>
           </span>
         </button>
       ) : null}
@@ -70,36 +108,43 @@ const AgentThoughtAccordion: React.FC<{
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '4px',
-            marginTop: isStreaming ? '0' : '6px',
+            gap: '6px',
+            marginTop: isStreaming ? '0' : '8px',
           }}
         >
-          {thoughtSteps?.map((step, sIdx) => (
-            <div
-              key={sIdx}
-              style={{
-                opacity: 0.8,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <Check size={11} style={{ color: '#10b981' }} />
-              <span>{step}</span>
-            </div>
-          ))}
+          {thoughtSteps?.map((step, sIdx) => {
+            const badge = getToolBadge(step);
+            return (
+              <div
+                key={sIdx}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '12px',
+                  color: 'var(--text-main)',
+                }}
+              >
+                <Check size={13} style={{ color: '#10b981', flexShrink: 0 }} />
+                <span style={{ flex: 1 }}>{step}</span>
+                {badge}
+              </div>
+            );
+          })}
           {activeThoughtStatus && (
             <div
               style={{
                 fontWeight: 500,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                color: '#6366f1',
+                gap: '8px',
+                color: 'var(--color-primary, #6366f1)',
+                fontSize: '12px',
               }}
             >
-              <Sparkles size={12} className="animate-spin" />
-              <span>{activeThoughtStatus}</span>
+              <Sparkles size={13} className="animate-spin" style={{ flexShrink: 0 }} />
+              <span style={{ flex: 1 }}>{activeThoughtStatus}</span>
+              {getToolBadge(activeThoughtStatus)}
             </div>
           )}
         </div>
@@ -164,6 +209,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 {m.text ||
                   (m.isStreaming && !m.activeThoughtStatus ? '...' : '')}
               </ReactMarkdown>
+              {m.isStreaming && <span className="streaming-cursor" title="Đang phản hồi..." />}
             </div>
           ) : (
             <div>{m.text}</div>

@@ -7,7 +7,7 @@ import { ShieldCheck, Loader2, Eye, EyeOff } from 'lucide-react';
 const Login: React.FC = () => {
   const { login, register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('operator@assistant.ai');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
@@ -261,6 +261,7 @@ const Login: React.FC = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@company.com"
               style={{
                 width: '100%',
                 padding: '10px 14px',
@@ -477,9 +478,7 @@ const Login: React.FC = () => {
           }}
         >
           <ShieldCheck size={14} style={{ color: 'var(--color-success)' }} />
-          <span>
-            Tip: Use <strong>operator@assistant.ai</strong> for Operator views.
-          </span>
+          <span>Bảo mật dữ liệu với cơ chế xác thực mã hóa an toàn</span>
         </div>
       </div>
       <style>{`
