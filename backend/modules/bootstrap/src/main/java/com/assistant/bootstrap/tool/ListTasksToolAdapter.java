@@ -1,23 +1,25 @@
-package com.assistant.agent.infrastructure.tools;
+package com.assistant.bootstrap.tool;
 
 import com.assistant.agent.domain.model.ToolExecutionResult;
 import com.assistant.agent.domain.tool.AgentToolContract;
+import com.assistant.kernel.domain.WorkspaceId;
+import com.assistant.todo.application.port.in.TodoPort;
+import com.assistant.todo.domain.model.Task;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.UUID;
-import org.springframework.context.ApplicationContext;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ListTasksToolAdapter implements AgentToolContract {
 
-  private final ApplicationContext applicationContext;
+  private final TodoPort todoPort;
   private final ObjectMapper objectMapper;
 
-  public ListTasksToolAdapter(ApplicationContext applicationContext, ObjectMapper objectMapper) {
-    this.applicationContext = applicationContext;
+  public ListTasksToolAdapter(TodoPort todoPort, ObjectMapper objectMapper) {
+    this.todoPort = todoPort;
     this.objectMapper = objectMapper;
   }
 
@@ -60,41 +62,41 @@ public class ListTasksToolAdapter implements AgentToolContract {
         }
       }
 
-      Object todoService = applicationContext.getBean("todoService");
-      Method listMethod = null;
-      for (Method m : todoService.getClass().getMethods()) {
-        if (m.getName().equals("listTasks")) {
-          listMethod = m;
-          break;
-        }
-      }
-
-      if (listMethod == null) {
-        return ToolExecutionResult.error("TodoService listTasks method not found");
-      }
-
-      Class<?> wsIdClass = Class.forName("com.assistant.kernel.domain.WorkspaceId");
-      Constructor<?> wsConst = wsIdClass.getConstructor(UUID.class);
-
       UUID wsUuid;
       try {
         wsUuid = UUID.fromString(workspaceIdStr);
       } catch (Exception e) {
         wsUuid =
             com.assistant.kernel.context.WorkspaceContextHolder.get()
-                .map(com.assistant.kernel.domain.WorkspaceId::value)
+                .map(WorkspaceId::value)
                 .orElseGet(UUID::randomUUID);
       }
+      WorkspaceId workspaceId = new WorkspaceId(wsUuid);
 
-      Object wsIdObj = wsConst.newInstance(wsUuid);
+      Page<Task> page =
+          todoPort.listTasks(
+              workspaceId, title, null, null, false, null, null, PageRequest.of(0, 20));
 
-      Class<?> pageReqClass = Class.forName("org.springframework.data.domain.PageRequest");
-      Method ofMethod = pageReqClass.getMethod("of", int.class, int.class);
-      Object pageable = ofMethod.invoke(null, 0, 10);
+      StringBuilder formatted = new StringBuilder();
+      for (Task t : page.getContent()) {
+        formatted
+            .append("- Task: \"")
+            .append(t.getTitle())
+            .append("\" (ID: ")
+            .append(t.getId().value())
+            .append(") | Độ ưu tiên: ")
+            .append(t.getPriority())
+            .append(" | Hạn: ")
+            .append(t.getDueDate() != null ? t.getDueDate().toString() : "Không")
+            .append("\n");
+      }
 
-      Object result =
-          listMethod.invoke(todoService, wsIdObj, title, null, null, null, null, null, pageable);
-      return ToolExecutionResult.ok("Tasks retrieved: " + objectMapper.writeValueAsString(result));
+      String output =
+          formatted.length() > 0
+              ? "Danh sách công việc đang chờ xử lý:\n" + formatted.toString()
+              : "Không có công việc nào đang chờ xử lý.";
+
+      return ToolExecutionResult.ok(output);
     } catch (Exception e) {
       return ToolExecutionResult.error("Failed to execute list_tasks tool: " + e.getMessage());
     }

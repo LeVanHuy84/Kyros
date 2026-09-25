@@ -402,6 +402,7 @@ public class ReActOrchestratorService {
               StringBuilder finalExecutionSummary = new StringBuilder();
               String finalAnswerText = null;
 
+              java.util.Set<String> executedActionSignatures = new java.util.HashSet<>();
               for (int turn = 1; turn <= MAX_TURNS; turn++) {
                 LlmPort.LlmResponse llmResp =
                     llmPort.callLlm(
@@ -415,8 +416,16 @@ public class ReActOrchestratorService {
 
                 if (llmResp.toolCalls() != null && !llmResp.toolCalls().isEmpty()) {
                   StringBuilder turnLogs = new StringBuilder();
+                  boolean hasNewAction = false;
                   for (LlmPort.ToolCall tc : llmResp.toolCalls()) {
                     if (toolRegistry.containsKey(tc.name())) {
+                      String sig = tc.name() + ":" + tc.argumentsJson().replaceAll("\\s+", "");
+                      if (executedActionSignatures.contains(sig)) {
+                        continue;
+                      }
+                      executedActionSignatures.add(sig);
+                      hasNewAction = true;
+
                       AgentToolContract tool = toolRegistry.get(tc.name());
                       emitter.send(
                           SseEmitter.event()
@@ -439,6 +448,12 @@ public class ReActOrchestratorService {
                           .append("\n");
                     }
                   }
+
+                  if (!hasNewAction) {
+                    // All requested tool calls were duplicate / already executed
+                    break;
+                  }
+
                   finalExecutionSummary.append(turnLogs);
                   accumulativeContext
                       .append("\n\n[Kết quả thực thi công cụ ở Bước ")
@@ -447,9 +462,8 @@ public class ReActOrchestratorService {
                       .append(turnLogs);
                   accumulativeContext.append(
                       "\n"
-                          + "Hãy đánh giá kết quả trên. Nếu cần thực hiện tiếp thao tác khác (như"
-                          + " tạo lịch hay task), tiếp tục gọi công cụ. Nếu đã hoàn tất, hãy đưa ra"
-                          + " câu trả lời cuối cùng cho người dùng.");
+                          + "[LƯU Ý]: Các công cụ trên ĐÃ THỰC THI THÀNH CÔNG VÀ ĐÃ ĐƯỢC LƯU VÀO HỆ THỐNG."
+                          + " KHÔNG ĐƯỢC GỌI LẠI CÔNG CỤ TRÙNG LẶP. Hãy đưa ra câu trả lời chi tiết, hoàn tất và thân thiện cho người dùng.");
                 } else if (llmResp.content() != null && !llmResp.content().isBlank()) {
                   if (llmResp.content().startsWith("Invocation Error")
                       || llmResp.content().startsWith("LLM Error")) {
@@ -642,15 +656,48 @@ public class ReActOrchestratorService {
         || lower.contains("họp")
         || lower.contains("nhắc")
         || lower.contains("chiều nay")
-        || lower.contains("sáng nay")) {
+        || lower.contains("sáng nay")
+        || lower.contains("ngày mai")
+        || lower.contains("sáng mai")
+        || lower.contains("chiều mai")) {
       String cleanTitle =
           prompt.replaceAll("(?i)^(lên lịch|thêm|tạo|cho tôi|giúp tôi)\\s*", "").trim();
       if (cleanTitle.isEmpty()) {
         cleanTitle = prompt;
       }
       String title = cleanTitle;
-      String start = "2026-09-18T14:00:00Z";
-      String end = "2026-09-18T15:00:00Z";
+
+      java.time.ZoneId vnZone = java.time.ZoneId.of("Asia/Ho_Chi_Minh");
+      java.time.ZonedDateTime now = java.time.ZonedDateTime.now(vnZone);
+      java.time.ZonedDateTime eventStart;
+
+      if (lower.contains("sáng mai")) {
+        eventStart = now.plusDays(1).withHour(9).withMinute(0).withSecond(0).withNano(0);
+      } else if (lower.contains("chiều mai")) {
+        eventStart = now.plusDays(1).withHour(14).withMinute(0).withSecond(0).withNano(0);
+      } else if (lower.contains("sáng nay") || lower.contains("sáng")) {
+        eventStart = now.withHour(9).withMinute(0).withSecond(0).withNano(0);
+        if (eventStart.isBefore(now)) {
+          eventStart = now.plusHours(1);
+        }
+      } else if (lower.contains("chiều nay") || lower.contains("chiều")) {
+        eventStart = now.withHour(14).withMinute(0).withSecond(0).withNano(0);
+        if (eventStart.isBefore(now)) {
+          eventStart = now.plusHours(1);
+        }
+      } else if (lower.contains("tối nay") || lower.contains("tối")) {
+        eventStart = now.withHour(19).withMinute(30).withSecond(0).withNano(0);
+        if (eventStart.isBefore(now)) {
+          eventStart = now.plusHours(1);
+        }
+      } else {
+        eventStart = now.plusHours(1);
+      }
+
+      java.time.ZonedDateTime eventEnd = eventStart.plusHours(1);
+      String start = eventStart.toInstant().toString();
+      String end = eventEnd.toInstant().toString();
+
       String args =
           String.format(
               "{\"workspaceId\":\"%s\",\"events\":[{\"title\":\"%s\",\"startTime\":\"%s\",\"endTime\":\"%s\"}]}",

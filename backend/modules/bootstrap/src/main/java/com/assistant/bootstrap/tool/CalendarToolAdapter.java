@@ -1,26 +1,26 @@
-package com.assistant.agent.infrastructure.tools;
+package com.assistant.bootstrap.tool;
 
 import com.assistant.agent.domain.model.ToolExecutionResult;
 import com.assistant.agent.domain.tool.AgentToolContract;
+import com.assistant.calendar.application.port.in.CalendarPort;
+import com.assistant.calendar.domain.model.EventId;
+import com.assistant.kernel.domain.WorkspaceId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CalendarToolAdapter implements AgentToolContract {
 
-  private final ApplicationContext applicationContext;
+  private final CalendarPort calendarPort;
   private final ObjectMapper objectMapper;
 
-  public CalendarToolAdapter(ApplicationContext applicationContext, ObjectMapper objectMapper) {
-    this.applicationContext = applicationContext;
+  public CalendarToolAdapter(CalendarPort calendarPort, ObjectMapper objectMapper) {
+    this.calendarPort = calendarPort;
     this.objectMapper = objectMapper;
   }
 
@@ -74,31 +74,16 @@ public class CalendarToolAdapter implements AgentToolContract {
         eventsNode = objectMapper.createArrayNode().add(eventsNode);
       }
 
-      Object calendarService = applicationContext.getBean("calendarEventService");
-      Method createMethod = null;
-      for (Method m : calendarService.getClass().getMethods()) {
-        if (m.getName().equals("createEvent")) {
-          createMethod = m;
-          break;
-        }
-      }
-
-      if (createMethod == null) {
-        return ToolExecutionResult.error("CalendarEventService createEvent method not found");
-      }
-
-      Class<?> wsIdClass = Class.forName("com.assistant.kernel.domain.WorkspaceId");
-      Constructor<?> wsConst = wsIdClass.getConstructor(UUID.class);
       UUID wsUuid;
       try {
         wsUuid = UUID.fromString(workspaceIdStr);
       } catch (Exception e) {
         wsUuid =
             com.assistant.kernel.context.WorkspaceContextHolder.get()
-                .map(com.assistant.kernel.domain.WorkspaceId::value)
+                .map(WorkspaceId::value)
                 .orElseGet(UUID::randomUUID);
       }
-      Object wsIdObj = wsConst.newInstance(wsUuid);
+      WorkspaceId workspaceId = new WorkspaceId(wsUuid);
       String dummyUserId = UUID.randomUUID().toString();
 
       List<String> results = new ArrayList<>();
@@ -106,28 +91,57 @@ public class CalendarToolAdapter implements AgentToolContract {
         String title = eventItem.has("title") ? eventItem.get("title").asText() : "Sự kiện mới";
         String description =
             eventItem.has("description") ? eventItem.get("description").asText() : "";
-        Instant startTime =
+        Instant rawStartTime =
             parseDateTime(eventItem.has("startTime") ? eventItem.get("startTime").asText() : null);
-        Instant endTime =
+        Instant rawEndTime =
             parseDateTime(eventItem.has("endTime") ? eventItem.get("endTime").asText() : null);
-        if (startTime == null) {
-          startTime = Instant.now().plus(java.time.Duration.ofHours(1));
-        }
-        if (endTime == null) {
-          endTime = startTime.plus(java.time.Duration.ofHours(1));
+        final Instant effStartTime =
+            rawStartTime != null
+                ? rawStartTime
+                : Instant.now().plus(java.time.Duration.ofHours(1));
+        final Instant effEndTime =
+            rawEndTime != null ? rawEndTime : effStartTime.plus(java.time.Duration.ofHours(1));
+
+        // De-duplication check: avoid creating duplicate identical events
+        var existingInWindow =
+            calendarPort.listEvents(
+                workspaceId,
+                effStartTime.minus(java.time.Duration.ofMinutes(1)),
+                effEndTime.plus(java.time.Duration.ofMinutes(1)));
+        var duplicateOpt =
+            existingInWindow.stream()
+                .filter(
+                    e ->
+                        "Scheduled".equalsIgnoreCase(e.status())
+                            && e.title().equalsIgnoreCase(title)
+                            && Math.abs(
+                                    java.time.Duration.between(e.startTime(), effStartTime)
+                                        .toMinutes())
+                                <= 5)
+                .findFirst();
+
+        if (duplicateOpt.isPresent()) {
+          results.add(
+              title
+                  + " (ID: "
+                  + duplicateOpt.get().eventId()
+                  + " lúc "
+                  + duplicateOpt.get().startTime().toString()
+                  + ")");
+          continue;
         }
 
-        createMethod.invoke(
-            calendarService,
-            wsIdObj,
-            dummyUserId,
-            null,
-            title,
-            description,
-            startTime,
-            endTime,
-            null);
-        results.add(title + " (" + startTime.toString() + ")");
+        EventId eventId =
+            calendarPort.createEvent(
+                workspaceId,
+                dummyUserId,
+                null,
+                title,
+                description,
+                effStartTime,
+                effEndTime,
+                List.of(15));
+        results.add(title + " (ID: " + eventId.value() + " lúc " + effStartTime.toString() + ")");
       }
 
       return ToolExecutionResult.ok(
@@ -146,14 +160,14 @@ public class CalendarToolAdapter implements AgentToolContract {
     } catch (Exception e1) {
       try {
         java.time.LocalTime time = java.time.LocalTime.parse(text);
-        return java.time.LocalDate.now(java.time.ZoneId.systemDefault())
+        return java.time.LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"))
             .atTime(time)
-            .atZone(java.time.ZoneId.systemDefault())
+            .atZone(java.time.ZoneId.of("Asia/Ho_Chi_Minh"))
             .toInstant();
       } catch (Exception e2) {
         try {
           java.time.LocalDateTime ldt = java.time.LocalDateTime.parse(text);
-          return ldt.atZone(java.time.ZoneId.systemDefault()).toInstant();
+          return ldt.atZone(java.time.ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
         } catch (Exception e3) {
           return Instant.now().plus(java.time.Duration.ofHours(1));
         }
