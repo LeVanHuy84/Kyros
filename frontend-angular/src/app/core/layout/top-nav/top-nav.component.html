@@ -9,12 +9,8 @@
       <app-icon name="menu" [size]="18"></app-icon>
     </button>
 
-    <div class="workspace-badge" [title]="languageService.t().topNav.workspaceTitle">
-      <app-icon name="building" [size]="15" class="workspace-icon"></app-icon>
-      <span class="workspace-name">
-        {{ workspaceService.activeWorkspace()?.name || languageService.t().topNav.defaultWorkspace }}
-      </span>
-    </div>
+    <!-- Workspace Tenant Selector -->
+    <app-tenant-selector></app-tenant-selector>
 
     <!-- Quick Command Palette / Search Trigger -->
     <button class="search-trigger-btn" (click)="searchClicked.emit()" [title]="languageService.t().topNav.searchPlaceholder">
@@ -62,9 +58,39 @@
 
     <div class="divider"></div>
 
-    <!-- User Profile -->
-    <div class="user-profile" [title]="languageService.t().topNav.userProfile">
-      <app-avatar [name]="'Executive User'" [size]="32"></app-avatar>
+    <!-- User Profile Dropdown -->
+    <div class="user-profile-container">
+      <button
+        type="button"
+        class="user-profile-btn"
+        (click)="toggleUserMenu()"
+        [title]="languageService.t().topNav.userProfile"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="isUserMenuOpen()"
+      >
+        <app-avatar
+          [name]="authService.currentUser()?.name || authService.currentUser()?.email || 'Executive'"
+          [size]="32"
+        ></app-avatar>
+        <span class="user-name">{{ authService.currentUser()?.name || 'Executive' }}</span>
+        <app-icon name="chevron-down" [size]="13" class="user-chevron" [class.open]="isUserMenuOpen()"></app-icon>
+      </button>
+
+      @if (isUserMenuOpen()) {
+        <div class="user-menu-dropdown animate-fade-in-scale" role="menu">
+          <div class="user-menu-header">
+            <span class="menu-user-name">{{ authService.currentUser()?.name || 'Executive User' }}</span>
+            <span class="menu-user-email">{{ authService.currentUser()?.email }}</span>
+          </div>
+
+          <div class="user-menu-items">
+            <button type="button" class="user-menu-item logout" (click)="handleLogout()" role="menuitem">
+              <app-icon name="log-out" [size]="15"></app-icon>
+              <span>{{ languageService.t().user.logout }}</span>
+            </button>
+          </div>
+        </div>
+      }
     </div>
   </div>
 </header>

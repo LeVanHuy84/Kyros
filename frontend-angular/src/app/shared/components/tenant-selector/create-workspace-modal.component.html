@@ -1,0 +1,56 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="languageService.t().workspace.createWorkspaceTitle"
+  maxWidth="440px"
+  (close)="handleClose()"
+>
+  <form [formGroup]="form" (ngSubmit)="handleSubmit()" class="create-workspace-form">
+    @if (errorMessage()) {
+      <div class="form-error-banner" role="alert">
+        <app-icon name="alert-triangle" [size]="16"></app-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <div class="form-group">
+      <label for="workspace-name" class="form-label">
+        {{ languageService.t().workspace.workspaceNameLabel }}
+        <span class="required">*</span>
+      </label>
+      <input
+        id="workspace-name"
+        type="text"
+        formControlName="name"
+        class="form-input"
+        [placeholder]="languageService.t().workspace.workspaceNamePlaceholder"
+        [class.has-error]="form.controls.name.invalid && form.controls.name.touched"
+        autofocus
+      />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="field-error">
+          {{ languageService.t().workspace.workspaceNameLabel }} (2-50 ký tự)
+        </span>
+      }
+    </div>
+
+    <div class="modal-actions">
+      <app-button
+        variant="ghost"
+        type="button"
+        (clicked)="handleClose()"
+        [disabled]="isSubmitting()"
+      >
+        {{ languageService.t().common.cancel }}
+      </app-button>
+      <app-button
+        variant="primary"
+        type="submit"
+        [loading]="isSubmitting()"
+        [disabled]="form.invalid || isSubmitting()"
+      >
+        <app-icon name="plus" [size]="16"></app-icon>
+        {{ isSubmitting() ? languageService.t().workspace.creating : languageService.t().workspace.createBtn }}
+      </app-button>
+    </div>
+  </form>
+</app-modal>

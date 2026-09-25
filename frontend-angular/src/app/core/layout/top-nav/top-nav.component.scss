@@ -173,8 +173,114 @@
   margin: 0 4px;
 }
 
-.user-profile {
+.user-profile-container {
+  position: relative;
+}
+
+.user-profile-btn {
   display: flex;
   align-items: center;
+  gap: 8px;
+  padding: 3px 8px 3px 3px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
   cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--border-subtle);
+  }
+
+  .user-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .user-chevron {
+    color: var(--text-muted);
+    transition: transform var(--transition-fast);
+
+    &.open {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.user-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.user-menu-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .menu-user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .menu-user-email {
+    font-size: 11px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.user-menu-items {
+  padding: 4px;
+}
+
+.user-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  &.logout {
+    color: var(--color-danger);
+
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.08);
+      color: var(--color-danger);
+    }
+  }
 }

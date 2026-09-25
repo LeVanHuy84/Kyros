@@ -36,7 +36,14 @@ export type AppIconName =
   | 'mic'
   | 'lock'
   | 'shield-check'
-  | 'zap';
+  | 'zap'
+  | 'mail'
+  | 'mail-check'
+  | 'eye'
+  | 'eye-off'
+  | 'loader'
+  | 'log-out'
+  | 'refresh-cw';
 
 @Component({
   selector: 'app-icon',

@@ -1,0 +1,74 @@
+<div class="tenant-selector">
+  <button
+    type="button"
+    class="tenant-trigger-btn"
+    (click)="toggleDropdown()"
+    [attr.aria-expanded]="isOpen()"
+    [attr.aria-label]="languageService.t().workspace.selectWorkspace"
+    [title]="workspaceService.activeWorkspace()?.name || languageService.t().topNav.defaultWorkspace"
+  >
+    <app-icon name="building" [size]="16" class="tenant-icon"></app-icon>
+    <span class="tenant-name">
+      {{ workspaceService.activeWorkspace()?.name || languageService.t().topNav.defaultWorkspace }}
+    </span>
+    <app-icon
+      name="chevron-down"
+      [size]="14"
+      class="chevron-icon"
+      [class.open]="isOpen()"
+    ></app-icon>
+  </button>
+
+  @if (isOpen()) {
+    <div class="tenant-dropdown animate-fade-in-scale" role="listbox">
+      <div class="dropdown-header">
+        <span class="header-label">{{ languageService.t().workspace.title }}</span>
+      </div>
+
+      <div class="workspace-list">
+        @for (ws of workspaceService.workspaces(); track ws.id) {
+          <button
+            type="button"
+            class="workspace-item"
+            [class.active]="ws.id === workspaceService.activeWorkspaceId()"
+            [class.suspended]="ws.status === 'SUSPENDED'"
+            (click)="selectWorkspace(ws)"
+            role="option"
+            [attr.aria-selected]="ws.id === workspaceService.activeWorkspaceId()"
+          >
+            <div class="item-left">
+              <span class="status-dot" [class.suspended]="ws.status === 'SUSPENDED'"></span>
+              <span class="item-name">{{ ws.name }}</span>
+            </div>
+
+            <div class="item-right">
+              @if (ws.id === workspaceService.activeWorkspaceId()) {
+                <app-icon name="check" [size]="14" class="check-icon"></app-icon>
+              }
+              @if (ws.status === 'SUSPENDED') {
+                <span class="suspended-badge">{{ languageService.t().workspace.suspended }}</span>
+              }
+            </div>
+          </button>
+        } @empty {
+          <div class="empty-workspaces">
+            <span>{{ languageService.t().workspace.noWorkspaces }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="dropdown-footer">
+        <button type="button" class="create-ws-btn" (click)="openCreateModal()">
+          <app-icon name="plus" [size]="14"></app-icon>
+          <span>{{ languageService.t().workspace.createWorkspace }}</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <app-create-workspace-modal
+    [isOpen]="isCreateModalOpen()"
+    (closeModal)="closeCreateModal()"
+    (workspaceCreated)="onWorkspaceCreated($event)"
+  ></app-create-workspace-modal>
+</div>

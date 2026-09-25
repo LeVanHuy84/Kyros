@@ -1,7 +1,7 @@
 # KẾ HOẠCH TRIỂN KHAI ANGULAR UI - GIAI ĐOẠN 2: XÁC THỰC & ĐA NGƯỜI DÙNG (AUTHENTICATION & MULTI-TENANCY)
 
 > **Tài liệu:** `docs/implementation/angular/phase-2-auth-and-multi-tenancy.md`  
-> **Mục tiêu:** Xây dựng toàn diện luồng đăng ký, đăng nhập, xác thực mã OTP qua Email, quản lý phiên làm việc JWT và cơ chế chuyển đổi Workspace (Tenant Isolation AD-002).  
+> **Mục tiêu:** Xây dựng toàn diện luồng đăng ký, đăng nhập, xác thực kích hoạt tài khoản qua liên kết Email Token (kèm form Fallback gửi lại link), quản lý phiên làm việc JWT và cơ chế chuyển đổi Workspace (Tenant Isolation AD-002).  
 > **Ước lượng thời gian:** 1 - 2 ngày làm việc.
 
 ---
@@ -12,7 +12,7 @@
 | :--- | :--- | :--- | :--- |
 | **TASK-2.1** | Auth State & Token Management | `src/app/core/auth/services/auth.service.ts` | `POST /api/auth/login`<br/>`POST /api/auth/refresh`<br/>`POST /api/auth/logout` |
 | **TASK-2.2** | Giao diện Đăng nhập & Đăng ký | `src/app/features/auth/pages/login/*`<br/>`src/app/features/auth/pages/register/*` | `POST /api/auth/register`<br/>`POST /api/auth/login` |
-| **TASK-2.3** | Màn hình Xác thực OTP Email | `src/app/features/auth/pages/verify/*` | `POST /api/auth/verify`<br/>`POST /api/auth/resend-verification` |
+| **TASK-2.3** | Màn hình Xác thực Link Email & Fallback Resend | `src/app/features/auth/pages/verify/*` | `POST /api/auth/verify`<br/>`POST /api/auth/resend-verification` |
 | **TASK-2.4** | Quản lý Workspace & Tenant Selector | `src/app/core/workspace/*`<br/>`src/app/shared/components/tenant-selector/*` | `GET /api/workspaces`<br/>`POST /api/workspaces`<br/>`GET /api/workspaces/primary`<br/>`POST /api/workspaces/primary/{id}` |
 | **TASK-2.5** | Route Guards & Security Checks | `src/app/core/guards/auth.guard.ts`<br/>`src/app/core/guards/workspace.guard.ts` | Client Routing Protection |
 
@@ -72,18 +72,30 @@
 
 ---
 
-### Task 2.3: Màn hình Xác thực OTP Email (Verify Component)
+### Task 2.3: Màn hình Xác thực Link Email & Fallback Gửi Lại Link (Verify Component)
 - **Vị trí tệp:**
   - `src/app/features/auth/pages/verify/verify.component.ts`
-  - `src/app/features/auth/components/otp-input/otp-input.component.ts`
+  - `src/app/features/auth/pages/verify/verify.component.html`
+  - `src/app/features/auth/pages/verify/verify.component.scss`
 - **Các bước thực hiện:**
-  1. Xây dựng component `OtpInputComponent` với 6 ô nhập mã số:
-     - Tự động nhảy con trỏ sang ô tiếp theo khi nhập.
-     - Hỗ trợ Paste nguyên chuỗi 6 số từ clipboard vào ô đầu tiên.
-     - Tự động trigger hàm `verify()` khi đã đủ 6 số.
-  2. Đồng hồ đếm ngược gửi lại mã (Resend OTP Countdown 60s).
+  1. Trích xuất Token từ URL query parameter:
+     - Đọc `token` từ `ActivatedRoute.queryParamMap` (route `/auth/verify?token=...` hoặc `/verify?token=...`).
+     - Nếu không tìm thấy `token`, chuyển ngay state sang `'error'` với thông báo yêu cầu mã token hợp lệ.
+  2. Gọi Backend API kích hoạt tài khoản:
+     - Gửi request `POST /api/auth/verify` với body `{ token }`.
+     - Áp dụng in-flight guard / request deduplication để tránh trigger trùng lặp request khi component khởi tạo.
+  3. Quản lý 3 trạng thái giao diện trực quan (Signals Reactive State):
+     - **`loading` (Đang xử lý):** Hiển thị spinner chuyển động cùng thông điệp *"Đang xác thực liên kết đăng ký với Kyros..."* (`auth.verify.verifying`).
+     - **`success` (Thành công):** Icon tròn xanh lá `<app-icon name="mail-check">`, tiêu đề *"Email Đã Được Xác Thực!"* (`auth.verify.success_title`), nội dung hướng dẫn và nút *"Vào trang chủ / Đăng nhập"* (`auth.verify.go_home`).
+     - **`error` (Thất bại / Hết hạn):** Icon tròn đỏ `<app-icon name="x-circle">`, tiêu đề *"Xác thực không thành công"* (`auth.verify.failed_title`), hiển thị chi tiết lỗi RFC 7807 từ backend (`detail`).
+  4. Form Fallback gửi lại liên kết xác thực (Resend Verification Link):
+     - Hiển thị form nhập email ngay dưới thông báo lỗi: *"Cần một liên kết xác thực mới?"* (`auth.verify.need_new_link`).
+     - Gửi request `POST /api/auth/resend-verification` với body `{ email }`.
+     - Hiển thị trạng thái loading spinner trên nút Resend và thông báo màu xanh khi link mới đã được gửi thành công (`auth.verify.resend_success`).
 - **Tiêu chí nghiệm thu:**
-  - Xác thực mã OTP thành công chuyển người dùng trực tiếp vào hệ thống và kích hoạt tài khoản.
+  - Tự động kích hoạt tài khoản mượt mà khi người dùng nhấp link trong email.
+  - Xử lý đầy đủ, thân thiện các trường hợp token hết hạn, sai token hoặc gửi lại email xác thực.
+  - Tuân thủ 100% OnPush, Standalone, tách file `.ts`/`.html`/`.scss`, dùng icon chuẩn từ `<app-icon>` và cấu hình song ngữ đầy đủ trong `vi.json` / `en.json`.
 
 ---
 

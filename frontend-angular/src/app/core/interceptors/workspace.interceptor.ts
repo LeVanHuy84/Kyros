@@ -1,9 +1,9 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { WorkspaceContextService } from '../services/workspace-context.service';
+import { WorkspaceService } from '../workspace/services/workspace.service';
 
 export const workspaceInterceptor: HttpInterceptorFn = (req, next) => {
-  const workspaceService = inject(WorkspaceContextService);
+  const workspaceService = inject(WorkspaceService);
   const activeWorkspaceId = workspaceService.activeWorkspaceId();
 
   // If request already has X-Workspace-Id or has no active workspace, proceed

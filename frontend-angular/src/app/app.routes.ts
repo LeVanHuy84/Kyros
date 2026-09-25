@@ -1,10 +1,47 @@
 import { Routes } from '@angular/router';
 import { AppLayoutComponent } from '@core/layout/app-layout/app-layout.component';
+import { authGuard } from '@core/guards/auth.guard';
+import { guestGuard } from '@core/guards/guest.guard';
+import { workspaceGuard } from '@core/guards/workspace.guard';
 
 export const routes: Routes = [
+  // Public / Guest Auth Routes
+  {
+    path: 'auth/login',
+    loadComponent: () =>
+      import('@features/auth/pages/login/login.component').then(
+        (m) => m.LoginComponent
+      ),
+    canActivate: [guestGuard],
+  },
+  {
+    path: 'auth/register',
+    loadComponent: () =>
+      import('@features/auth/pages/login/login.component').then(
+        (m) => m.LoginComponent
+      ),
+    canActivate: [guestGuard],
+  },
+  {
+    path: 'verify',
+    loadComponent: () =>
+      import('@features/auth/pages/verify/verify.component').then(
+        (m) => m.VerifyComponent
+      ),
+  },
+  {
+    path: 'auth/verify',
+    loadComponent: () =>
+      import('@features/auth/pages/verify/verify.component').then(
+        (m) => m.VerifyComponent
+      ),
+  },
+
+  // Protected App Shell Routes
   {
     path: '',
     component: AppLayoutComponent,
+    canActivate: [authGuard, workspaceGuard],
     children: [
       {
         path: '',
@@ -55,6 +92,8 @@ export const routes: Routes = [
       },
     ],
   },
+
+  // Fallback Wildcard
   {
     path: '**',
     redirectTo: '',

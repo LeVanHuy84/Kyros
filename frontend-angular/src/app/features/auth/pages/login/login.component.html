@@ -1,0 +1,197 @@
+<div class="auth-page-container">
+  <!-- Top Right Actions: Language & Theme Switcher -->
+  <div class="auth-top-actions">
+    <button
+      type="button"
+      class="lang-switch-btn"
+      (click)="languageService.toggleLanguage()"
+      [title]="languageService.t().topNav.switchLangTooltip"
+    >
+      <span class="lang-flag">{{ languageService.currentLanguage() === 'vi' ? '🇻🇳' : '🇬🇧' }}</span>
+      <span class="lang-code">{{ languageService.currentLanguage().toUpperCase() }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="theme-toggle-btn"
+      (click)="themeService.toggleTheme()"
+      [title]="themeService.isDark() ? languageService.t().topNav.lightModeTooltip : languageService.t().topNav.darkModeTooltip"
+    >
+      @if (themeService.isDark()) {
+        <app-icon name="sun" [size]="17"></app-icon>
+      } @else {
+        <app-icon name="moon" [size]="17"></app-icon>
+      }
+    </button>
+  </div>
+
+  <div class="auth-card animate-fade-in-slide-up">
+    <!-- Header with Kyros Logo -->
+    <div class="auth-header">
+      <div class="logo-box">
+        <app-kyros-logo [size]="36"></app-kyros-logo>
+      </div>
+      <h1 class="auth-title">
+        {{ isRegister() ? languageService.t().auth.registerTitle : languageService.t().auth.loginTitle }}
+      </h1>
+      <p class="auth-tagline">{{ languageService.t().auth.tagline }}</p>
+    </div>
+
+    <!-- Error Banner with Resend Action -->
+    @if (errorMessage()) {
+      <div class="auth-alert error animate-shake" role="alert">
+        <div class="alert-content">
+          <app-icon name="alert-triangle" [size]="16" class="alert-icon"></app-icon>
+          <span>{{ errorMessage() }}</span>
+        </div>
+        @if (showResend()) {
+          <button
+            type="button"
+            class="resend-link-btn"
+            (click)="handleResendVerification()"
+            [disabled]="resendLoading()"
+          >
+            @if (resendLoading()) {
+              <app-icon name="loader" [size]="13" class="animate-spin"></app-icon>
+            }
+            <span>{{ languageService.t().auth.resendVerificationBtn }}</span>
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Resend Success Banner -->
+    @if (resendSuccess()) {
+      <div class="auth-alert success animate-fade-in" role="status">
+        <app-icon name="mail-check" [size]="16" class="alert-icon"></app-icon>
+        <span>{{ languageService.t().auth.verify.resendSuccess }}</span>
+      </div>
+    }
+
+    <!-- Form -->
+    <form [formGroup]="authForm" (ngSubmit)="handleSubmit()" class="auth-form" novalidate>
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="auth-email" class="form-label">
+          {{ languageService.t().auth.emailLabel }}
+        </label>
+        <div class="input-wrapper">
+          <app-icon name="mail" [size]="16" class="input-icon"></app-icon>
+          <input
+            id="auth-email"
+            type="email"
+            formControlName="email"
+            class="form-input with-icon"
+            [placeholder]="languageService.t().auth.emailPlaceholder"
+            [class.has-error]="authForm.controls.email.invalid && authForm.controls.email.touched"
+            autocomplete="email"
+            required
+          />
+        </div>
+        @if (authForm.controls.email.invalid && authForm.controls.email.touched) {
+          <span class="field-error">{{ languageService.t().auth.emailRequired }}</span>
+        }
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <div class="label-row">
+          <label for="auth-password" class="form-label">
+            {{ languageService.t().auth.passwordLabel }}
+          </label>
+          @if (!isRegister()) {
+            <span class="forgot-pwd-hint">
+              {{ languageService.t().auth.forgotPassword }}
+            </span>
+          }
+        </div>
+        <div class="input-wrapper">
+          <app-icon name="lock" [size]="16" class="input-icon"></app-icon>
+          <input
+            id="auth-password"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            class="form-input with-icon with-action"
+            [placeholder]="languageService.t().auth.passwordPlaceholder"
+            [class.has-error]="authForm.controls.password.invalid && authForm.controls.password.touched"
+            autocomplete="current-password"
+            required
+          />
+          <button
+            type="button"
+            class="toggle-pwd-btn"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+          >
+            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="16"></app-icon>
+          </button>
+        </div>
+        @if (authForm.controls.password.invalid && authForm.controls.password.touched) {
+          <span class="field-error">
+            {{ isRegister() ? languageService.t().auth.passwordMinLength : languageService.t().auth.passwordRequired }}
+          </span>
+        }
+      </div>
+
+      <!-- Confirm Password Field (Register Mode) -->
+      @if (isRegister()) {
+        <div class="form-group animate-fade-in-slide-down">
+          <label for="auth-confirm-password" class="form-label">
+            {{ languageService.t().auth.confirmPasswordLabel }}
+          </label>
+          <div class="input-wrapper">
+            <app-icon name="lock" [size]="16" class="input-icon"></app-icon>
+            <input
+              id="auth-confirm-password"
+              [type]="showConfirmPassword() ? 'text' : 'password'"
+              formControlName="confirmPassword"
+              class="form-input with-icon with-action"
+              [placeholder]="languageService.t().auth.confirmPasswordPlaceholder"
+              [class.has-error]="authForm.controls.confirmPassword.invalid && authForm.controls.confirmPassword.touched"
+              autocomplete="new-password"
+              required
+            />
+            <button
+              type="button"
+              class="toggle-pwd-btn"
+              (click)="toggleConfirmPasswordVisibility()"
+              [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'"
+            >
+              <app-icon [name]="showConfirmPassword() ? 'eye-off' : 'eye'" [size]="16"></app-icon>
+            </button>
+          </div>
+          @if (authForm.controls.confirmPassword.touched && authForm.controls.password.value !== authForm.controls.confirmPassword.value) {
+            <span class="field-error">{{ languageService.t().auth.passwordsDoNotMatch }}</span>
+          }
+        </div>
+      }
+
+      <!-- Submit Button -->
+      <app-button
+        variant="primary"
+        size="lg"
+        type="submit"
+        customClass="auth-submit-btn"
+        [loading]="isLoading()"
+        [disabled]="authForm.invalid || isLoading()"
+      >
+        <span>
+          {{ isRegister() ? languageService.t().auth.registerBtn : languageService.t().auth.signInBtn }}
+        </span>
+      </app-button>
+    </form>
+
+    <!-- Toggle Mode Link -->
+    <div class="auth-toggle-mode">
+      <button type="button" class="mode-switch-btn" (click)="toggleMode()">
+        {{ isRegister() ? languageService.t().auth.haveAccount : languageService.t().auth.noAccount }}
+      </button>
+    </div>
+
+    <!-- Security Footer -->
+    <div class="auth-footer">
+      <app-icon name="shield-check" [size]="14" class="security-icon"></app-icon>
+      <span>{{ languageService.t().auth.securityNote }}</span>
+    </div>
+  </div>
+</div>

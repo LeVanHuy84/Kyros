@@ -1,7 +1,13 @@
+:host {
+  display: inline-block;
+}
+
 button {
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
   gap: 8px;
   font-weight: 500;
   border-radius: var(--radius-md);
@@ -13,6 +19,13 @@ button {
     opacity: 0.55;
     cursor: not-allowed;
   }
+}
+
+.btn-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 // Sizes
