@@ -20,33 +20,32 @@ interface ChatWindowProps {
 
 const getToolBadge = (stepText: string) => {
   const lower = stepText.toLowerCase();
-  if (lower.includes('calendar') || lower.includes('lịch') || lower.includes('event')) {
+  if (
+    lower.includes('calendar') ||
+    lower.includes('lịch') ||
+    lower.includes('event')
+  ) {
     return (
-      <span className="tool-badge tool-badge-calendar">
-        📅 Calendar Tool
-      </span>
+      <span className="tool-badge tool-badge-calendar">📅 Calendar Tool</span>
     );
   }
-  if (lower.includes('task') || lower.includes('todo') || lower.includes('công việc')) {
-    return (
-      <span className="tool-badge tool-badge-task">
-        ✅ Task Tool
-      </span>
-    );
+  if (
+    lower.includes('task') ||
+    lower.includes('todo') ||
+    lower.includes('công việc')
+  ) {
+    return <span className="tool-badge tool-badge-task">✅ Task Tool</span>;
   }
-  if (lower.includes('memory') || lower.includes('note') || lower.includes('ghi chú') || lower.includes('semantic')) {
-    return (
-      <span className="tool-badge tool-badge-memory">
-        🧠 Memory Tool
-      </span>
-    );
+  if (
+    lower.includes('memory') ||
+    lower.includes('note') ||
+    lower.includes('ghi chú') ||
+    lower.includes('semantic')
+  ) {
+    return <span className="tool-badge tool-badge-memory">🧠 Memory Tool</span>;
   }
   if (lower.startsWith('🔧') || lower.includes('tool:')) {
-    return (
-      <span className="tool-badge tool-badge-generic">
-        ⚡ Agent Tool
-      </span>
-    );
+    return <span className="tool-badge tool-badge-generic">⚡ Agent Tool</span>;
   }
   return null;
 };
@@ -142,7 +141,11 @@ const AgentThoughtAccordion: React.FC<{
                 fontSize: '12px',
               }}
             >
-              <Sparkles size={13} className="animate-spin" style={{ flexShrink: 0 }} />
+              <Sparkles
+                size={13}
+                className="animate-spin"
+                style={{ flexShrink: 0 }}
+              />
               <span style={{ flex: 1 }}>{activeThoughtStatus}</span>
               {getToolBadge(activeThoughtStatus)}
             </div>
@@ -209,7 +212,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 {m.text ||
                   (m.isStreaming && !m.activeThoughtStatus ? '...' : '')}
               </ReactMarkdown>
-              {m.isStreaming && <span className="streaming-cursor" title="Đang phản hồi..." />}
+              {m.isStreaming && (
+                <span className="streaming-cursor" title="Đang phản hồi..." />
+              )}
             </div>
           ) : (
             <div>{m.text}</div>

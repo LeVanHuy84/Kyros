@@ -40,14 +40,7 @@ public class OpenAiCompatibleLlmClient implements LlmPort {
       List<Map<String, String>> chatHistory,
       List<AgentToolContract> availableTools) {
     return streamLlm(
-        baseUrl,
-        apiKey,
-        modelName,
-        systemPrompt,
-        userPrompt,
-        chatHistory,
-        availableTools,
-        null);
+        baseUrl, apiKey, modelName, systemPrompt, userPrompt, chatHistory, availableTools, null);
   }
 
   @Override
@@ -213,8 +206,7 @@ public class OpenAiCompatibleLlmClient implements LlmPort {
                       for (JsonNode tcNode : delta.path("tool_calls")) {
                         int index = tcNode.path("index").asInt(0);
                         PartialToolCall ptc =
-                            toolCallsByIndex.computeIfAbsent(
-                                index, k -> new PartialToolCall());
+                            toolCallsByIndex.computeIfAbsent(index, k -> new PartialToolCall());
 
                         if (tcNode.has("function")) {
                           JsonNode fn = tcNode.path("function");
@@ -228,7 +220,8 @@ public class OpenAiCompatibleLlmClient implements LlmPort {
                       }
                     }
                   }
-                } catch (Exception ignored) {
+                } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                  // Skip unparseable non-JSON SSE chunks
                 }
               }
             });
@@ -273,8 +266,7 @@ public class OpenAiCompatibleLlmClient implements LlmPort {
       return new LlmResponse(content, Collections.emptyList());
     } else {
       return new LlmResponse(
-          "LLM Error (" + response.statusCode() + "): " + response.body(),
-          Collections.emptyList());
+          "LLM Error (" + response.statusCode() + "): " + response.body(), Collections.emptyList());
     }
   }
 

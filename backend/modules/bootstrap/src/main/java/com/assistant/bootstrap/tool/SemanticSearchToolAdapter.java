@@ -38,7 +38,8 @@ public class SemanticSearchToolAdapter implements AgentToolContract {
 
   @Override
   public String getDescription() {
-    return "Tìm kiếm ngữ nghĩa và tri thức từ các ghi chú (Notes), tài liệu và trí nhớ (Memory) của người dùng trong workspace theo từ khóa hoặc câu hỏi tự nhiên.";
+    return "Tìm kiếm ngữ nghĩa và tri thức từ các ghi chú (Notes), tài liệu và trí nhớ (Memory) của"
+        + " người dùng trong workspace theo từ khóa hoặc câu hỏi tự nhiên.";
   }
 
   @Override
@@ -69,10 +70,7 @@ public class SemanticSearchToolAdapter implements AgentToolContract {
       try {
         wsUuid = UUID.fromString(workspaceIdStr);
       } catch (Exception e) {
-        wsUuid =
-            WorkspaceContextHolder.get()
-                .map(WorkspaceId::value)
-                .orElseGet(UUID::randomUUID);
+        wsUuid = WorkspaceContextHolder.get().map(WorkspaceId::value).orElseGet(UUID::randomUUID);
       }
       WorkspaceId workspaceId = new WorkspaceId(wsUuid);
 
@@ -85,16 +83,29 @@ public class SemanticSearchToolAdapter implements AgentToolContract {
       List<ScoredItem> scoredNotes = new ArrayList<>();
       for (Note note : allNotes) {
         String title = note.getTitle() != null ? note.getTitle().toLowerCase(Locale.ROOT) : "";
-        String content = note.getContent() != null ? note.getContent().toLowerCase(Locale.ROOT) : "";
+        String content =
+            note.getContent() != null ? note.getContent().toLowerCase(Locale.ROOT) : "";
         int score = 0;
         for (String kw : keywords) {
           if (kw.length() >= 2) {
-            if (title.contains(kw)) score += 3;
-            if (content.contains(kw)) score += 1;
+            if (title.contains(kw)) {
+              score += 3;
+            }
+            if (content.contains(kw)) {
+              score += 1;
+            }
           }
         }
         if (score > 0 || title.contains(lowerQuery) || content.contains(lowerQuery)) {
-          scoredNotes.add(new ScoredItem(score, "📝 Note: \"" + note.getTitle() + "\" (ID: " + note.getId().value() + ")\n" + (note.getContent() != null ? note.getContent() : "")));
+          scoredNotes.add(
+              new ScoredItem(
+                  score,
+                  "📝 Note: \""
+                      + note.getTitle()
+                      + "\" (ID: "
+                      + note.getId().value()
+                      + ")\n"
+                      + (note.getContent() != null ? note.getContent() : "")));
         }
       }
 
@@ -105,19 +116,24 @@ public class SemanticSearchToolAdapter implements AgentToolContract {
 
       // 2. Search memory facts
       try {
-        var memEntries =
-            memoryEntryRepository.findBySemanticQuery(workspaceId, query, limit, 0.5);
+        var memEntries = memoryEntryRepository.findBySemanticQuery(workspaceId, query, limit, 0.5);
         for (var entry : memEntries) {
           searchResults.add("🧠 Memory Fact: " + entry.getContent());
         }
-      } catch (Exception ignored) {
+      } catch (Exception ex) {
+        // Semantic memory search fallback
       }
 
       if (searchResults.isEmpty()) {
-        return ToolExecutionResult.ok("Không tìm thấy ghi chú hoặc tri thức phù hợp với từ khóa: \"" + query + "\".");
+        return ToolExecutionResult.ok(
+            "Không tìm thấy ghi chú hoặc tri thức phù hợp với từ khóa: \"" + query + "\".");
       }
 
-      return ToolExecutionResult.ok("Tìm thấy " + searchResults.size() + " kết quả tri thức liên quan:\n\n" + String.join("\n\n---\n\n", searchResults));
+      return ToolExecutionResult.ok(
+          "Tìm thấy "
+              + searchResults.size()
+              + " kết quả tri thức liên quan:\n\n"
+              + String.join("\n\n---\n\n", searchResults));
     } catch (Exception e) {
       return ToolExecutionResult.error("Lỗi khi thực hiện semantic_search: " + e.getMessage());
     }

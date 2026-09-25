@@ -313,7 +313,9 @@ export const useAgentChat = () => {
               currentEvent = line.slice(6).trim();
             } else if (line.startsWith('data:')) {
               const rawData = line.slice(5);
-              const dataText = rawData.startsWith(' ') ? rawData.slice(1) : rawData;
+              const dataText = rawData.startsWith(' ')
+                ? rawData.slice(1)
+                : rawData;
 
               if (currentEvent === 'thought') {
                 setMessages((prev) => {
@@ -388,7 +390,10 @@ export const useAgentChat = () => {
                   }
                   return next;
                 });
-              } else if (currentEvent === 'chunk' || currentEvent === 'message') {
+              } else if (
+                currentEvent === 'chunk' ||
+                currentEvent === 'message'
+              ) {
                 fullAgentResponse += dataText;
               }
 

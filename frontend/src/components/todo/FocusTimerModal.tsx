@@ -116,8 +116,9 @@ export const FocusTimerModal: React.FC<FocusTimerModalProps> = ({
     setIsRunning(false);
     // Play subtle audio alert if possible
     try {
-      const audioCtx = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      const audioCtx = new (
+        window.AudioContext || (window as any).webkitAudioContext
+      )();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.connect(gain);

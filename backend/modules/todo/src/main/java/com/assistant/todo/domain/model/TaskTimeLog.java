@@ -38,14 +38,7 @@ public class TaskTimeLog {
 
   public static TaskTimeLog start(WorkspaceId workspaceId, TaskId taskId, UserId userId) {
     return new TaskTimeLog(
-        UUID.randomUUID(),
-        workspaceId,
-        taskId,
-        userId,
-        Instant.now(),
-        null,
-        0,
-        null);
+        UUID.randomUUID(), workspaceId, taskId, userId, Instant.now(), null, 0, null);
   }
 
   public void stop(String notes) {

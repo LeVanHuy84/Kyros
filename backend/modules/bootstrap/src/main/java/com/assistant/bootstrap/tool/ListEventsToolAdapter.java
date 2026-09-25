@@ -95,8 +95,7 @@ public class ListEventsToolAdapter implements AgentToolContract {
 
       List<CalendarEventDto> events = calendarPort.listEvents(workspaceId, startTime, endTime);
 
-      DateTimeFormatter fmt =
-          DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm (EEEE, 'múi giờ' z)");
+      DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm (EEEE, 'múi giờ' z)");
 
       StringBuilder formattedOutput = new StringBuilder();
       for (CalendarEventDto ev : events) {

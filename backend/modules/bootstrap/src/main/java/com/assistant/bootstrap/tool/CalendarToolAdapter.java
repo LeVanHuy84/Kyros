@@ -96,9 +96,7 @@ public class CalendarToolAdapter implements AgentToolContract {
         Instant rawEndTime =
             parseDateTime(eventItem.has("endTime") ? eventItem.get("endTime").asText() : null);
         final Instant effStartTime =
-            rawStartTime != null
-                ? rawStartTime
-                : Instant.now().plus(java.time.Duration.ofHours(1));
+            rawStartTime != null ? rawStartTime : Instant.now().plus(java.time.Duration.ofHours(1));
         final Instant effEndTime =
             rawEndTime != null ? rawEndTime : effStartTime.plus(java.time.Duration.ofHours(1));
 

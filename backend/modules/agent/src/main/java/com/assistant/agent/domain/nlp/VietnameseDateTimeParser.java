@@ -10,9 +10,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Natural language parser for Vietnamese date, time, and scheduling expressions.
- * Maps phrases like "sáng mai 9h", "chiều thứ 6 tuần tới từ 14h đến 15h30",
- * "sau 3 ngày nữa lúc 10h", "tối nay 19h30" into accurate ZonedDateTime instances (Asia/Ho_Chi_Minh).
+ * Natural language parser for Vietnamese date, time, and scheduling expressions. Maps phrases like
+ * "sáng mai 9h", "chiều thứ 6 tuần tới từ 14h đến 15h30", "sau 3 ngày nữa lúc 10h", "tối nay 19h30"
+ * into accurate ZonedDateTime instances (Asia/Ho_Chi_Minh).
  */
 public final class VietnameseDateTimeParser {
 
@@ -27,11 +27,13 @@ public final class VietnameseDateTimeParser {
 
   private static final Pattern TIME_RANGE_PATTERN =
       Pattern.compile(
-          "(?i)(?:từ\\s*)?(\\d{1,2})(?:h|:| giờ)(\\d{1,2})?\\s*(?:đến|tới|-|->)\\s*(\\d{1,2})(?:h|:| giờ)(\\d{1,2})?");
+          "(?i)(?:từ\\s*)?(\\d{1,2})(?:h|:|"
+              + " giờ)(\\d{1,2})?\\s*(?:đến|tới|-|->)\\s*(\\d{1,2})(?:h|:| giờ)(\\d{1,2})?");
 
   private static final Pattern SINGLE_TIME_PATTERN =
       Pattern.compile(
-          "(?i)(?:lúc|vào lúc|vào|khoảng)?\\s*(\\d{1,2})(?:h|:| giờ)(\\d{1,2})?\\s*(sáng|trưa|chiều|tối)?");
+          "(?i)(?:lúc|vào lúc|vào|khoảng)?\\s*(\\d{1,2})(?:h|:|"
+              + " giờ)(\\d{1,2})?\\s*(sáng|trưa|chiều|tối)?");
 
   private static final Pattern DURATION_MINUTES_PATTERN =
       Pattern.compile("(?i)(?:trong|khoảng|kéo dài)?\\s*(\\d+)\\s*(?:phút|p)");
@@ -72,10 +74,20 @@ public final class VietnameseDateTimeParser {
     } else if (lower.contains("ngày kia") || lower.contains("mốt") || lower.contains("hôm kia")) {
       targetDate = baseTime.toLocalDate().plusDays(2);
       hasExplicitDate = true;
-    } else if (lower.contains("ngày mai") || lower.contains("sáng mai") || lower.contains("chiều mai") || lower.contains("tối mai") || lower.contains("trưa mai") || lower.contains("mai")) {
+    } else if (lower.contains("ngày mai")
+        || lower.contains("sáng mai")
+        || lower.contains("chiều mai")
+        || lower.contains("tối mai")
+        || lower.contains("trưa mai")
+        || lower.contains("mai")) {
       targetDate = baseTime.toLocalDate().plusDays(1);
       hasExplicitDate = true;
-    } else if (lower.contains("hôm nay") || lower.contains("sáng nay") || lower.contains("chiều nay") || lower.contains("tối nay") || lower.contains("trưa nay") || lower.contains("nay")) {
+    } else if (lower.contains("hôm nay")
+        || lower.contains("sáng nay")
+        || lower.contains("chiều nay")
+        || lower.contains("tối nay")
+        || lower.contains("trưa nay")
+        || lower.contains("nay")) {
       targetDate = baseTime.toLocalDate();
       hasExplicitDate = true;
     } else if (lower.contains("cuối tuần sau")) {
@@ -98,7 +110,10 @@ public final class VietnameseDateTimeParser {
         if (dateMatcher.find()) {
           int day = Integer.parseInt(dateMatcher.group(1));
           int month = Integer.parseInt(dateMatcher.group(2));
-          int year = dateMatcher.group(3) != null ? Integer.parseInt(dateMatcher.group(3)) : baseTime.getYear();
+          int year =
+              dateMatcher.group(3) != null
+                  ? Integer.parseInt(dateMatcher.group(3))
+                  : baseTime.getYear();
           try {
             targetDate = LocalDate.of(year, month, day);
             hasExplicitDate = true;
@@ -181,7 +196,8 @@ public final class VietnameseDateTimeParser {
     // 3. Duration resolution
     if (endTime == null) {
       if (lower.contains("tiếng rưỡi") || lower.contains("giờ rưỡi")) {
-        Matcher hrHalfMatcher = Pattern.compile("(?i)(\\d+)\\s*(?:tiếng|giờ)\\s*rưỡi").matcher(lower);
+        Matcher hrHalfMatcher =
+            Pattern.compile("(?i)(\\d+)\\s*(?:tiếng|giờ)\\s*rưỡi").matcher(lower);
         if (hrHalfMatcher.find()) {
           int hrs = Integer.parseInt(hrHalfMatcher.group(1));
           endTime = startTime.plusMinutes(hrs * 60L + 30);
@@ -253,14 +269,24 @@ public final class VietnameseDateTimeParser {
   }
 
   private static String cleanTitle(String input) {
-    String cleaned = input
-        .replaceAll("(?i)^(lên lịch|đặt lịch|tạo lịch|nhắc tôi|tạo task|thêm task|tạo việc|giúp tôi|hãy)\\s*", "")
-        .replaceAll("(?i)(vào lúc|lúc|từ|đến|tới)\\s*\\d{1,2}(?:h|:| giờ)\\d{0,2}", "")
-        .replaceAll("(?i)(sáng mai|chiều mai|tối mai|trưa mai|ngày mai|hôm nay|sáng nay|chiều nay|tối nay|trưa nay|ngày kia|sau \\d+ ngày nữa)", "")
-        .replaceAll("(?i)(thứ \\d+|thứ hai|thứ ba|thứ tư|thứ bốn|thứ năm|thứ sáu|thứ bảy|chủ nhật)(?: tuần sau| tuần tới| này)?", "")
-        .replaceAll("(?i)(trong \\d+ (?:phút|tiếng|giờ)|\\d+p|\\d+ phút)", "")
-        .replaceAll("\\s+", " ")
-        .trim();
+    String cleaned =
+        input
+            .replaceAll(
+                "(?i)^(lên lịch|đặt lịch|tạo lịch|nhắc tôi|tạo task|thêm task|tạo việc|giúp"
+                    + " tôi|hãy)\\s*",
+                "")
+            .replaceAll("(?i)(vào lúc|lúc|từ|đến|tới)\\s*\\d{1,2}(?:h|:| giờ)\\d{0,2}", "")
+            .replaceAll(
+                "(?i)(sáng mai|chiều mai|tối mai|trưa mai|ngày mai|hôm nay|sáng nay|chiều nay|tối"
+                    + " nay|trưa nay|ngày kia|sau \\d+ ngày nữa)",
+                "")
+            .replaceAll(
+                "(?i)(thứ \\d+|thứ hai|thứ ba|thứ tư|thứ bốn|thứ năm|thứ sáu|thứ bảy|chủ nhật)(?:"
+                    + " tuần sau| tuần tới| này)?",
+                "")
+            .replaceAll("(?i)(trong \\d+ (?:phút|tiếng|giờ)|\\d+p|\\d+ phút)", "")
+            .replaceAll("\\s+", " ")
+            .trim();
     return cleaned.isEmpty() ? input : cleaned;
   }
 }

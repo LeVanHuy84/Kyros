@@ -92,8 +92,7 @@ public class TaskTimeTrackingService {
   @Transactional(readOnly = true)
   public ProductivityStatsDto getProductivityStats(
       WorkspaceId workspaceId, UserId userId, Instant fromTime, Instant toTime) {
-    Instant effectiveFrom =
-        fromTime != null ? fromTime : Instant.now().minus(7, ChronoUnit.DAYS);
+    Instant effectiveFrom = fromTime != null ? fromTime : Instant.now().minus(7, ChronoUnit.DAYS);
     Instant effectiveTo = toTime != null ? toTime : Instant.now();
 
     List<TaskTimeLog> logs =

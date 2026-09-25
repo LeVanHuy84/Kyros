@@ -30,9 +30,7 @@ public class TaskTimeLogRepositoryAdapter implements TaskTimeLogRepository {
 
   @Override
   public Optional<TaskTimeLog> findById(UUID id, WorkspaceId workspaceId) {
-    return springDataRepo
-        .findByIdAndWorkspaceId(id, workspaceId.value())
-        .map(this::toDomain);
+    return springDataRepo.findByIdAndWorkspaceId(id, workspaceId.value()).map(this::toDomain);
   }
 
   @Override

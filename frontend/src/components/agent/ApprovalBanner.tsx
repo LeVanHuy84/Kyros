@@ -235,4 +235,3 @@ export const ApprovalBanner: React.FC<ApprovalBannerProps> = ({
     </div>
   );
 };
-

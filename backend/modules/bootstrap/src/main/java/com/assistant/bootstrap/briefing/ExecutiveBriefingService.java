@@ -63,26 +63,18 @@ public class ExecutiveBriefingService {
     ZonedDateTime endOfDay = now.with(LocalTime.MAX);
 
     // 1. Fetch today's events
-    var events =
-        calendarPort.listEvents(workspaceId, startOfDay.toInstant(), endOfDay.toInstant());
+    var events = calendarPort.listEvents(workspaceId, startOfDay.toInstant(), endOfDay.toInstant());
 
     // 2. Fetch pending tasks
     var tasksPage =
-        todoPort.listTasks(
-            workspaceId,
-            null,
-            null,
-            null,
-            false,
-            null,
-            null,
-            PageRequest.of(0, 20));
+        todoPort.listTasks(workspaceId, null, null, null, false, null, null, PageRequest.of(0, 20));
     List<Task> pendingTasks = tasksPage.getContent();
 
     // 3. Format Morning Markdown Briefing
     String dateStr =
         now.format(
-            DateTimeFormatter.ofPattern("EEEE, 'ngày' dd/MM/yyyy", java.util.Locale.forLanguageTag("vi")));
+            DateTimeFormatter.ofPattern(
+                "EEEE, 'ngày' dd/MM/yyyy", java.util.Locale.forLanguageTag("vi")));
     if (!dateStr.isEmpty()) {
       dateStr = Character.toUpperCase(dateStr.charAt(0)) + dateStr.substring(1);
     }
@@ -93,7 +85,9 @@ public class ExecutiveBriefingService {
 
     md.append("### 📅 Lịch trình & Cuộc họp hôm nay (").append(events.size()).append(")\n");
     if (events.isEmpty()) {
-      md.append("*(Hôm nay bạn không có cuộc họp cố định nào. Đây là cơ hội tuyệt vời để tập trung Deep Work!)*\n\n");
+      md.append(
+          "*(Hôm nay bạn không có cuộc họp cố định nào. Đây là cơ hội tuyệt vời để tập trung Deep"
+              + " Work!)*\n\n");
     } else {
       DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm").withZone(vnZone);
       for (var ev : events) {
@@ -119,12 +113,10 @@ public class ExecutiveBriefingService {
     } else {
       for (Task t : pendingTasks) {
         String priorityIcon =
-            t.getPriority() == Priority.High ? "🔴" : t.getPriority() == Priority.Medium ? "🟠" : "🟡";
-        md.append("- ")
-            .append(priorityIcon)
-            .append(" **")
-            .append(t.getTitle())
-            .append("**");
+            t.getPriority() == Priority.High
+                ? "🔴"
+                : t.getPriority() == Priority.Medium ? "🟠" : "🟡";
+        md.append("- ").append(priorityIcon).append(" **").append(t.getTitle()).append("**");
         if (t.getDueDate() != null) {
           String dueStr =
               DateTimeFormatter.ofPattern("HH:mm dd/MM").withZone(vnZone).format(t.getDueDate());
@@ -135,7 +127,9 @@ public class ExecutiveBriefingService {
       md.append("\n");
     }
 
-    md.append("💡 **Gợi ý của Trợ lý Kyros:** Ưu tiên xử lý các đầu việc quan trọng trước 11:30 sáng và dành 60-90 phút cho các dự án cốt lõi.");
+    md.append(
+        "💡 **Gợi ý của Trợ lý Kyros:** Ưu tiên xử lý các đầu việc quan trọng trước 11:30 sáng và"
+            + " dành 60-90 phút cho các dự án cốt lõi.");
 
     String briefingTitle = "Bản tin điều hành: " + dateStr;
     String finalContent = md.toString();
@@ -168,27 +162,15 @@ public class ExecutiveBriefingService {
 
     // 1. Fetch completed tasks
     var completedTasks =
-        todoPort.listTasks(
-            workspaceId,
-            null,
-            null,
-            null,
-            true,
-            null,
-            null,
-            PageRequest.of(0, 20)).getContent();
+        todoPort
+            .listTasks(workspaceId, null, null, null, true, null, null, PageRequest.of(0, 20))
+            .getContent();
 
     // 2. Fetch pending tasks
     var pendingTasks =
-        todoPort.listTasks(
-            workspaceId,
-            null,
-            null,
-            null,
-            false,
-            null,
-            null,
-            PageRequest.of(0, 20)).getContent();
+        todoPort
+            .listTasks(workspaceId, null, null, null, false, null, null, PageRequest.of(0, 20))
+            .getContent();
 
     // 3. Fetch tomorrow's preview
     ZonedDateTime tomorrowStart = now.plusDays(1).with(LocalTime.MIN);
@@ -198,7 +180,8 @@ public class ExecutiveBriefingService {
 
     String dateStr =
         now.format(
-            DateTimeFormatter.ofPattern("EEEE, 'ngày' dd/MM/yyyy", java.util.Locale.forLanguageTag("vi")));
+            DateTimeFormatter.ofPattern(
+                "EEEE, 'ngày' dd/MM/yyyy", java.util.Locale.forLanguageTag("vi")));
     if (!dateStr.isEmpty()) {
       dateStr = Character.toUpperCase(dateStr.charAt(0)) + dateStr.substring(1);
     }
@@ -207,7 +190,9 @@ public class ExecutiveBriefingService {
     md.append("## 🌆 Tổng Kết Cuối Ngày & Kế Hoạch Ngày Mai\n\n");
     md.append("**Thời gian:** ").append(dateStr).append("\n\n");
 
-    md.append("### ✅ Công việc đã hoàn thành hôm nay (").append(completedTasks.size()).append(")\n");
+    md.append("### ✅ Công việc đã hoàn thành hôm nay (")
+        .append(completedTasks.size())
+        .append(")\n");
     if (completedTasks.isEmpty()) {
       md.append("*(Hôm nay chưa có task nào được đánh dấu hoàn thành)*\n\n");
     } else {
@@ -277,7 +262,10 @@ public class ExecutiveBriefingService {
         generateMorningBriefing(ws.getId(), ws.getOwnerId(), true);
       } catch (Exception e) {
         System.err.println(
-            "Failed to send morning briefing for workspace " + ws.getId().value() + ": " + e.getMessage());
+            "Failed to send morning briefing for workspace "
+                + ws.getId().value()
+                + ": "
+                + e.getMessage());
       }
     }
   }
@@ -289,7 +277,10 @@ public class ExecutiveBriefingService {
         generateEveningWrapup(ws.getId(), ws.getOwnerId(), true);
       } catch (Exception e) {
         System.err.println(
-            "Failed to send evening wrapup for workspace " + ws.getId().value() + ": " + e.getMessage());
+            "Failed to send evening wrapup for workspace "
+                + ws.getId().value()
+                + ": "
+                + e.getMessage());
       }
     }
   }

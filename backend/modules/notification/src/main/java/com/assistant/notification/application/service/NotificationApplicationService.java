@@ -107,20 +107,14 @@ public class NotificationApplicationService
       String email = profile.getEmailAddress();
       if (email != null && !email.trim().isEmpty()) {
         channelsUsed.add("Email");
-        java.util.concurrent.CompletableFuture.runAsync(
-            () -> {
-              try {
-                String htmlContent =
-                    com.assistant.kernel.util.KyrosEmailTemplate.buildNotificationEmail(
-                        command.title(),
-                        command.content(),
-                        command.urgencyLevel().name(),
-                        frontendUrl);
-                emailDispatcher.sendEmail(email, command.title(), htmlContent);
-              } catch (Exception e) {
-                System.err.println("Async email delivery failed for " + email + ": " + e.getMessage());
-              }
-            });
+        try {
+          String htmlContent =
+              com.assistant.kernel.util.KyrosEmailTemplate.buildNotificationEmail(
+                  command.title(), command.content(), command.urgencyLevel().name(), frontendUrl);
+          emailDispatcher.sendEmail(email, command.title(), htmlContent);
+        } catch (Exception e) {
+          System.err.println("Email delivery failed for " + email + ": " + e.getMessage());
+        }
       }
     }
 
@@ -131,17 +125,14 @@ public class NotificationApplicationService
         String slackRef = profile.getSlackWebhookReference();
         if (slackRef != null && !slackRef.trim().isEmpty()) {
           channelsUsed.add("Slack");
-          java.util.concurrent.CompletableFuture.runAsync(
-              () -> {
-                try {
-                  String message =
-                      String.format(
-                          "[%s] %s: %s", command.urgencyLevel(), command.title(), command.content());
-                  slackDispatcher.postMessage(slackRef, message);
-                } catch (Exception e) {
-                  System.err.println("Async Slack delivery failed: " + e.getMessage());
-                }
-              });
+          try {
+            String message =
+                String.format(
+                    "[%s] %s: %s", command.urgencyLevel(), command.title(), command.content());
+            slackDispatcher.postMessage(slackRef, message);
+          } catch (Exception e) {
+            System.err.println("Slack delivery failed: " + e.getMessage());
+          }
         }
       }
     }

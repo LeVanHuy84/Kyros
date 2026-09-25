@@ -21,8 +21,12 @@ public class MemorySynthesisService {
       List.of(
           Pattern.compile("(?i)(?:tôi\\s+thường|thói\\s+quen\\s+của\\s+tôi\\s+là)\\s+([^.,;\\n]+)"),
           Pattern.compile("(?i)(?:tôi\\s+thích|tôi\\s+muốn\\s+ưu\\s+tiên)\\s+([^.,;\\n]+)"),
-          Pattern.compile("(?i)(?:tôi\\s+không\\s+thích|tôi\\s+tránh|không\\s+được\\s+xếp\\s+lịch)\\s+([^.,;\\n]+)"),
-          Pattern.compile("(?i)(?:tôi\\s+đang\\s+làm\\s+dự\\s+án|dự\\s+án\\s+của\\s+tôi\\s+là)\\s+([^.,;\\n]+)"),
+          Pattern.compile(
+              "(?i)(?:tôi\\s+không\\s+thích|tôi\\s+tránh|không\\s+được\\s+xếp\\s+lịch)\\s+([^.,;\\n"
+                  + "]+)"),
+          Pattern.compile(
+              "(?i)(?:tôi\\s+đang\\s+làm\\s+dự\\s+án|dự\\s+án\\s+của\\s+tôi\\s+là)\\s+([^.,;\\n"
+                  + "]+)"),
           Pattern.compile("(?i)(?:tôi\\s+là|vai\\s+trò\\s+của\\s+tôi\\s+là)\\s+([^.,;\\n]+)"));
 
   public MemorySynthesisService(MemoryEntryRepository memoryEntryRepository) {
@@ -49,12 +53,7 @@ public class MemorySynthesisService {
     for (String fact : extractedFacts) {
       try {
         MemoryEntry entry =
-            new MemoryEntry(
-                new MemoryId(UUID.randomUUID()),
-                workspaceId,
-                userId,
-                fact,
-                0.85f);
+            new MemoryEntry(new MemoryId(UUID.randomUUID()), workspaceId, userId, fact, 0.85f);
         memoryEntryRepository.save(entry);
       } catch (Exception ignored) {
       }

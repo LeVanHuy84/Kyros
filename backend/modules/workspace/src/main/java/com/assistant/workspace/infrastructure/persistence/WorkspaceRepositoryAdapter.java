@@ -46,9 +46,7 @@ public class WorkspaceRepositoryAdapter implements WorkspaceRepository {
 
   @Override
   public List<Workspace> findAll() {
-    return workspaceRepository.findAll().stream()
-        .map(this::toDomain)
-        .collect(Collectors.toList());
+    return workspaceRepository.findAll().stream().map(this::toDomain).collect(Collectors.toList());
   }
 
   @Override

@@ -10,13 +10,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface SpringDataTaskTimeLogRepository
-    extends JpaRepository<TaskTimeLogJpaEntity, UUID> {
+public interface SpringDataTaskTimeLogRepository extends JpaRepository<TaskTimeLogJpaEntity, UUID> {
 
   Optional<TaskTimeLogJpaEntity> findByIdAndWorkspaceId(UUID id, UUID workspaceId);
 
   @Query(
-      "SELECT t FROM TaskTimeLogJpaEntity t WHERE t.workspaceId = :workspaceId AND t.taskId = :taskId AND t.userId = :userId AND t.endTime IS NULL")
+      "SELECT t FROM TaskTimeLogJpaEntity t WHERE t.workspaceId = :workspaceId AND t.taskId ="
+          + " :taskId AND t.userId = :userId AND t.endTime IS NULL")
   Optional<TaskTimeLogJpaEntity> findActiveLog(
       @Param("workspaceId") UUID workspaceId,
       @Param("taskId") UUID taskId,
@@ -26,7 +26,9 @@ public interface SpringDataTaskTimeLogRepository
       UUID workspaceId, UUID taskId);
 
   @Query(
-      "SELECT t FROM TaskTimeLogJpaEntity t WHERE t.workspaceId = :workspaceId AND t.userId = :userId AND t.startTime >= :fromTime AND t.startTime <= :toTime ORDER BY t.startTime DESC")
+      "SELECT t FROM TaskTimeLogJpaEntity t WHERE t.workspaceId = :workspaceId AND t.userId ="
+          + " :userId AND t.startTime >= :fromTime AND t.startTime <= :toTime ORDER BY t.startTime"
+          + " DESC")
   List<TaskTimeLogJpaEntity> findByTimeRange(
       @Param("workspaceId") UUID workspaceId,
       @Param("userId") UUID userId,

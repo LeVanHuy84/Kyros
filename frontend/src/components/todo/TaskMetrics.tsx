@@ -61,7 +61,9 @@ export const TaskMetrics: React.FC<TaskMetricsProps> = ({ metrics }) => {
     },
     {
       label: 'On-Time Rate',
-      count: prodStats ? `${Math.round(prodStats.onTimeCompletionRate || 100)}%` : '100%',
+      count: prodStats
+        ? `${Math.round(prodStats.onTimeCompletionRate || 100)}%`
+        : '100%',
       color: '#f59e0b',
       icon: <Flame size={14} style={{ color: '#f59e0b' }} />,
     },
@@ -81,8 +83,18 @@ export const TaskMetrics: React.FC<TaskMetricsProps> = ({ metrics }) => {
       }}
     >
       {items.map((item, idx) => (
-        <div key={idx} className="card" style={{ padding: '18px 20px', gap: '6px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div
+          key={idx}
+          className="card"
+          style={{ padding: '18px 20px', gap: '6px' }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
             <span
               style={{
                 fontSize: '12px',
@@ -96,7 +108,14 @@ export const TaskMetrics: React.FC<TaskMetricsProps> = ({ metrics }) => {
             </span>
             {item.icon}
           </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '2px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '8px',
+              marginTop: '2px',
+            }}
+          >
             <span
               style={{
                 fontSize: '26px',
@@ -120,4 +139,3 @@ export const TaskMetrics: React.FC<TaskMetricsProps> = ({ metrics }) => {
     </div>
   );
 };
-

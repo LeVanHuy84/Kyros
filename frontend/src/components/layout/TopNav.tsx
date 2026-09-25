@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import {
-  Menu,
-  Sun,
-  Moon,
-  RefreshCw,
-  Building2,
-} from 'lucide-react';
+import { Menu, Sun, Moon, RefreshCw, Building2 } from 'lucide-react';
 import { useWorkspace } from '../../hooks/useWorkspace';
 import { useTheme } from '../../hooks/useTheme';
 import { NotificationsDropdown } from './NotificationsDropdown';
@@ -130,7 +124,11 @@ export const TopNav: React.FC<TopNavProps> = ({ onToggleSidebar }) => {
       <div className="header-controls">
         {/* Realtime Connection Status Pill */}
         <div
-          onClick={connectionStatus === 'disconnected' ? handleRetryConnection : undefined}
+          onClick={
+            connectionStatus === 'disconnected'
+              ? handleRetryConnection
+              : undefined
+          }
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -178,7 +176,10 @@ export const TopNav: React.FC<TopNavProps> = ({ onToggleSidebar }) => {
                   : connectionStatus === 'reconnecting'
                     ? '#f59e0b'
                     : '#ef4444',
-              animation: connectionStatus === 'reconnecting' ? 'pulse 1.5s infinite' : 'none',
+              animation:
+                connectionStatus === 'reconnecting'
+                  ? 'pulse 1.5s infinite'
+                  : 'none',
             }}
           />
           <span className="hide-mobile">

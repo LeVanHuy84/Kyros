@@ -309,27 +309,28 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               minWidth: 0,
             }}
           >
-            {task.estimatedDurationMinutes && task.estimatedDurationMinutes > 0 && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  fontSize: '12px',
-                  color: 'var(--text-muted)',
-                  backgroundColor: 'rgba(99, 102, 241, 0.08)',
-                  padding: '2px 8px',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(99, 102, 241, 0.2)',
-                  flex: '0 0 auto',
-                  whiteSpace: 'nowrap',
-                }}
-                title="Thời lượng dự kiến"
-              >
-                <Timer size={12} style={{ color: 'var(--color-primary)' }} />
-                <span>{task.estimatedDurationMinutes}m</span>
-              </div>
-            )}
+            {task.estimatedDurationMinutes &&
+              task.estimatedDurationMinutes > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '12px',
+                    color: 'var(--text-muted)',
+                    backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(99, 102, 241, 0.2)',
+                    flex: '0 0 auto',
+                    whiteSpace: 'nowrap',
+                  }}
+                  title="Thời lượng dự kiến"
+                >
+                  <Timer size={12} style={{ color: 'var(--color-primary)' }} />
+                  <span>{task.estimatedDurationMinutes}m</span>
+                </div>
+              )}
 
             {task.dueDate && (
               <div

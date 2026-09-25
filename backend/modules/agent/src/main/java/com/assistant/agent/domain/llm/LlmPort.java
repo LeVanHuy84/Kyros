@@ -47,14 +47,7 @@ public interface LlmPort {
       List<AgentToolContract> availableTools,
       Consumer<String> tokenConsumer) {
     LlmResponse response =
-        callLlm(
-            baseUrl,
-            apiKey,
-            modelName,
-            systemPrompt,
-            userPrompt,
-            chatHistory,
-            availableTools);
+        callLlm(baseUrl, apiKey, modelName, systemPrompt, userPrompt, chatHistory, availableTools);
     if (tokenConsumer != null && response.content() != null && !response.content().isBlank()) {
       tokenConsumer.accept(response.content());
     }

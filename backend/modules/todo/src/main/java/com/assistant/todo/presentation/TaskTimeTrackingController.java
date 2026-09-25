@@ -90,9 +90,7 @@ public class TaskTimeTrackingController {
     TaskId tId = new TaskId(taskId);
 
     List<TimeLogResponse> list =
-        timeTrackingService.getTaskLogs(wsId, tId).stream()
-            .map(this::toResponse)
-            .toList();
+        timeTrackingService.getTaskLogs(wsId, tId).stream().map(this::toResponse).toList();
     return ResponseEntity.ok(list);
   }
 

@@ -12,7 +12,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @org.springframework.scheduling.annotation.EnableAsync
 @org.springframework.data.web.config.EnableSpringDataWebSupport(
-    pageSerializationMode = org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
+    pageSerializationMode =
+        org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode
+            .VIA_DTO)
 public class AiExecutiveAssistantApplication {
   public static void main(String[] args) {
     SpringApplication.run(AiExecutiveAssistantApplication.class, args);

@@ -42,7 +42,9 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
   onClose,
 }) => {
   const { activeWorkspace } = useWorkspace();
-  const [briefingType, setBriefingType] = useState<'MORNING' | 'EVENING'>('MORNING');
+  const [briefingType, setBriefingType] = useState<'MORNING' | 'EVENING'>(
+    'MORNING'
+  );
   const [briefing, setBriefing] = useState<ExecutiveBriefingDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -60,7 +62,9 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
       setBriefing(res.data);
     } catch (err: any) {
       console.warn('Failed to load briefing', err);
-      setError(err?.response?.data?.message || 'Không thể tải bản tin điều hành.');
+      setError(
+        err?.response?.data?.message || 'Không thể tải bản tin điều hành.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -164,7 +168,11 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                 justifyContent: 'center',
               }}
             >
-              {briefingType === 'MORNING' ? <Sun size={22} /> : <Moon size={22} />}
+              {briefingType === 'MORNING' ? (
+                <Sun size={22} />
+              ) : (
+                <Moon size={22} />
+              )}
             </div>
             <div>
               <h3
@@ -305,7 +313,11 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                 gap: '12px',
               }}
             >
-              <Sparkles size={28} className="animate-spin" style={{ color: 'var(--color-primary)' }} />
+              <Sparkles
+                size={28}
+                className="animate-spin"
+                style={{ color: 'var(--color-primary)' }}
+              />
               <span>Đang thu thập lịch trình và nhiệm vụ trọng tâm...</span>
             </div>
           ) : error ? (
@@ -351,10 +363,18 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                 >
                   <Calendar size={20} style={{ color: '#3b82f6' }} />
                   <div>
-                    <div style={{ fontSize: '18px', fontWeight: '700', color: '#3b82f6' }}>
+                    <div
+                      style={{
+                        fontSize: '18px',
+                        fontWeight: '700',
+                        color: '#3b82f6',
+                      }}
+                    >
                       {briefing.upcomingEventsCount}
                     </div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    <div
+                      style={{ fontSize: '12px', color: 'var(--text-muted)' }}
+                    >
                       Sự kiện / Cuộc họp
                     </div>
                   </div>
@@ -373,10 +393,18 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                 >
                   <CheckSquare size={20} style={{ color: '#ef4444' }} />
                   <div>
-                    <div style={{ fontSize: '18px', fontWeight: '700', color: '#ef4444' }}>
+                    <div
+                      style={{
+                        fontSize: '18px',
+                        fontWeight: '700',
+                        color: '#ef4444',
+                      }}
+                    >
                       {briefing.urgentTasksCount}
                     </div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    <div
+                      style={{ fontSize: '12px', color: 'var(--text-muted)' }}
+                    >
                       Nhiệm vụ ưu tiên cao
                     </div>
                   </div>
@@ -407,7 +435,10 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                 >
                   <Sparkles size={14} /> Tổng quan từ Kyros AI
                 </div>
-                <div className="markdown-body" style={{ fontSize: '14px', lineHeight: '1.7' }}>
+                <div
+                  className="markdown-body"
+                  style={{ fontSize: '14px', lineHeight: '1.7' }}
+                >
                   <ReactMarkdown>{briefing.summary}</ReactMarkdown>
                 </div>
               </div>
@@ -433,7 +464,10 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
             disabled={isGenerating || isLoading}
             style={{ fontSize: '13px', gap: '6px' }}
           >
-            <RefreshCw size={14} className={isGenerating ? 'animate-spin' : ''} />
+            <RefreshCw
+              size={14}
+              className={isGenerating ? 'animate-spin' : ''}
+            />
             <span>{isGenerating ? 'Đang tạo mới...' : 'Làm mới bằng AI'}</span>
           </button>
 

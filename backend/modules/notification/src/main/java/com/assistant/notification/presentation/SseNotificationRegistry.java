@@ -68,20 +68,22 @@ public class SseNotificationRegistry {
 
   @Scheduled(fixedRate = 25000)
   public void sendHeartbeat() {
-    emitters.entrySet().removeIf(
-        entry -> {
-          Set<SseEmitter> set = entry.getValue();
-          set.removeIf(
-              emitter -> {
-                try {
-                  emitter.send(SseEmitter.event().name("ping").data("keep-alive"));
-                  return false;
-                } catch (Exception e) {
-                  return true;
-                }
-              });
-          return set.isEmpty();
-        });
+    emitters
+        .entrySet()
+        .removeIf(
+            entry -> {
+              Set<SseEmitter> set = entry.getValue();
+              set.removeIf(
+                  emitter -> {
+                    try {
+                      emitter.send(SseEmitter.event().name("ping").data("keep-alive"));
+                      return false;
+                    } catch (Exception e) {
+                      return true;
+                    }
+                  });
+              return set.isEmpty();
+            });
   }
 
   private static String keyOf(WorkspaceId workspaceId, UserId userId) {
