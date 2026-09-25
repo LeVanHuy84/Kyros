@@ -1,0 +1,36 @@
+<aside class="sidebar" [class.collapsed]="collapsed()">
+  <!-- Brand Logo Synchronized -->
+  <div class="brand-header">
+    <app-kyros-logo [size]="30" [showText]="!collapsed()"></app-kyros-logo>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav class="nav-menu">
+    @for (item of navItems; track item.route) {
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        class="nav-link"
+        [title]="collapsed() ? item.label : ''"
+      >
+        <app-icon [name]="item.iconName" [size]="18" class="nav-icon"></app-icon>
+        @if (!collapsed()) {
+          <span class="nav-label">{{ item.label }}</span>
+          @if (item.badge) {
+            <span class="nav-badge">{{ item.badge }}</span>
+          }
+        }
+      </a>
+    }
+  </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer">
+    <div class="agent-status" [class.collapsed]="collapsed()">
+      <span class="status-indicator"></span>
+      @if (!collapsed()) {
+        <span class="status-text">Kyros OS Online</span>
+      }
+    </div>
+  </div>
+</aside>

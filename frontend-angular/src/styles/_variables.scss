@@ -1,0 +1,101 @@
+// Natural & Warm Design System Variables
+:root {
+  // Brand / Natural Primary Accents
+  --color-primary: #2d6a4f;
+  --color-primary-hover: #1b4332;
+  --color-primary-subtle: #e8f5e9;
+  --color-primary-text: #ffffff;
+
+  // Warm Accent & Highlights
+  --color-warm: #d4a373;
+  --color-warm-hover: #bc8a5f;
+  --color-warm-subtle: #fefae0;
+
+  // Light Theme Canvas & Surfaces
+  --bg-canvas: #f9f9f6;
+  --bg-surface: #ffffff;
+  --bg-surface-secondary: #f4f3ee;
+  --bg-surface-glass: rgba(255, 255, 255, 0.78);
+  --bg-hover: rgba(0, 0, 0, 0.035);
+  --bg-active: rgba(0, 0, 0, 0.06);
+
+  // Typography Colors
+  --text-primary: #1e2022;
+  --text-secondary: #59616a;
+  --text-muted: #8c939d;
+  --text-inverse: #ffffff;
+
+  // Borders & Dividers
+  --border-subtle: #e8e6df;
+  --border-strong: #d2cfc4;
+
+  // Semantic Colors
+  --color-success: #2e7d32;
+  --color-success-bg: #edf7ed;
+  --color-warning: #ed6c02;
+  --color-warning-bg: #fff4e5;
+  --color-danger: #d32f2f;
+  --color-danger-bg: #fdecea;
+  --color-info: #0288d1;
+  --color-info-bg: #e1f5fe;
+
+  // Soft Natural Elevation
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 16px -2px rgba(45, 106, 79, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 12px 32px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.06);
+
+  // Radii
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  // Transition Easing
+  --ease-natural: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 150ms var(--ease-natural);
+  --transition-normal: 250ms var(--ease-natural);
+  --transition-slow: 400ms var(--ease-natural);
+}
+
+// Dark Theme Variables
+[data-theme="dark"] {
+  --color-primary: #52b788;
+  --color-primary-hover: #74c69d;
+  --color-primary-subtle: rgba(82, 183, 136, 0.15);
+  --color-primary-text: #0d1b13;
+
+  --color-warm: #dda15e;
+  --color-warm-hover: #bc6c25;
+  --color-warm-subtle: rgba(221, 161, 94, 0.15);
+
+  --bg-canvas: #121416;
+  --bg-surface: #1a1d20;
+  --bg-surface-secondary: #22262b;
+  --bg-surface-glass: rgba(26, 29, 32, 0.78);
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-active: rgba(255, 255, 255, 0.08);
+
+  --text-primary: #eceff2;
+  --text-secondary: #9da6b2;
+  --text-muted: #67707c;
+  --text-inverse: #121416;
+
+  --border-subtle: #2d3239;
+  --border-strong: #3f454e;
+
+  --color-success: #66bb6a;
+  --color-success-bg: rgba(102, 187, 106, 0.12);
+  --color-warning: #ffa726;
+  --color-warning-bg: rgba(255, 167, 38, 0.12);
+  --color-danger: #ef5350;
+  --color-danger-bg: rgba(239, 83, 80, 0.12);
+  --color-info: #29b6f6;
+  --color-info-bg: rgba(41, 182, 246, 0.12);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.5);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}

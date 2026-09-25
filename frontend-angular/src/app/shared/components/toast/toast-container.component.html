@@ -1,0 +1,31 @@
+<div class="toast-container" aria-live="polite">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div class="toast-card animate-slide-in" [class]="'toast-' + toast.type">
+      <div class="toast-icon">
+        @switch (toast.type) {
+          @case ('success') {
+            <app-icon name="check-circle" [size]="18"></app-icon>
+          }
+          @case ('error') {
+            <app-icon name="x-circle" [size]="18"></app-icon>
+          }
+          @case ('warning') {
+            <app-icon name="alert-triangle" [size]="18"></app-icon>
+          }
+          @default {
+            <app-icon name="info" [size]="18"></app-icon>
+          }
+        }
+      </div>
+      <div class="toast-content">
+        @if (toast.title) {
+          <div class="toast-title">{{ toast.title }}</div>
+        }
+        <div class="toast-message">{{ toast.message }}</div>
+      </div>
+      <button class="toast-close" (click)="toastService.dismiss(toast.id)" aria-label="Close notification">
+        <app-icon name="x" [size]="14"></app-icon>
+      </button>
+    </div>
+  }
+</div>

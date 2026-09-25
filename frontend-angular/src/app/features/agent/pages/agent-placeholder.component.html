@@ -1,0 +1,60 @@
+<div class="welcome-container animate-fade-in">
+  <div class="welcome-card">
+    <div class="hero-badge">
+      <app-kyros-logo [size]="18"></app-kyros-logo>
+      <span>Kyros Natural Assistant</span>
+    </div>
+
+    <h2>Chào mừng bạn đến với AI Executive Assistant (Angular UI)</h2>
+    <p class="subtitle">
+      Giao diện Angular 19 Standalone với hệ thống Design Tokens tự nhiên, xử lý luồng phản hồi thời gian thực qua SSE và phân tách đa người dùng (Multi-Tenancy).
+    </p>
+
+    <div class="features-preview">
+      <div class="feature-item">
+        <div class="icon-wrap">
+          <app-icon name="sparkles" [size]="20" class="feature-icon"></app-icon>
+        </div>
+        <div class="text">
+          <strong>Conversational Natural UI</strong>
+          <span>Streaming mượt mà từng ký tự, Human-In-The-Loop Security Gate</span>
+        </div>
+      </div>
+
+      <div class="feature-item">
+        <div class="icon-wrap">
+          <app-icon name="zap" [size]="20" class="feature-icon"></app-icon>
+        </div>
+        <div class="text">
+          <strong>Signals & OnPush Architecture</strong>
+          <span>Hiệu năng 60 FPS, phản hồi tức thì không giật lag</span>
+        </div>
+      </div>
+
+      <div class="feature-item">
+        <div class="icon-wrap">
+          <app-icon name="building" [size]="20" class="feature-icon"></app-icon>
+        </div>
+        <div class="text">
+          <strong>Multi-Tenancy (AD-002)</strong>
+          <span>Tự động gán header X-Workspace-Id trên toàn bộ HTTP interceptors</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="markdown-demo">
+      <app-markdown-viewer
+        [content]="'### Phase 1: Hoàn tất Foundation\nĐã chuẩn hóa tách biệt 100% tệp tin `.ts`, `.html`, `.scss` cho từng Component theo đúng quy chuẩn!'"
+      ></app-markdown-viewer>
+    </div>
+
+    <div class="actions-demo">
+      <app-button variant="primary" (clicked)="testToast()">
+        <span slot="prefix">
+          <app-icon name="sparkles" [size]="16"></app-icon>
+        </span>
+        Thử nghiệm Toast thông báo
+      </app-button>
+    </div>
+  </div>
+</div>

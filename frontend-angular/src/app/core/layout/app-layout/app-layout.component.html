@@ -1,0 +1,13 @@
+<div class="app-layout-wrapper">
+  <app-sidebar [collapsed]="sidebarCollapsed()"></app-sidebar>
+
+  <div class="main-content-wrapper">
+    <app-top-nav (toggleSidebar)="toggleSidebar()"></app-top-nav>
+
+    <main class="page-body">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <app-toast-container></app-toast-container>
+</div>

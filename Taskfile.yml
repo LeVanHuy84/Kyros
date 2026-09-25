@@ -83,6 +83,18 @@ tasks:
     cmds:
       - 'npm run build'
 
+  dev-angular:
+    desc: 'Launch Angular frontend application locally in development mode'
+    dir: frontend-angular
+    cmds:
+      - 'npm start'
+
+  build-angular:
+    desc: 'Build Angular frontend application for production'
+    dir: frontend-angular
+    cmds:
+      - 'npm run build'
+
   infra-up:
     desc: 'Start Postgres and Redis database infrastructure containers'
     cmds:

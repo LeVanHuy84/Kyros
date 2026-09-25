@@ -1,0 +1,22 @@
+@if (isOpen()) {
+  <div class="modal-backdrop animate-fade-in" (click)="onBackdropClick()">
+    <div class="modal-card" [style.max-width]="maxWidth()" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>{{ title() }}</h3>
+        <button class="close-btn" (click)="close.emit()" aria-label="Close modal">
+          <app-icon name="x" [size]="18"></app-icon>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <ng-content></ng-content>
+      </div>
+
+      @if (showFooter()) {
+        <footer class="modal-footer">
+          <ng-content select="[slot=footer]"></ng-content>
+        </footer>
+      }
+    </div>
+  </div>
+}

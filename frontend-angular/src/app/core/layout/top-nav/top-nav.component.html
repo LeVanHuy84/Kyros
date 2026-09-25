@@ -1,0 +1,42 @@
+<header class="top-nav">
+  <div class="nav-left">
+    <button class="menu-toggle-btn" (click)="toggleSidebar.emit()" aria-label="Toggle navigation" title="Thu gọn / Mở rộng menu">
+      <app-icon name="menu" [size]="18"></app-icon>
+    </button>
+    <div class="workspace-badge">
+      <app-icon name="building" [size]="15" class="workspace-icon"></app-icon>
+      <span class="workspace-name">
+        {{ workspaceService.activeWorkspace()?.name || 'Kyros Workspace' }}
+      </span>
+    </div>
+  </div>
+
+  <div class="nav-right">
+    <!-- Theme Toggle -->
+    <button
+      class="nav-icon-btn"
+      (click)="themeService.toggleTheme()"
+      [title]="themeService.isDark() ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'"
+      aria-label="Toggle theme"
+    >
+      @if (themeService.isDark()) {
+        <app-icon name="sun" [size]="18"></app-icon>
+      } @else {
+        <app-icon name="moon" [size]="18"></app-icon>
+      }
+    </button>
+
+    <!-- Notification Bell -->
+    <button class="nav-icon-btn" title="Thông báo" aria-label="Notifications">
+      <app-icon name="bell" [size]="18"></app-icon>
+      <span class="notification-dot"></span>
+    </button>
+
+    <div class="divider"></div>
+
+    <!-- User Profile -->
+    <div class="user-profile">
+      <app-avatar [name]="'Executive User'" [size]="32"></app-avatar>
+    </div>
+  </div>
+</header>
