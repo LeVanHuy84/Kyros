@@ -45,6 +45,11 @@ public class WorkspaceRepositoryAdapter implements WorkspaceRepository {
   }
 
   @Override
+  public List<Workspace> findAll() {
+    return workspaceRepository.findAll().stream().map(this::toDomain).collect(Collectors.toList());
+  }
+
+  @Override
   public Optional<Membership> findPrimaryMembership(UserId userId) {
     return membershipRepository.findByUserIdAndIsPrimaryTrue(userId.value()).map(this::toDomain);
   }

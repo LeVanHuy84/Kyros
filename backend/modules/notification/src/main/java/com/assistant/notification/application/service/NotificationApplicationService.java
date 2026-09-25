@@ -61,6 +61,7 @@ public class NotificationApplicationService
 
   @Override
   @Transactional
+  @SuppressWarnings("FutureReturnValueIgnored")
   public void dispatch(DispatchNotificationCommand command) {
     NotificationProfile profile = getOrCreateProfile(command.workspaceId(), command.userId());
 
@@ -105,14 +106,13 @@ public class NotificationApplicationService
     if (channels.contains(NotificationChannel.Email)) {
       String email = profile.getEmailAddress();
       if (email != null && !email.trim().isEmpty()) {
+        channelsUsed.add("Email");
         try {
           String htmlContent =
               com.assistant.kernel.util.KyrosEmailTemplate.buildNotificationEmail(
                   command.title(), command.content(), command.urgencyLevel().name(), frontendUrl);
           emailDispatcher.sendEmail(email, command.title(), htmlContent);
-          channelsUsed.add("Email");
         } catch (Exception e) {
-          // Log channel failure and fall back if needed (UC-NOTIF-005)
           System.err.println("Email delivery failed for " + email + ": " + e.getMessage());
         }
       }
@@ -120,17 +120,16 @@ public class NotificationApplicationService
 
     // 3. Slack Delivery
     if (channels.contains(NotificationChannel.Slack)) {
-      // Slack is limited to Urgent and Critical
       if (command.urgencyLevel() == UrgencyLevel.Urgent
           || command.urgencyLevel() == UrgencyLevel.Critical) {
         String slackRef = profile.getSlackWebhookReference();
         if (slackRef != null && !slackRef.trim().isEmpty()) {
+          channelsUsed.add("Slack");
           try {
             String message =
                 String.format(
                     "[%s] %s: %s", command.urgencyLevel(), command.title(), command.content());
             slackDispatcher.postMessage(slackRef, message);
-            channelsUsed.add("Slack");
           } catch (Exception e) {
             System.err.println("Slack delivery failed: " + e.getMessage());
           }

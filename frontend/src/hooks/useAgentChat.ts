@@ -309,11 +309,13 @@ export const useAgentChat = () => {
           buffer = lines.pop() || '';
 
           for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.startsWith('event:')) {
-              currentEvent = trimmed.replace('event:', '').trim();
-            } else if (trimmed.startsWith('data:')) {
-              const dataText = trimmed.replace('data:', '').trim();
+            if (line.startsWith('event:')) {
+              currentEvent = line.slice(6).trim();
+            } else if (line.startsWith('data:')) {
+              const rawData = line.slice(5);
+              const dataText = rawData.startsWith(' ')
+                ? rawData.slice(1)
+                : rawData;
 
               if (currentEvent === 'thought') {
                 setMessages((prev) => {
@@ -329,7 +331,7 @@ export const useAgentChat = () => {
                       : steps;
                     next[next.length - 1] = {
                       ...last,
-                      activeThoughtStatus: dataText,
+                      activeThoughtStatus: dataText.trim(),
                       thoughtSteps: updatedSteps,
                     };
                   }
@@ -349,7 +351,7 @@ export const useAgentChat = () => {
                       : steps;
                     next[next.length - 1] = {
                       ...last,
-                      activeThoughtStatus: `🔧 ${dataText}`,
+                      activeThoughtStatus: `🔧 ${dataText.trim()}`,
                       thoughtSteps: updatedSteps,
                     };
                   }
@@ -357,7 +359,7 @@ export const useAgentChat = () => {
                 });
               } else if (currentEvent === 'approval') {
                 try {
-                  const data = JSON.parse(dataText);
+                  const data = JSON.parse(dataText.trim());
                   setPendingApproval({
                     toolName: data.toolName,
                     argumentsJson: data.argumentsJson,
@@ -388,8 +390,11 @@ export const useAgentChat = () => {
                   }
                   return next;
                 });
-              } else if (currentEvent === 'chunk') {
-                fullAgentResponse += dataText + '\n';
+              } else if (
+                currentEvent === 'chunk' ||
+                currentEvent === 'message'
+              ) {
+                fullAgentResponse += dataText;
               }
 
               const currentContent = fullAgentResponse;

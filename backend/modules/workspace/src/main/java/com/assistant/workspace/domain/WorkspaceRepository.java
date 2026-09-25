@@ -13,6 +13,8 @@ public interface WorkspaceRepository {
 
   List<Workspace> findByUserId(UserId userId);
 
+  List<Workspace> findAll();
+
   Optional<Membership> findPrimaryMembership(UserId userId);
 
   void saveMembership(Membership membership);

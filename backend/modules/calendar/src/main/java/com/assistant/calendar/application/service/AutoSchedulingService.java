@@ -78,7 +78,7 @@ public class AutoSchedulingService {
             .collect(Collectors.toSet());
 
     List<CalendarEventDto> scheduledEvents = new ArrayList<>();
-    ZoneId zone = ZoneId.systemDefault();
+    ZoneId zone = ZoneId.of("Asia/Ho_Chi_Minh");
 
     for (Task task : pendingTasks) {
       if (alreadyScheduledTaskIds.contains(task.getId().toString())) {

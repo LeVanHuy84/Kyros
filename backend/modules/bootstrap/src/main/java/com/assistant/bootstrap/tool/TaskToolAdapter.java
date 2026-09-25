@@ -1,25 +1,27 @@
-package com.assistant.agent.infrastructure.tools;
+package com.assistant.bootstrap.tool;
 
 import com.assistant.agent.domain.model.ToolExecutionResult;
 import com.assistant.agent.domain.tool.AgentToolContract;
+import com.assistant.kernel.domain.WorkspaceId;
+import com.assistant.todo.application.port.in.TodoPort;
+import com.assistant.todo.domain.model.Priority;
+import com.assistant.todo.domain.model.Task;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TaskToolAdapter implements AgentToolContract {
 
-  private final ApplicationContext applicationContext;
+  private final TodoPort todoPort;
   private final ObjectMapper objectMapper;
 
-  public TaskToolAdapter(ApplicationContext applicationContext, ObjectMapper objectMapper) {
-    this.applicationContext = applicationContext;
+  public TaskToolAdapter(TodoPort todoPort, ObjectMapper objectMapper) {
+    this.todoPort = todoPort;
     this.objectMapper = objectMapper;
   }
 
@@ -49,7 +51,9 @@ public class TaskToolAdapter implements AgentToolContract {
             "properties": {
               "id": { "type": "string", "description": "ID của task nếu là cập nhật" },
               "title": { "type": "string", "description": "Tiêu đề công việc" },
-              "description": { "type": "string", "description": "Mô tả chi tiết công việc" }
+              "description": { "type": "string", "description": "Mô tả chi tiết công việc" },
+              "dueDate": { "type": "string", "description": "Hạn chót công việc (ISO-8601)" },
+              "priority": { "type": "string", "description": "Độ ưu tiên: Low, Medium, High, Critical" }
             },
             "required": ["title"]
           }
@@ -69,25 +73,8 @@ public class TaskToolAdapter implements AgentToolContract {
 
       JsonNode tasksNode = jsonNode.has("tasks") ? jsonNode.get("tasks") : jsonNode;
       if (!tasksNode.isArray()) {
-        // Fallback if LLM passed a single task object at top-level
         tasksNode = objectMapper.createArrayNode().add(tasksNode);
       }
-
-      Object todoService = applicationContext.getBean("todoService");
-      Method createMethod = null;
-      for (Method m : todoService.getClass().getMethods()) {
-        if (m.getName().equals("createTask")) {
-          createMethod = m;
-          break;
-        }
-      }
-
-      if (createMethod == null) {
-        return ToolExecutionResult.error("TodoService createTask method not found");
-      }
-
-      Class<?> wsIdClass = Class.forName("com.assistant.kernel.domain.WorkspaceId");
-      Constructor<?> wsConst = wsIdClass.getConstructor(UUID.class);
 
       UUID wsUuid;
       try {
@@ -95,25 +82,41 @@ public class TaskToolAdapter implements AgentToolContract {
       } catch (Exception e) {
         wsUuid =
             com.assistant.kernel.context.WorkspaceContextHolder.get()
-                .map(com.assistant.kernel.domain.WorkspaceId::value)
+                .map(WorkspaceId::value)
                 .orElseGet(UUID::randomUUID);
       }
-
-      Object wsIdObj = wsConst.newInstance(wsUuid);
+      WorkspaceId workspaceId = new WorkspaceId(wsUuid);
 
       List<String> results = new ArrayList<>();
       for (JsonNode taskItem : tasksNode) {
         String title = taskItem.has("title") ? taskItem.get("title").asText() : "Task mới";
         String description =
             taskItem.has("description") ? taskItem.get("description").asText() : "";
+        Priority priority = Priority.Medium;
+        if (taskItem.has("priority")) {
+          try {
+            priority = Priority.valueOf(taskItem.get("priority").asText());
+          } catch (Exception ignored) {
+            // keep default
+          }
+        }
+        Instant dueDate = null;
+        if (taskItem.has("dueDate") && !taskItem.get("dueDate").asText().isBlank()) {
+          try {
+            dueDate = Instant.parse(taskItem.get("dueDate").asText());
+          } catch (Exception ignored) {
+            // keep null
+          }
+        }
 
-        createMethod.invoke(
-            todoService, wsIdObj, title, description, null, null, null, null, null, null);
-        results.add(title + " (Status: Created/Updated)");
+        Task task =
+            todoPort.createTask(
+                workspaceId, title, description, priority, dueDate, null, null, null, null);
+        results.add(task.getTitle() + " (ID: " + task.getId().value() + ")");
       }
 
       return ToolExecutionResult.ok(
-          "Đã upsert thành công " + results.size() + " công việc: " + String.join(", ", results));
+          "Đã tạo thành công " + results.size() + " công việc: " + String.join(", ", results));
     } catch (Exception e) {
       return ToolExecutionResult.error("Failed to execute upsert_tasks tool: " + e.getMessage());
     }

@@ -17,6 +17,7 @@ import {
   Tags,
   Zap,
   CalendarCheck,
+  Timer,
 } from 'lucide-react';
 import { useWorkspace } from '../hooks/useWorkspace';
 import { useTasks } from '../hooks/useTasks';
@@ -29,6 +30,7 @@ import { EditTaskModal } from '../components/todo/EditTaskModal';
 import { RecurrenceModal } from '../components/todo/RecurrenceModal';
 import { TagManagerModal } from '../components/todo/TagManagerModal';
 import { TaskFilters } from '../components/todo/TaskFilters';
+import { FocusTimerModal } from '../components/todo/FocusTimerModal';
 
 const TaskManagement: React.FC = () => {
   const { activeWorkspace } = useWorkspace();
@@ -83,7 +85,9 @@ const TaskManagement: React.FC = () => {
     useState<boolean>(false);
   const [showTagManagerModal, setShowTagManagerModal] =
     useState<boolean>(false);
+  const [showTimerModal, setShowTimerModal] = useState<boolean>(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [timerTask, setTimerTask] = useState<Task | null>(null);
 
   // One-Click AI Auto Schedule Action
   const handleAutoSchedule = async () => {
@@ -736,6 +740,28 @@ const TaskManagement: React.FC = () => {
                 >
                   {activeTab === 'all' && (
                     <>
+                      {/* Focus Timer Button */}
+                      {task.status !== 'Completed' && (
+                        <button
+                          onClick={() => {
+                            setTimerTask(task);
+                            setShowTimerModal(true);
+                          }}
+                          className="btn btn-secondary"
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: '12px',
+                            gap: '4px',
+                            borderColor: 'rgba(99, 102, 241, 0.4)',
+                            color: 'var(--color-primary)',
+                          }}
+                          title="Bắt đầu Focus Timer (Pomodoro)"
+                        >
+                          <Timer size={13} />
+                          <span className="hide-mobile">Focus</span>
+                        </button>
+                      )}
+
                       {/* Quick Schedule Button */}
                       <button
                         onClick={() => handleScheduleTask(task)}
@@ -869,6 +895,18 @@ const TaskManagement: React.FC = () => {
         isOpen={showTagManagerModal}
         onClose={() => setShowTagManagerModal(false)}
         onTagsChange={refreshWorkspaceTags}
+      />
+
+      <FocusTimerModal
+        task={timerTask}
+        isOpen={showTimerModal}
+        onClose={() => {
+          setShowTimerModal(false);
+          setTimerTask(null);
+        }}
+        onTimerComplete={() => {
+          fetchTasks();
+        }}
       />
     </div>
   );

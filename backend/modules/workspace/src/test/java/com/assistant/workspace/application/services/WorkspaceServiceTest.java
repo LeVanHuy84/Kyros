@@ -145,6 +145,11 @@ class WorkspaceServiceTest {
     }
 
     @Override
+    public List<Workspace> findAll() {
+      return new ArrayList<>(workspaces.values());
+    }
+
+    @Override
     public Optional<Membership> findPrimaryMembership(UserId userId) {
       return memberships.stream()
           .filter(m -> m.getUserId().equals(userId) && m.isPrimary())

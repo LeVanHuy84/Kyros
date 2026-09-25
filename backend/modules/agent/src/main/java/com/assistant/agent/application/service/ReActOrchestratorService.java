@@ -6,11 +6,16 @@ import com.assistant.agent.domain.model.AgentExecutionResult;
 import com.assistant.agent.domain.model.AgentThought;
 import com.assistant.agent.domain.model.AgentTurn;
 import com.assistant.agent.domain.model.ToolExecutionResult;
+import com.assistant.agent.domain.nlp.VietnameseDateTimeParser;
 import com.assistant.agent.domain.tool.AgentToolContract;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -83,13 +88,13 @@ public class ReActOrchestratorService {
       augmentedPrompt += noteContext.toString();
     }
 
-    // ReAct Step 1: Safety interception for destructive actions
+    // Safety interception for destructive actions
     if (lowerPrompt.contains("xóa") || lowerPrompt.contains("delete")) {
       String toolName =
           lowerPrompt.contains("lịch") || lowerPrompt.contains("event")
               ? "delete_events"
               : "delete_tasks";
-      String approvalReason = "Thao tác xóa cần sự xác nhận của người dùng.";
+      String approvalReason = "Thao tác xóa dữ liệu cần sự xác nhận của người dùng.";
       String argsJson =
           String.format("{\"workspaceId\":\"%s\",\"target\":\"%s\"}", workspaceId, prompt);
 
@@ -128,12 +133,10 @@ public class ReActOrchestratorService {
         (effApiKey != null && !effApiKey.isBlank())
             || (effBaseUrl != null && !effBaseUrl.isBlank());
 
-    // Attempt real dynamic LLM call if user provided BYOK API Key or Custom Local LLM
-    // (Ollama/LMStudio)
     if (hasCustomLlmConfig) {
-      String systemPrompt =
-          "You are Kyros AI Executive Assistant. Choose tools when needed to fulfill user"
-              + " requests.";
+      ZonedDateTime nowLocal = ZonedDateTime.now(VietnameseDateTimeParser.VIETNAM_ZONE);
+      String systemPrompt = buildSystemPrompt(nowLocal, prompt);
+
       LlmPort.LlmResponse llmResp =
           llmPort.callLlm(effBaseUrl, effApiKey, effModel, systemPrompt, augmentedPrompt, toolList);
 
@@ -150,8 +153,8 @@ public class ReActOrchestratorService {
                     step++,
                     new AgentThought(
                         "LLM ("
-                            + (effProvider != null ? effProvider : "Local LLM")
-                            + ") chọn công cụ: "
+                            + (effProvider != null ? effProvider : "LLM")
+                            + ") thực thi công cụ: "
                             + tc.name()),
                     new AgentAction(tc.name(), tc.argumentsJson()),
                     execRes.output(),
@@ -184,7 +187,7 @@ public class ReActOrchestratorService {
       }
     }
 
-    // Fallback: Rule-based ReAct cognitive engine
+    // Fallback: Rule-based ReAct cognitive engine with Vietnamese DateTime NLP
     List<AgentAction> plannedActions = planActions(workspaceId, userId, augmentedPrompt);
     int step = 1;
     for (AgentAction action : plannedActions) {
@@ -198,7 +201,7 @@ public class ReActOrchestratorService {
       }
 
       AgentThought thought =
-          new AgentThought("Sử dụng công cụ " + tool.getName() + " thực hiện yêu cầu.");
+          new AgentThought("Sử dụng công cụ " + tool.getName() + " để thực hiện yêu cầu.");
       ToolExecutionResult result = tool.execute(action.argumentsJson());
 
       turns.add(
@@ -265,7 +268,7 @@ public class ReActOrchestratorService {
                   lowerPrompt.contains("lịch") || lowerPrompt.contains("event")
                       ? "delete_events"
                       : "delete_tasks";
-              String approvalReason = "Thao tác xóa cần sự xác nhận của người dùng.";
+              String approvalReason = "Thao tác xóa dữ liệu cần sự xác nhận của người dùng.";
               String argsJson =
                   String.format("{\"workspaceId\":\"%s\",\"target\":\"%s\"}", workspaceId, prompt);
 
@@ -372,61 +375,66 @@ public class ReActOrchestratorService {
                               + " ("
                               + (effModel != null ? effModel : "default")
                               + ")..."));
-              java.time.ZonedDateTime nowLocal =
-                  java.time.ZonedDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
-              String currentLocalTimeStr =
-                  nowLocal.format(
-                      java.time.format.DateTimeFormatter.ofPattern(
-                          "yyyy-MM-dd HH:mm:ss (EEEE, 'múi giờ' z)"));
-              String systemPrompt =
-                  "You are Kyros AI Executive Assistant. Current Local Time: "
-                      + currentLocalTimeStr
-                      + ". Always convert event timestamps into local Vietnam time (UTC+7 /"
-                      + " Asia/Ho_Chi_Minh) when responding.\n"
-                      + "AVAILABLE MUTATION & QUERY TOOLS:\n"
-                      + "- upsert_events: Create or update calendar events. Parameters:"
-                      + " {\"workspaceId\":\"...\", \"events\": [{\"title\":\"...\","
-                      + " \"description\":\"...\", \"startTime\":\"ISO-8601\","
-                      + " \"endTime\":\"ISO-8601\"}]}\n"
-                      + "- upsert_tasks: Create or update tasks. Parameters:"
-                      + " {\"workspaceId\":\"...\", \"tasks\": [{\"title\":\"...\","
-                      + " \"description\":\"...\", \"dueDate\":\"ISO-8601\"}]}\n"
-                      + "- list_events, list_tasks, list_notes, delete_events, delete_tasks.\n"
-                      + "CRITICAL INSTRUCTION: When the user asks to schedule, plan, or create"
-                      + " calendar events or tasks (e.g. 'lên lịch học tiếng anh', 'tạo task'), YOU"
-                      + " MUST CALL `upsert_events` OR `upsert_tasks` TOOLS directly to persist"
-                      + " them into the system. Do NOT just output text schedules without calling"
-                      + " tools.";
+
+              ZonedDateTime nowLocal = ZonedDateTime.now(VietnameseDateTimeParser.VIETNAM_ZONE);
+              String systemPrompt = buildSystemPrompt(nowLocal, prompt);
 
               StringBuilder accumulativeContext = new StringBuilder(augmentedPrompt);
               StringBuilder finalExecutionSummary = new StringBuilder();
               String finalAnswerText = null;
+              boolean streamTokensEmitted = false;
 
+              Set<String> executedActionSignatures = new HashSet<>();
               for (int turn = 1; turn <= MAX_TURNS; turn++) {
+                final int currentTurn = turn;
+                // For the last turn or final answer, stream tokens directly to SSE emitter
                 LlmPort.LlmResponse llmResp =
-                    llmPort.callLlm(
+                    llmPort.streamLlm(
                         effBaseUrl,
                         effApiKey,
                         effModel,
                         systemPrompt,
                         accumulativeContext.toString(),
                         history,
-                        toolList);
+                        toolList,
+                        chunk -> {
+                          try {
+                            emitter.send(SseEmitter.event().name("chunk").data(chunk));
+                          } catch (Exception ignored) {
+                          }
+                        });
 
                 if (llmResp.toolCalls() != null && !llmResp.toolCalls().isEmpty()) {
                   StringBuilder turnLogs = new StringBuilder();
+                  boolean hasNewAction = false;
+
                   for (LlmPort.ToolCall tc : llmResp.toolCalls()) {
                     if (toolRegistry.containsKey(tc.name())) {
+                      String sig = tc.name() + ":" + tc.argumentsJson().replaceAll("\\s+", "");
+                      if (executedActionSignatures.contains(sig)) {
+                        continue;
+                      }
+                      executedActionSignatures.add(sig);
+                      hasNewAction = true;
+
                       AgentToolContract tool = toolRegistry.get(tc.name());
                       emitter.send(
                           SseEmitter.event()
                               .name("thought")
                               .data(
                                   "Bước "
-                                      + turn
-                                      + ": LLM quyết định gọi công cụ "
+                                      + currentTurn
+                                      + ": LLM thực thi công cụ "
                                       + tool.getName()));
-                      ToolExecutionResult execRes = tool.execute(tc.argumentsJson());
+                      ToolExecutionResult execRes;
+                      try {
+                        execRes = tool.execute(tc.argumentsJson());
+                      } catch (Exception ex) {
+                        execRes =
+                            ToolExecutionResult.error(
+                                "Lỗi khi chạy công cụ " + tool.getName() + ": " + ex.getMessage());
+                      }
+
                       emitter.send(
                           SseEmitter.event()
                               .name("observation")
@@ -439,6 +447,12 @@ public class ReActOrchestratorService {
                           .append("\n");
                     }
                   }
+
+                  if (!hasNewAction) {
+                    // All requested tool calls were duplicate / already executed
+                    break;
+                  }
+
                   finalExecutionSummary.append(turnLogs);
                   accumulativeContext
                       .append("\n\n[Kết quả thực thi công cụ ở Bước ")
@@ -447,10 +461,11 @@ public class ReActOrchestratorService {
                       .append(turnLogs);
                   accumulativeContext.append(
                       "\n"
-                          + "Hãy đánh giá kết quả trên. Nếu cần thực hiện tiếp thao tác khác (như"
-                          + " tạo lịch hay task), tiếp tục gọi công cụ. Nếu đã hoàn tất, hãy đưa ra"
-                          + " câu trả lời cuối cùng cho người dùng.");
+                          + "[LƯU Ý]: Các công cụ trên ĐÃ THỰC THI THÀNH CÔNG VÀ ĐÃ ĐƯỢC LƯU VÀO HỆ"
+                          + " THỐNG. KHÔNG ĐƯỢC GỌI LẠI CÔNG CỤ TRÙNG LẶP. Hãy trả lời câu hỏi của"
+                          + " người dùng và tóm tắt kết quả thân thiện bằng tiếng Việt.");
                 } else if (llmResp.content() != null && !llmResp.content().isBlank()) {
+                  streamTokensEmitted = true;
                   if (llmResp.content().startsWith("Invocation Error")
                       || llmResp.content().startsWith("LLM Error")) {
                     finalAnswerText =
@@ -476,6 +491,9 @@ public class ReActOrchestratorService {
                         ? "Đã hoàn thành các thao tác trên hệ thống:\n\n"
                             + finalExecutionSummary.toString()
                         : "Hệ thống đã tiếp nhận yêu cầu của bạn.";
+                if (!streamTokensEmitted) {
+                  emitter.send(SseEmitter.event().name("chunk").data(finalAnswerText));
+                }
               }
 
               memoryStore.addMessage(targetMemoryId, "assistant", finalAnswerText);
@@ -491,15 +509,12 @@ public class ReActOrchestratorService {
                 }
               }
 
-              for (String line : finalAnswerText.split("\n")) {
-                emitter.send(SseEmitter.event().name("chunk").data(line + "\n"));
-              }
               emitter.send(SseEmitter.event().name("completed").data("Hoàn tất."));
               emitter.complete();
               return;
-            } // Fall through to planActions rule-based engine if Ollama/LLM timed out or produced
-            // no tool calls
+            }
 
+            // Fall through to planActions rule-based engine if no custom LLM config
             List<AgentAction> plannedActions = planActions(workspaceId, userId, augmentedPrompt);
             if (plannedActions.isEmpty()) {
               String fallbackReply =
@@ -525,12 +540,15 @@ public class ReActOrchestratorService {
                     SseEmitter.event()
                         .name("observation")
                         .data("Kết quả " + tool.getName() + ": " + result.output()));
-                resultSummary.append(result.output()).append(" ");
+                resultSummary.append(result.output()).append("\n");
                 step++;
               }
             }
 
-            memoryStore.addMessage(targetMemoryId, "assistant", resultSummary.toString().trim());
+            String summaryAnswer =
+                "Đã hoàn thành các yêu cầu của bạn:\n" + resultSummary.toString().trim();
+            memoryStore.addMessage(targetMemoryId, "assistant", summaryAnswer);
+            emitter.send(SseEmitter.event().name("chunk").data(summaryAnswer));
             emitter.send(
                 SseEmitter.event()
                     .name("completed")
@@ -579,6 +597,54 @@ public class ReActOrchestratorService {
         "Đã phê duyệt và thực thi thành công thao tác " + toolName + ".", turns);
   }
 
+  private String buildSystemPrompt(ZonedDateTime nowLocal, String userPrompt) {
+    String currentLocalTimeStr =
+        nowLocal.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss (EEEE, 'múi giờ' z)"));
+
+    var parsedNlp = VietnameseDateTimeParser.parse(userPrompt, nowLocal);
+    String nlpHint = "";
+    if (parsedNlp.hasExplicitDate() || parsedNlp.hasExplicitTime()) {
+      nlpHint =
+          "\n[VIETNAMESE NLP PRE-PARSED TIME HINT]:"
+              + "\n- StartTime (ISO-8601): "
+              + parsedNlp.startTime().toInstant().toString()
+              + "\n- EndTime (ISO-8601): "
+              + parsedNlp.endTime().toInstant().toString()
+              + "\n- Cleaned Topic: "
+              + parsedNlp.cleanedTitle()
+              + "\n"
+              + "(Use these accurate ISO timestamps when calling `upsert_events` or"
+              + " `upsert_tasks`)";
+    }
+
+    return "You are Kyros AI Executive Assistant, an intelligent, professional AI capable of"
+        + " orchestrating schedules, tasks, and notes.\n"
+        + "Current Local Time: "
+        + currentLocalTimeStr
+        + nlpHint
+        + "\n"
+        + "Always convert event timestamps into local Vietnam time (UTC+7 / Asia/Ho_Chi_Minh) when"
+        + " responding.\n"
+        + "FORMATTING GUIDELINES:\n"
+        + "- Always respond with clean, beautifully formatted, professional Markdown in natural"
+        + " Vietnamese.\n"
+        + "- Do NOT insert extra spaces between letters, words, or markdown asterisks (e.g., write"
+        + " **Hôm nay** NOT ** Hôm nay **).\n"
+        + "- Use bold headers, bullet lists, emojis (📅, ⏰, 🎯, ✅), and clear spacing for"
+        + " readability.\n"
+        + "AVAILABLE MUTATION & QUERY TOOLS:\n"
+        + "- upsert_events: Create or update calendar events. Parameters: {\"workspaceId\":\"...\","
+        + " \"events\": [{\"title\":\"...\", \"description\":\"...\", \"startTime\":\"ISO-8601\","
+        + " \"endTime\":\"ISO-8601\"}]}\n"
+        + "- upsert_tasks: Create or update tasks. Parameters: {\"workspaceId\":\"...\", \"tasks\":"
+        + " [{\"title\":\"...\", \"description\":\"...\", \"dueDate\":\"ISO-8601\"}]}\n"
+        + "- list_events, list_tasks, list_notes, delete_events, delete_tasks.\n"
+        + "CRITICAL INSTRUCTION: When the user asks to schedule, plan, or create calendar events or"
+        + " tasks (e.g. 'lên lịch', 'họp', 'tạo task', 'chuẩn bị slide'), YOU MUST CALL"
+        + " `upsert_events` OR `upsert_tasks` TOOLS directly to persist them into the system. Do"
+        + " NOT just output text schedules without calling tools.";
+  }
+
   private List<AgentAction> planActions(UUID workspaceId, UUID userId, String prompt) {
     List<AgentAction> actions = new ArrayList<>();
     String lower = prompt.toLowerCase(Locale.ROOT);
@@ -592,29 +658,27 @@ public class ReActOrchestratorService {
             || lower.contains("danh sách")
             || lower.contains("báo cáo");
 
-    boolean isCreate =
-        lower.contains("thêm")
-            || lower.contains("tạo")
-            || lower.contains("lên lịch")
-            || lower.contains("lưu")
-            || lower.contains("mới");
+    if (isQuery) {
+      if (lower.contains("lịch") || lower.contains("họp") || lower.contains("sự kiện")) {
+        actions.add(
+            new AgentAction("list_events", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
+      }
+      if (lower.contains("task") || lower.contains("nhiệm vụ") || lower.contains("công việc")) {
+        actions.add(
+            new AgentAction("list_tasks", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
+      }
+      if (lower.contains("note") || lower.contains("ghi chú")) {
+        actions.add(
+            new AgentAction("list_notes", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
+      }
+      if (!actions.isEmpty()) {
+        return actions;
+      }
+    }
 
-    if (isQuery
-        && (lower.contains("lịch")
-            || lower.contains("họp")
-            || lower.contains("sự kiện")
-            || lower.contains("tối nay")
-            || lower.contains("hôm nay"))) {
-      actions.add(
-          new AgentAction("list_events", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
-    } else if (isQuery
-        && (lower.contains("task") || lower.contains("nhiệm vụ") || lower.contains("công việc"))) {
-      actions.add(
-          new AgentAction("list_tasks", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
-    } else if (isQuery && (lower.contains("note") || lower.contains("ghi chú"))) {
-      actions.add(
-          new AgentAction("list_notes", String.format("{\"workspaceId\":\"%s\"}", workspaceId)));
-    } else if (lower.contains("note") || lower.contains("ghi chú")) {
+    // Check for note creation
+    if ((lower.contains("note") || lower.contains("ghi chú"))
+        && (lower.contains("tạo") || lower.contains("thêm") || lower.contains("lưu"))) {
       String title = "Ghi chú từ Agent";
       String content = prompt;
       String args =
@@ -622,40 +686,62 @@ public class ReActOrchestratorService {
               "{\"workspaceId\":\"%s\",\"userId\":\"%s\",\"title\":\"%s\",\"content\":\"%s\"}",
               workspaceId, userId, title, content);
       actions.add(new AgentAction("create_note", args));
-    } else if (lower.contains("task")
-        || lower.contains("nhiệm vụ")
-        || lower.contains("công việc")
-        || (isCreate
-            && (lower.contains("làm") || lower.contains("dự án") || lower.contains("app")))) {
-      String cleanTitle =
-          prompt.replaceAll("(?i)^(thêm|tạo|cho tôi|nhiệm vụ|task|giúp tôi)\\s*", "").trim();
-      if (cleanTitle.isEmpty()) {
-        cleanTitle = prompt;
+    }
+
+    // Check for multi-tool (both task & event) or event/task individually
+    boolean hasEventIntent =
+        lower.contains("lịch")
+            || lower.contains("họp")
+            || lower.contains("hẹn")
+            || lower.contains("meeting")
+            || lower.contains("chiều nay")
+            || lower.contains("sáng nay")
+            || lower.contains("ngày mai")
+            || lower.contains("sáng mai")
+            || lower.contains("chiều mai")
+            || lower.contains("tối mai");
+
+    boolean hasTaskIntent =
+        lower.contains("task")
+            || lower.contains("nhiệm vụ")
+            || lower.contains("công việc")
+            || lower.contains("chuẩn bị")
+            || lower.contains("làm slide")
+            || lower.contains("viết báo cáo")
+            || (lower.contains("tạo") && !hasEventIntent);
+
+    var parsedNlp = VietnameseDateTimeParser.parse(prompt);
+
+    if (hasEventIntent) {
+      String eventTitle = parsedNlp.cleanedTitle();
+      if (eventTitle.isEmpty() || eventTitle.length() < 3) {
+        eventTitle = prompt;
       }
-      String title = cleanTitle;
-      String args =
-          String.format(
-              "{\"workspaceId\":\"%s\",\"userId\":\"%s\",\"tasks\":[{\"title\":\"%s\"}]}",
-              workspaceId, userId, title);
-      actions.add(new AgentAction("upsert_tasks", args));
-    } else if (lower.contains("lịch")
-        || lower.contains("họp")
-        || lower.contains("nhắc")
-        || lower.contains("chiều nay")
-        || lower.contains("sáng nay")) {
-      String cleanTitle =
-          prompt.replaceAll("(?i)^(lên lịch|thêm|tạo|cho tôi|giúp tôi)\\s*", "").trim();
-      if (cleanTitle.isEmpty()) {
-        cleanTitle = prompt;
-      }
-      String title = cleanTitle;
-      String start = "2026-09-18T14:00:00Z";
-      String end = "2026-09-18T15:00:00Z";
+      String start = parsedNlp.startTime().toInstant().toString();
+      String end = parsedNlp.endTime().toInstant().toString();
+
       String args =
           String.format(
               "{\"workspaceId\":\"%s\",\"events\":[{\"title\":\"%s\",\"startTime\":\"%s\",\"endTime\":\"%s\"}]}",
-              workspaceId, title, start, end);
+              workspaceId, eventTitle, start, end);
       actions.add(new AgentAction("upsert_events", args));
+    }
+
+    if (hasTaskIntent) {
+      String taskTitle =
+          prompt
+              .replaceAll("(?i)^(thêm|tạo|cho tôi|nhiệm vụ|task|giúp tôi|hãy)\\s*", "")
+              .replaceAll("(?i)(và lên lịch.*|đặt lịch.*|họp.*)$", "")
+              .trim();
+      if (taskTitle.isEmpty()) {
+        taskTitle = prompt;
+      }
+      String due = parsedNlp.startTime().toInstant().toString();
+      String args =
+          String.format(
+              "{\"workspaceId\":\"%s\",\"userId\":\"%s\",\"tasks\":[{\"title\":\"%s\",\"dueDate\":\"%s\"}]}",
+              workspaceId, userId, taskTitle, due);
+      actions.add(new AgentAction("upsert_tasks", args));
     }
 
     return actions;

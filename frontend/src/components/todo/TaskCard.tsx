@@ -11,6 +11,7 @@ import {
   Edit3,
   Trash2,
   RotateCcw,
+  Timer,
 } from 'lucide-react';
 
 import type { Task, RecurrenceRule } from '../../hooks/useTasks';
@@ -27,6 +28,7 @@ interface TaskCardProps {
   onEdit: (task: Task) => void;
   onSoftDelete: (taskId: string) => void;
   onRecover: (taskId: string) => void;
+  onOpenTimer?: (task: Task) => void;
 
   onRecurrenceAction: (
     taskId: string,
@@ -44,6 +46,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onEdit,
   onSoftDelete,
   onRecover,
+  onOpenTimer,
   onRecurrenceAction,
 }) => {
   const [now, setNow] = useState<number>(Date.now());
@@ -306,6 +309,29 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               minWidth: 0,
             }}
           >
+            {task.estimatedDurationMinutes &&
+              task.estimatedDurationMinutes > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '12px',
+                    color: 'var(--text-muted)',
+                    backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(99, 102, 241, 0.2)',
+                    flex: '0 0 auto',
+                    whiteSpace: 'nowrap',
+                  }}
+                  title="Thời lượng dự kiến"
+                >
+                  <Timer size={12} style={{ color: 'var(--color-primary)' }} />
+                  <span>{task.estimatedDurationMinutes}m</span>
+                </div>
+              )}
+
             {task.dueDate && (
               <div
                 className="task-card-due-date"
@@ -426,6 +452,24 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         {/* ALL */}
         {activeTab === 'all' && (
           <>
+            {task.status !== 'Completed' && onOpenTimer && (
+              <button
+                onClick={() => onOpenTimer(task)}
+                className="btn btn-secondary"
+                style={{
+                  padding: '8px 12px',
+                  fontSize: '13px',
+                  whiteSpace: 'nowrap',
+                  borderColor: 'rgba(99, 102, 241, 0.4)',
+                  color: 'var(--color-primary)',
+                }}
+                title="Bắt đầu phiên tập trung (Pomodoro Focus Timer)"
+              >
+                <Timer size={14} />
+                <span>Focus</span>
+              </button>
+            )}
+
             <button
               onClick={() => onConfigureRecurrence(task)}
               className="btn btn-secondary"
