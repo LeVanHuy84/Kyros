@@ -1,0 +1,115 @@
+<div class="calendar-page-layout">
+  <!-- Page Header -->
+  <header class="calendar-header-banner">
+    <div class="header-left">
+      <div class="title-group">
+        <h1 class="page-title">{{ languageService.t().calendar.title }}</h1>
+        <p class="page-subtitle">{{ languageService.t().calendar.subtitle }}</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Search Input -->
+      <div class="search-box">
+        <app-icon name="search" [size]="15" class="search-icon"></app-icon>
+        <input
+          type="text"
+          class="search-input"
+          [placeholder]="languageService.t().calendar.searchPlaceholder"
+          [ngModel]="calendarService.searchQuery()"
+          (ngModelChange)="onSearch($event)"
+        />
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons-group">
+        <!-- AI Auto-Schedule -->
+        <app-button
+          variant="outline"
+          (buttonClick)="isAutoScheduleModalOpen.set(true)"
+          [title]="'Tự động phân bổ task vào lịch trình'"
+        >
+          <app-icon name="sparkles" [size]="15"></app-icon>
+          <span>{{ languageService.t().calendar.autoSchedule }}</span>
+        </app-button>
+
+        <!-- Find Slot -->
+        <app-button
+          variant="outline"
+          (buttonClick)="isSlotPickerModalOpen.set(true)"
+          [title]="'Tìm các khung giờ trống phù hợp'"
+        >
+          <app-icon name="clock" [size]="15"></app-icon>
+          <span>{{ languageService.t().calendar.findSlot }}</span>
+        </app-button>
+
+        <!-- Resolve Conflicts (Emphasized if any) -->
+        @if (calendarService.hasConflicts()) {
+          <app-button
+            variant="secondary"
+            class="conflict-btn"
+            (buttonClick)="isConflictResolverModalOpen.set(true)"
+          >
+            <app-icon name="alert-triangle" [size]="15"></app-icon>
+            <span>{{ languageService.t().calendar.resolveConflicts }}</span>
+          </app-button>
+        }
+
+        <!-- New Event Button -->
+        <app-button
+          variant="primary"
+          (buttonClick)="openCreateEventModal()"
+        >
+          <app-icon name="plus" [size]="16"></app-icon>
+          <span>{{ languageService.t().calendar.newEvent }}</span>
+        </app-button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Calendar Multi-View Grid -->
+  <main class="calendar-main-content">
+    <app-calendar-grid
+      (eventSelected)="openEventDetails($event)"
+      (createAtDate)="openCreateEventModal($event)"
+      (createAtSlot)="openCreateEventModal($event.date, $event.hour)"
+      (openConflictResolver)="isConflictResolverModalOpen.set(true)"
+    ></app-calendar-grid>
+  </main>
+
+  <!-- Modals and Drawer -->
+  <app-event-editor-modal
+    [isOpen]="isEditorModalOpen()"
+    [event]="selectedEventForEdit()"
+    [initialDate]="initialDateForNew()"
+    [initialHour]="initialHourForNew()"
+    (close)="isEditorModalOpen.set(false)"
+    (saved)="onEventsUpdated()"
+  ></app-event-editor-modal>
+
+  <app-event-details-drawer
+    [isOpen]="isDetailsDrawerOpen()"
+    [event]="selectedEventForDrawer()"
+    (close)="isDetailsDrawerOpen.set(false)"
+    (editClicked)="openEditFromDrawer($event)"
+    (eventDeleted)="onEventsUpdated()"
+  ></app-event-details-drawer>
+
+  <app-auto-schedule-modal
+    [isOpen]="isAutoScheduleModalOpen()"
+    (close)="isAutoScheduleModalOpen.set(false)"
+    (scheduled)="onEventsUpdated()"
+  ></app-auto-schedule-modal>
+
+  <app-slot-picker-modal
+    [isOpen]="isSlotPickerModalOpen()"
+    (close)="isSlotPickerModalOpen.set(false)"
+    (slotSelected)="onSlotSelectedFromPicker($event)"
+  ></app-slot-picker-modal>
+
+  <app-conflict-resolver-modal
+    [isOpen]="isConflictResolverModalOpen()"
+    (close)="isConflictResolverModalOpen.set(false)"
+    (resolved)="onEventsUpdated()"
+  ></app-conflict-resolver-modal>
+</div>

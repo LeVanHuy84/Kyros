@@ -1,0 +1,312 @@
+.week-view-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 650px;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.week-header-row {
+  display: flex;
+  background-color: var(--bg-surface-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  user-select: none;
+  z-index: 10;
+  width: 100%;
+}
+
+.time-gutter-header {
+  width: 65px;
+  min-width: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--border-subtle);
+
+  .timezone-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+}
+
+.days-header-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  flex: 1;
+  min-width: 0;
+}
+
+.day-header-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  border-right: 1px solid var(--border-subtle);
+  min-width: 0;
+  overflow: hidden;
+
+  &:last-child {
+    border-right: none;
+  }
+
+  .day-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .day-badge {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+
+    &.today-badge {
+      background-color: var(--color-primary);
+      color: var(--color-primary-text);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  &.is-today {
+    background-color: var(--color-primary-subtle);
+  }
+}
+
+.timeline-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  background-color: var(--bg-surface);
+}
+
+.timeline-body {
+  display: flex;
+  position: relative;
+  height: calc(24 * 56px);
+  min-height: 100%;
+  width: 100%;
+}
+
+.time-gutter {
+  width: 65px;
+  min-width: 65px;
+  border-right: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface-secondary);
+  user-select: none;
+  position: relative;
+}
+
+.hour-label-cell {
+  height: 56px;
+  position: relative;
+
+  span {
+    position: absolute;
+    top: -8px;
+    right: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+}
+
+.columns-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.hour-grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--border-subtle);
+  pointer-events: none;
+}
+
+.day-timeline-col {
+  border-right: 1px solid var(--border-subtle);
+  position: relative;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &.is-today {
+    background-color: rgba(45, 106, 79, 0.02);
+  }
+}
+
+.slot-cell {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 56px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+}
+
+.current-time-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-primary);
+  z-index: 20;
+  pointer-events: none;
+
+  .current-time-circle {
+    position: absolute;
+    left: -4px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--color-primary);
+  }
+}
+
+.week-event-card {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface-secondary);
+  border-left: 3px solid var(--color-primary);
+  padding: 4px 6px;
+  font-size: 0.75rem;
+  overflow: hidden;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+  box-sizing: border-box;
+
+  &:hover {
+    transform: scale(1.01);
+    box-shadow: var(--shadow-md);
+    filter: brightness(0.97);
+    z-index: 15;
+  }
+
+  // Compact layout for 15-30m short events
+  &.is-short-event {
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+
+    .compact-event-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+      min-width: 0;
+      overflow: hidden;
+      line-height: 1.2;
+
+      .conflict-badge-icon {
+        color: var(--color-warning);
+        flex-shrink: 0;
+      }
+
+      .card-time-compact {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .card-title-compact {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+        flex: 1;
+      }
+    }
+  }
+
+  // Gentle, warm conflict indicator
+  &.has-conflict {
+    border-left-color: var(--color-warning) !important;
+    background-color: var(--color-warning-bg);
+    border: 1px solid rgba(237, 108, 2, 0.35);
+
+    .card-title,
+    .card-title-compact {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+  }
+
+  .event-card-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 2px;
+    min-width: 0;
+  }
+
+  .conflict-badge-icon {
+    color: var(--color-warning);
+    flex-shrink: 0;
+  }
+
+  .card-time {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .card-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-location {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

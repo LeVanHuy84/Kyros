@@ -1,0 +1,115 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="languageService.t().calendar.autoScheduleModal.title"
+  maxWidth="520px"
+  [showFooter]="true"
+  (close)="onResetAndClose()"
+>
+  <div class="auto-schedule-body">
+    <!-- AI Intro Hero Banner -->
+    <div class="ai-hero-banner">
+      <div class="ai-icon-sparkle">
+        <app-icon name="sparkles" [size]="28"></app-icon>
+      </div>
+      <div class="ai-hero-text">
+        <p class="subtitle">{{ languageService.t().calendar.autoScheduleModal.subtitle }}</p>
+      </div>
+    </div>
+
+    @if (scheduledResults() !== null) {
+      <!-- Results Card -->
+      <div class="results-card">
+        <div class="success-header">
+          <app-icon name="check-circle" [size]="24" class="check-icon"></app-icon>
+          <h4>{{ languageService.t().calendar.autoScheduleModal.successTitle }}</h4>
+        </div>
+        <p class="results-desc">
+          {{
+            languageService
+              .t()
+              .calendar.autoScheduleModal.successDesc.replace(
+                '{count}',
+                scheduledResults()!.length.toString()
+              )
+          }}
+        </p>
+
+        @if (scheduledResults()!.length > 0) {
+          <div class="results-list">
+            @for (ev of scheduledResults()!; track ev.id) {
+              <div class="result-event-pill">
+                <span class="event-title">{{ ev.title }}</span>
+                <span class="event-time">{{ ev.startTime | date: 'shortTime' }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      <!-- Lookahead Horizon Selector -->
+      <div class="horizon-form">
+        <label class="form-label">
+          {{ languageService.t().calendar.autoScheduleModal.lookaheadLabel }}
+        </label>
+
+        <div class="horizon-options-grid">
+          <button
+            type="button"
+            class="horizon-chip"
+            [class.active]="selectedDaysAhead() === 3"
+            (click)="selectedDaysAhead.set(3)"
+          >
+            {{ languageService.t().calendar.autoScheduleModal.days3 }}
+          </button>
+
+          <button
+            type="button"
+            class="horizon-chip"
+            [class.active]="selectedDaysAhead() === 7"
+            (click)="selectedDaysAhead.set(7)"
+          >
+            {{ languageService.t().calendar.autoScheduleModal.days7 }}
+          </button>
+
+          <button
+            type="button"
+            class="horizon-chip"
+            [class.active]="selectedDaysAhead() === 14"
+            (click)="selectedDaysAhead.set(14)"
+          >
+            {{ languageService.t().calendar.autoScheduleModal.days14 }}
+          </button>
+
+          <button
+            type="button"
+            class="horizon-chip"
+            [class.active]="selectedDaysAhead() === 30"
+            (click)="selectedDaysAhead.set(30)"
+          >
+            {{ languageService.t().calendar.autoScheduleModal.days30 }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div footer class="modal-footer-actions">
+    @if (scheduledResults() !== null) {
+      <app-button variant="primary" (buttonClick)="onResetAndClose()">
+        {{ languageService.t().calendar.autoScheduleModal.close }}
+      </app-button>
+    } @else {
+      <app-button variant="outline" (buttonClick)="onResetAndClose()">
+        {{ languageService.t().common.cancel }}
+      </app-button>
+      <app-button
+        variant="primary"
+        [loading]="calendarService.isActionLoading()"
+        (buttonClick)="onAutoSchedule()"
+      >
+        <app-icon name="zap" [size]="15"></app-icon>
+        <span>{{ languageService.t().calendar.autoScheduleModal.actionBtn }}</span>
+      </app-button>
+    }
+  </div>
+</app-modal>

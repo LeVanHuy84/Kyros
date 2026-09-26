@@ -51,6 +51,10 @@ export type AppIconName =
   | 'more-vertical'
   | 'filter'
   | 'bar-chart'
+  | 'map-pin'
+  | 'users'
+  | 'alert-circle'
+  | 'arrow-right'
   | 'edit';
 
 @Component({

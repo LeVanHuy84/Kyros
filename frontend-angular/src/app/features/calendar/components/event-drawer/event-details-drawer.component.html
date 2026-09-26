@@ -1,0 +1,256 @@
+@if (isOpen() && event()) {
+  <!-- Backdrop -->
+  <div class="drawer-backdrop" (click)="close.emit()"></div>
+
+  <!-- Drawer Container -->
+  <aside class="event-drawer" [style.border-left-color]="event()!.color || 'var(--color-primary)'">
+    <!-- Header -->
+    <div class="drawer-header">
+      <div class="header-left">
+        @if (isConflict()) {
+          <span class="conflict-badge">
+            <app-icon name="alert-triangle" [size]="13"></app-icon>
+            {{ languageService.t().calendar.agendaView.hasConflict }}
+          </span>
+        }
+        <span class="status-pill">{{ event()!.status }}</span>
+      </div>
+
+      <button type="button" class="close-btn" (click)="close.emit()">
+        <app-icon name="x" [size]="18"></app-icon>
+      </button>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="drawer-body">
+      <!-- Title -->
+      <h2 class="event-headline">{{ event()!.title }}</h2>
+
+      <!-- Date & Time Card -->
+      <div class="meta-card">
+        <div class="meta-row">
+          <app-icon name="clock" [size]="16" class="meta-icon"></app-icon>
+          <div class="meta-text">
+            <span class="meta-label">{{ languageService.t().calendar.drawer.time }}</span>
+            <span class="meta-val">{{ formattedDateTime() }}</span>
+          </div>
+        </div>
+
+        <div class="meta-row">
+          <app-icon name="zap" [size]="16" class="meta-icon"></app-icon>
+          <div class="meta-text">
+            <span class="meta-label">{{ languageService.t().calendar.drawer.duration }}</span>
+            <span class="meta-val">{{ durationMinutes() }} phút</span>
+          </div>
+        </div>
+
+        @if (event()!.location) {
+          <div class="meta-row">
+            <app-icon name="map-pin" [size]="16" class="meta-icon"></app-icon>
+            <div class="meta-text">
+              <span class="meta-label">{{ languageService.t().calendar.drawer.description }}</span>
+              <span class="meta-val">{{ event()!.location }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Quick Reschedule Panel -->
+      @if (isRescheduleOpen()) {
+        <div class="reschedule-box">
+          <h4 class="box-title">{{ languageService.t().calendar.drawer.rescheduleTitle }}</h4>
+
+          <div class="reschedule-inputs-grid">
+            <div class="field-item">
+              <label>{{ languageService.t().calendar.drawer.newStartTime }}</label>
+              <div class="datetime-flex">
+                <input
+                  type="date"
+                  class="form-control"
+                  [ngModel]="newStartDate()"
+                  (ngModelChange)="newStartDate.set($event)"
+                />
+                <input
+                  type="time"
+                  class="form-control"
+                  [ngModel]="newStartTime()"
+                  (ngModelChange)="newStartTime.set($event)"
+                />
+              </div>
+            </div>
+
+            <div class="field-item">
+              <label>{{ languageService.t().calendar.drawer.newEndTime }}</label>
+              <div class="datetime-flex">
+                <input
+                  type="date"
+                  class="form-control"
+                  [ngModel]="newEndDate()"
+                  (ngModelChange)="newEndDate.set($event)"
+                />
+                <input
+                  type="time"
+                  class="form-control"
+                  [ngModel]="newEndTime()"
+                  (ngModelChange)="newEndTime.set($event)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="reschedule-actions">
+            <app-button variant="outline" size="sm" (buttonClick)="isRescheduleOpen.set(false)">
+              {{ languageService.t().common.cancel }}
+            </app-button>
+            <app-button
+              variant="primary"
+              size="sm"
+              [loading]="calendarService.isActionLoading()"
+              (buttonClick)="saveReschedule()"
+            >
+              {{ languageService.t().calendar.drawer.confirmReschedule }}
+            </app-button>
+          </div>
+        </div>
+      }
+
+      <!-- Description Block -->
+      <div class="section-block">
+        <h4 class="section-title">{{ languageService.t().calendar.drawer.description }}</h4>
+        <p class="description-text">
+          {{ event()!.description || languageService.t().calendar.drawer.noDescription }}
+        </p>
+      </div>
+
+      <!-- Reminders Section -->
+      <div class="section-block">
+        <div class="section-header-flex">
+          <h4 class="section-title">{{ languageService.t().calendar.drawer.remindersTitle }}</h4>
+          <button
+            type="button"
+            class="add-reminder-btn"
+            (click)="isAddReminderOpen.set(!isAddReminderOpen())"
+          >
+            <app-icon name="plus" [size]="14"></app-icon>
+            <span>{{ languageService.t().calendar.drawer.addReminder }}</span>
+          </button>
+        </div>
+
+        @if (isAddReminderOpen()) {
+          <div class="add-reminder-box">
+            <select
+              class="form-control"
+              [ngModel]="selectedLeadMinutes()"
+              (ngModelChange)="selectedLeadMinutes.set(+$event)"
+            >
+              <option [value]="5">5 phút trước</option>
+              <option [value]="15">15 phút trước</option>
+              <option [value]="30">30 phút trước</option>
+              <option [value]="60">1 giờ trước</option>
+              <option [value]="1440">1 ngày trước</option>
+            </select>
+            <app-button size="sm" variant="primary" (buttonClick)="onAddReminder()">
+              <app-icon name="check" [size]="14"></app-icon>
+            </app-button>
+          </div>
+        }
+
+        <div class="reminders-list">
+          @for (rem of event()!.reminders; track rem.id) {
+            <div class="reminder-item-card">
+              <div class="reminder-left">
+                <app-icon name="bell" [size]="14" class="bell-icon"></app-icon>
+                <div class="reminder-info">
+                  <span class="lead-text">
+                    {{
+                      languageService
+                        .t()
+                        .calendar.drawer.leadTime.replace(
+                          '{mins}',
+                          rem.leadTimeMinutes.toString()
+                        )
+                    }}
+                  </span>
+                  <span class="reminder-status-chip" [class]="rem.status.toLowerCase()">
+                    {{ rem.status }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="reminder-actions">
+                @if (rem.status === 'TRIGGERED' || rem.status === 'PENDING') {
+                  <button
+                    type="button"
+                    class="rem-action-btn"
+                    title="Báo lại 5p"
+                    (click)="onSnoozeReminder(rem.id, 5)"
+                  >
+                    5m
+                  </button>
+                  <button
+                    type="button"
+                    class="rem-action-btn"
+                    title="Đã xem"
+                    (click)="onDismissReminder(rem.id)"
+                  >
+                    <app-icon name="check" [size]="12"></app-icon>
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="rem-delete-btn"
+                  title="Xóa nhắc nhở"
+                  (click)="onDeleteReminder(rem.id)"
+                >
+                  <app-icon name="trash" [size]="13"></app-icon>
+                </button>
+              </div>
+            </div>
+          }
+          @if (event()!.reminders.length === 0) {
+            <span class="no-reminders-hint">Chưa thiết lập nhắc nhở nào.</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="drawer-footer">
+      @if (showDeleteConfirm()) {
+        <div class="delete-confirm-box">
+          <span class="confirm-text">{{ languageService.t().calendar.drawer.deleteConfirm }}</span>
+          <div class="confirm-buttons">
+            <app-button variant="outline" size="sm" (buttonClick)="showDeleteConfirm.set(false)">
+              {{ languageService.t().common.cancel }}
+            </app-button>
+            <app-button
+              variant="danger"
+              size="sm"
+              [loading]="calendarService.isActionLoading()"
+              (buttonClick)="onDeleteEvent()"
+            >
+              {{ languageService.t().calendar.drawer.deleteBtn }}
+            </app-button>
+          </div>
+        </div>
+      } @else {
+        <div class="action-buttons-row">
+          <app-button variant="outline" size="sm" (buttonClick)="toggleReschedule()">
+            <app-icon name="clock" [size]="14"></app-icon>
+            <span>{{ languageService.t().calendar.drawer.rescheduleBtn }}</span>
+          </app-button>
+
+          <app-button variant="secondary" size="sm" (buttonClick)="onEdit()">
+            <app-icon name="edit" [size]="14"></app-icon>
+            <span>{{ languageService.t().calendar.drawer.editBtn }}</span>
+          </app-button>
+
+          <app-button variant="danger" size="sm" (buttonClick)="showDeleteConfirm.set(true)">
+            <app-icon name="trash" [size]="14"></app-icon>
+            <span>{{ languageService.t().calendar.drawer.deleteBtn }}</span>
+          </app-button>
+        </div>
+      }
+    </div>
+  </aside>
+}

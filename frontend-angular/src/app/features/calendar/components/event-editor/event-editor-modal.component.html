@@ -1,0 +1,153 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="modalTitle()"
+  maxWidth="560px"
+  [showFooter]="true"
+  (close)="close.emit()"
+>
+  <div class="event-form-body">
+    <!-- Title Input -->
+    <div class="form-group">
+      <label class="form-label" for="event-title">
+        {{ languageService.t().calendar.form.titleLabel }}
+      </label>
+      <input
+        id="event-title"
+        type="text"
+        class="form-control"
+        [placeholder]="languageService.t().calendar.form.titlePlaceholder"
+        [ngModel]="title()"
+        (ngModelChange)="title.set($event)"
+        autofocus
+      />
+    </div>
+
+    <!-- Description Input -->
+    <div class="form-group">
+      <label class="form-label" for="event-desc">
+        {{ languageService.t().calendar.form.descLabel }}
+      </label>
+      <textarea
+        id="event-desc"
+        class="form-control textarea"
+        rows="3"
+        [placeholder]="languageService.t().calendar.form.descPlaceholder"
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+      ></textarea>
+    </div>
+
+    <!-- Date and Time Row -->
+    <div class="form-row-2">
+      <!-- Start Date / Time -->
+      <div class="form-group">
+        <label class="form-label">
+          {{ languageService.t().calendar.form.startDateLabel }}
+        </label>
+        <div class="date-time-inputs">
+          <input
+            type="date"
+            class="form-control date-input"
+            [ngModel]="startDate()"
+            (ngModelChange)="startDate.set($event)"
+          />
+          <input
+            type="time"
+            class="form-control time-input"
+            [ngModel]="startTime()"
+            (ngModelChange)="startTime.set($event)"
+          />
+        </div>
+      </div>
+
+      <!-- End Date / Time -->
+      <div class="form-group">
+        <label class="form-label">
+          {{ languageService.t().calendar.form.endDateLabel }}
+        </label>
+        <div class="date-time-inputs">
+          <input
+            type="date"
+            class="form-control date-input"
+            [ngModel]="endDate()"
+            (ngModelChange)="endDate.set($event)"
+          />
+          <input
+            type="time"
+            class="form-control time-input"
+            [ngModel]="endTime()"
+            (ngModelChange)="endTime.set($event)"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Reminders Selection Chips -->
+    <div class="form-group">
+      <label class="form-label">
+        {{ languageService.t().calendar.form.remindersLabel }}
+      </label>
+      <div class="reminders-chip-grid">
+        <button
+          type="button"
+          class="reminder-chip"
+          [class.active]="reminderOffsets().includes(15)"
+          (click)="toggleReminder(15)"
+        >
+          <app-icon name="bell" [size]="13"></app-icon>
+          <span>{{ languageService.t().calendar.form.remind15m }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="reminder-chip"
+          [class.active]="reminderOffsets().includes(30)"
+          (click)="toggleReminder(30)"
+        >
+          <app-icon name="bell" [size]="13"></app-icon>
+          <span>{{ languageService.t().calendar.form.remind30m }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="reminder-chip"
+          [class.active]="reminderOffsets().includes(60)"
+          (click)="toggleReminder(60)"
+        >
+          <app-icon name="bell" [size]="13"></app-icon>
+          <span>{{ languageService.t().calendar.form.remind1h }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="reminder-chip"
+          [class.active]="reminderOffsets().includes(1440)"
+          (click)="toggleReminder(1440)"
+        >
+          <app-icon name="bell" [size]="13"></app-icon>
+          <span>{{ languageService.t().calendar.form.remind1d }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div footer class="modal-footer-actions">
+    <app-button variant="outline" (buttonClick)="close.emit()">
+      {{ languageService.t().common.cancel }}
+    </app-button>
+    <app-button
+      variant="primary"
+      [loading]="calendarService.isActionLoading()"
+      (buttonClick)="onSave()"
+    >
+      <app-icon name="check" [size]="16"></app-icon>
+      <span>
+        {{
+          isEditMode()
+            ? languageService.t().calendar.form.save
+            : languageService.t().calendar.form.create
+        }}
+      </span>
+    </app-button>
+  </div>
+</app-modal>

@@ -1,0 +1,203 @@
+.month-view-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 600px;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.weekday-header-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  background-color: var(--bg-surface-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 10px 0;
+  user-select: none;
+}
+
+.weekday-header-cell {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: repeat(6, 1fr);
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+.month-cell {
+  min-height: 96px;
+  min-width: 0;
+  border-right: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  background-color: var(--bg-surface);
+  position: relative;
+  overflow: hidden;
+
+  &:nth-child(7n) {
+    border-right: none;
+  }
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+
+  &.outside-month {
+    background-color: rgba(0, 0, 0, 0.015);
+    opacity: 0.55;
+
+    [data-theme='dark'] & {
+      background-color: rgba(255, 255, 255, 0.015);
+    }
+  }
+
+  &.is-today {
+    background-color: var(--color-primary-subtle);
+  }
+
+  &.is-selected:not(.is-today) {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+}
+
+.cell-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+  min-width: 0;
+}
+
+.day-number {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+
+  &.today-badge {
+    background-color: var(--color-primary);
+    color: var(--color-primary-text);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.event-count-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 1px 5px;
+  background-color: var(--bg-surface-secondary);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.event-pills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.event-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background-color: var(--bg-surface-secondary);
+  border-left: 3px solid var(--color-primary);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  cursor: pointer;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    filter: brightness(0.96);
+  }
+
+  // Gentle, warm conflict indicator
+  &.has-conflict {
+    border-left-color: var(--color-warning) !important;
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
+
+    .event-title {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+  }
+
+  .conflict-icon {
+    color: var(--color-warning);
+    flex-shrink: 0;
+  }
+
+  .event-time {
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    flex-shrink: 0;
+  }
+
+  .event-title {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+}
+
+.more-events-pill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  padding: 2px 4px;
+  border-radius: 4px;
+  background-color: var(--color-primary-subtle);
+  text-align: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

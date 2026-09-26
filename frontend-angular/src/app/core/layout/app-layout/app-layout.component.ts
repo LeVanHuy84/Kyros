@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { TopNavComponent } from '../top-nav/top-nav.component';
 import { ToastContainerComponent } from '@shared/components/toast/toast-container.component';
+import { ReminderToastsComponent } from '@features/calendar/components/reminder-toasts/reminder-toasts.component';
 
 @Component({
   selector: 'app-layout',
@@ -15,6 +16,7 @@ import { ToastContainerComponent } from '@shared/components/toast/toast-containe
     SidebarComponent,
     TopNavComponent,
     ToastContainerComponent,
+    ReminderToastsComponent,
   ],
   templateUrl: './app-layout.component.html',
   styleUrl: './app-layout.component.scss',

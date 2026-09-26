@@ -1,0 +1,100 @@
+<div class="week-view-container">
+  <!-- Day Column Header Row -->
+  <div class="week-header-row">
+    <div class="time-gutter-header">
+      <span class="timezone-label">GMT+7</span>
+    </div>
+
+    <div class="days-header-grid">
+      @for (col of columns(); track col.date.toISOString()) {
+        <div class="day-header-cell" [class.is-today]="col.isToday">
+          <span class="day-name">{{ col.dayName }}</span>
+          <span class="day-badge" [class.today-badge]="col.isToday">
+            {{ col.dayNumber }}
+          </span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Scrollable 24-hour Timeline Grid -->
+  <div class="timeline-scroll-area" #timelineScroll>
+    <div class="timeline-body">
+      <!-- Time Gutter Column -->
+      <div class="time-gutter">
+        @for (h of hours; track h) {
+          <div class="hour-label-cell">
+            <span>{{ formatHour(h) }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- 7 Day Columns Grid -->
+      <div class="columns-grid">
+        <!-- Horizontal hour divider grid lines across all columns -->
+        @for (h of hours; track h) {
+          <div class="hour-grid-line" [style.top.px]="h * 56"></div>
+        }
+
+        @for (col of columns(); track col.date.toISOString()) {
+          <div class="day-timeline-col" [class.is-today]="col.isToday">
+            <!-- Clickable hourly slots -->
+            @for (h of hours; track h) {
+              <div
+                class="slot-cell"
+                [style.top.px]="h * 56"
+                (click)="onSlotClick(col.date, h)"
+                [title]="'Tạo sự kiện lúc ' + formatHour(h)"
+              ></div>
+            }
+
+            <!-- Current time red indicator if today -->
+            @if (col.isToday && currentTimeTopPx() !== null) {
+              <div class="current-time-line" [style.top.px]="currentTimeTopPx()!">
+                <div class="current-time-circle"></div>
+              </div>
+            }
+
+            <!-- Event Cards within this column -->
+            @for (item of col.events; track item.event.id) {
+              <div
+                class="week-event-card"
+                [class.is-short-event]="item.isShort"
+                [class.has-conflict]="item.isConflict"
+                [style.top.px]="item.topPx"
+                [style.height.px]="item.heightPx"
+                [style.border-left-color]="item.event.color || 'var(--color-primary)'"
+                (click)="onEventCardClick($event, item.event)"
+                [title]="item.event.title + ' (' + item.formattedTime + ')'"
+              >
+                @if (item.isShort) {
+                  <div class="compact-event-row">
+                    @if (item.isConflict) {
+                      <app-icon name="alert-triangle" [size]="12" class="conflict-badge-icon"></app-icon>
+                    }
+                    <span class="card-time-compact">{{ item.shortTime }}</span>
+                    <span class="card-title-compact">{{ item.event.title }}</span>
+                  </div>
+                } @else {
+                  <div class="event-card-header">
+                    @if (item.isConflict) {
+                      <app-icon name="alert-triangle" [size]="13" class="conflict-badge-icon"></app-icon>
+                    }
+                    <span class="card-time">{{ item.formattedTime }}</span>
+                  </div>
+                  <div class="card-title">{{ item.event.title }}</div>
+                  @if (item.heightPx > 45 && item.event.location) {
+                    <div class="card-location">
+                      <app-icon name="map-pin" [size]="11"></app-icon>
+                      <span>{{ item.event.location }}</span>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

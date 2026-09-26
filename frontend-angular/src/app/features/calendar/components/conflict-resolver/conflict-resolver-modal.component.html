@@ -1,0 +1,100 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="languageService.t().calendar.conflictResolverModal.title"
+  maxWidth="560px"
+  [showFooter]="true"
+  (close)="close.emit()"
+>
+  <div class="conflict-resolver-body">
+    <p class="subtitle">{{ languageService.t().calendar.conflictResolverModal.subtitle }}</p>
+
+    @if (calendarService.conflicts().length === 0) {
+      <!-- No Conflicts State -->
+      <div class="no-conflicts-state">
+        <div class="check-circle-icon">
+          <app-icon name="check-circle" [size]="36"></app-icon>
+        </div>
+        <p class="no-conflicts-text">
+          {{ languageService.t().calendar.conflictResolverModal.noConflicts }}
+        </p>
+      </div>
+    } @else {
+      <!-- Detected Conflicts Header -->
+      <div class="conflict-alert-banner">
+        <app-icon name="alert-triangle" [size]="18"></app-icon>
+        <span>
+          {{
+            languageService
+              .t()
+              .calendar.conflictResolverModal.detectedCount.replace(
+                '{count}',
+                calendarService.conflicts().length.toString()
+              )
+          }}
+        </span>
+      </div>
+
+      <!-- Conflicts List -->
+      <div class="conflicts-list">
+        @for (item of calendarService.conflicts(); track item.eventA.id + '-' + item.eventB.id) {
+          <div class="conflict-pair-card">
+            <div class="events-comparison">
+              <!-- Event A -->
+              <div class="event-item">
+                <span class="event-tag">1</span>
+                <div class="event-detail">
+                  <h4 class="event-title">{{ item.eventA.title }}</h4>
+                  <span class="event-time">{{ formatTimeRange(item.eventA.startTime, item.eventA.endTime) }}</span>
+                </div>
+              </div>
+
+              <!-- Overlap Indicator Line -->
+              <div class="overlap-divider">
+                <span class="overlap-badge">
+                  {{ languageService.t().calendar.conflictResolverModal.overlapTime }}
+                  {{ formatTimeRange(item.overlapStart, item.overlapEnd) | slice:-13 }}
+                </span>
+              </div>
+
+              <!-- Event B -->
+              <div class="event-item">
+                <span class="event-tag secondary">2</span>
+                <div class="event-detail">
+                  <h4 class="event-title">{{ item.eventB.title }}</h4>
+                  <span class="event-time">{{ formatTimeRange(item.eventB.startTime, item.eventB.endTime) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Recommendation Box -->
+            <div class="ai-recommendation-box">
+              <div class="rec-title">
+                <app-icon name="sparkles" [size]="14"></app-icon>
+                <span>{{ languageService.t().calendar.conflictResolverModal.recommendation }}</span>
+              </div>
+              <p class="rec-text">
+                {{ languageService.t().calendar.conflictResolverModal.recommendationText }}
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div footer class="modal-footer-actions">
+    <app-button variant="outline" (buttonClick)="close.emit()">
+      {{ languageService.t().common.close }}
+    </app-button>
+    @if (calendarService.conflicts().length > 0) {
+      <app-button
+        variant="primary"
+        [loading]="calendarService.isActionLoading()"
+        (buttonClick)="onApplyResolution()"
+      >
+        <app-icon name="zap" [size]="15"></app-icon>
+        <span>{{ languageService.t().calendar.conflictResolverModal.applyBtn }}</span>
+      </app-button>
+    }
+  </div>
+</app-modal>

@@ -65,9 +65,9 @@ export const routes: Routes = [
       {
         path: 'calendar',
         loadComponent: () =>
-          import('@features/agent/pages/agent-placeholder.component').then(
-            (m) => m.AgentPlaceholderComponent
-          ),
+          import(
+            '@features/calendar/pages/calendar-page/calendar-page.component'
+          ).then((m) => m.CalendarPageComponent),
       },
       {
         path: 'notes',

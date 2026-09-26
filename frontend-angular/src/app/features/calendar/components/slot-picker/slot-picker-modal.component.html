@@ -1,0 +1,190 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="languageService.t().calendar.slotPickerModal.title"
+  maxWidth="560px"
+  [showFooter]="true"
+  (close)="close.emit()"
+>
+  <div class="slot-picker-body">
+    <p class="subtitle">{{ languageService.t().calendar.slotPickerModal.subtitle }}</p>
+
+    <!-- Search Horizon (Hôm nay / Ngày mai / 7 ngày tới) -->
+    <div class="form-group">
+      <label class="form-label">
+        {{ languageService.t().calendar.slotPickerModal.rangeLabel }}
+      </label>
+      <div class="horizon-chips-grid">
+        <button
+          type="button"
+          class="horizon-chip"
+          [class.active]="selectedHorizon() === 'today'"
+          (click)="selectedHorizon.set('today')"
+        >
+          <app-icon name="calendar" [size]="14"></app-icon>
+          <span>{{ languageService.t().calendar.slotPickerModal.rangeToday }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="horizon-chip"
+          [class.active]="selectedHorizon() === 'tomorrow'"
+          (click)="selectedHorizon.set('tomorrow')"
+        >
+          <app-icon name="arrow-right" [size]="14"></app-icon>
+          <span>{{ languageService.t().calendar.slotPickerModal.rangeTomorrow }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="horizon-chip"
+          [class.active]="selectedHorizon() === 'week'"
+          (click)="selectedHorizon.set('week')"
+        >
+          <app-icon name="sparkles" [size]="14"></app-icon>
+          <span>{{ languageService.t().calendar.slotPickerModal.rangeWeek }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Duration Selection -->
+    <div class="form-group">
+      <label class="form-label">
+        {{ languageService.t().calendar.slotPickerModal.durationLabel }}
+      </label>
+      <div class="duration-chips-grid">
+        <button
+          type="button"
+          class="dur-chip"
+          [class.active]="selectedDuration() === 15"
+          (click)="selectedDuration.set(15)"
+        >
+          {{ languageService.t().calendar.slotPickerModal.dur15 }}
+        </button>
+
+        <button
+          type="button"
+          class="dur-chip"
+          [class.active]="selectedDuration() === 30"
+          (click)="selectedDuration.set(30)"
+        >
+          {{ languageService.t().calendar.slotPickerModal.dur30 }}
+        </button>
+
+        <button
+          type="button"
+          class="dur-chip"
+          [class.active]="selectedDuration() === 45"
+          (click)="selectedDuration.set(45)"
+        >
+          {{ languageService.t().calendar.slotPickerModal.dur45 }}
+        </button>
+
+        <button
+          type="button"
+          class="dur-chip"
+          [class.active]="selectedDuration() === 60"
+          (click)="selectedDuration.set(60)"
+        >
+          {{ languageService.t().calendar.slotPickerModal.dur60 }}
+        </button>
+
+        <button
+          type="button"
+          class="dur-chip"
+          [class.active]="selectedDuration() === 90"
+          (click)="selectedDuration.set(90)"
+        >
+          {{ languageService.t().calendar.slotPickerModal.dur90 }}
+        </button>
+
+        <button
+          type="button"
+          class="dur-chip"
+          [class.active]="selectedDuration() === 120"
+          (click)="selectedDuration.set(120)"
+        >
+          {{ languageService.t().calendar.slotPickerModal.dur120 }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Working Hours Inputs -->
+    <div class="form-group">
+      <label class="form-label">
+        {{ languageService.t().calendar.slotPickerModal.workingHours }}
+      </label>
+      <div class="hours-inputs-row">
+        <input
+          type="time"
+          class="form-control"
+          [ngModel]="workingHoursStart()"
+          (ngModelChange)="workingHoursStart.set($event)"
+        />
+        <span class="to-separator">-</span>
+        <input
+          type="time"
+          class="form-control"
+          [ngModel]="workingHoursEnd()"
+          (ngModelChange)="workingHoursEnd.set($event)"
+        />
+
+        <app-button
+          variant="primary"
+          [loading]="isSearching()"
+          (buttonClick)="searchSlots()"
+        >
+          <app-icon name="search" [size]="15"></app-icon>
+          <span>{{ languageService.t().calendar.slotPickerModal.searchBtn }}</span>
+        </app-button>
+      </div>
+    </div>
+
+    <!-- Slots Results List -->
+    @if (hasSearched()) {
+      <div class="slots-results-section">
+        <h4 class="results-heading">
+          {{
+            languageService
+              .t()
+              .calendar.slotPickerModal.resultsTitle.replace(
+                '{count}',
+                availableSlots().length.toString()
+              )
+          }}
+        </h4>
+
+        @if (availableSlots().length === 0) {
+          <div class="empty-slots-warning">
+            <app-icon name="info" [size]="18"></app-icon>
+            <span>{{ languageService.t().calendar.slotPickerModal.emptySlots }}</span>
+          </div>
+        } @else {
+          <div class="slots-grid">
+            @for (slot of availableSlots(); track slot.startTime) {
+              <div class="slot-card" (click)="onSelectSlot(slot)">
+                <div class="slot-left">
+                  <span class="slot-date">{{ formatSlotDate(slot.startTime) }}</span>
+                  <span class="slot-time">
+                    {{ formatSlotTime(slot.startTime) }} - {{ formatSlotTime(slot.endTime) }}
+                  </span>
+                </div>
+                <div class="slot-right">
+                  <span class="slot-dur-badge">{{ slot.durationMinutes }}m</span>
+                  <app-button size="sm" variant="outline">
+                    {{ languageService.t().calendar.slotPickerModal.bookSlot }}
+                  </app-button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div footer class="modal-footer-actions">
+    <app-button variant="outline" (buttonClick)="close.emit()">
+      {{ languageService.t().common.close }}
+    </app-button>
+  </div>
+</app-modal>
