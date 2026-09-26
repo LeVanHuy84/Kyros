@@ -1,0 +1,56 @@
+@if (isOpen()) {
+  <div class="drawer-backdrop animate-fade-in" (click)="closeDrawer.emit()"></div>
+
+  <aside class="recovery-drawer animate-slide-left" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="drawer-header">
+      <div class="header-title-group">
+        <app-icon name="trash" [size]="18" class="header-icon"></app-icon>
+        <div class="title-text">
+          <h3>{{ languageService.t().tasks.trashTitle }}</h3>
+          <span class="subtitle">{{ languageService.t().tasks.trashDrawerSubtitle }}</span>
+        </div>
+      </div>
+      <button type="button" class="close-btn" (click)="closeDrawer.emit()" aria-label="Close">
+        <app-icon name="x" [size]="16"></app-icon>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="drawer-body">
+      <div class="deleted-tasks-list">
+        @for (task of tasksService.deletedTasks(); track task.id) {
+          <div class="deleted-task-card">
+            <div class="task-main-info">
+              <span class="task-title">{{ task.title }}</span>
+              <div class="countdown-row">
+                <app-icon name="clock" [size]="12"></app-icon>
+                <span class="countdown-text">{{ languageService.t().tasks.remainingTime }} {{ getRemainingRecoveryTime(task) }}</span>
+              </div>
+            </div>
+
+            <button type="button" class="recover-btn" (click)="recoverTask(task)">
+              <app-icon name="rotate-ccw" [size]="13"></app-icon>
+              <span>{{ languageService.t().tasks.recover }}</span>
+            </button>
+          </div>
+        } @empty {
+          <div class="empty-trash-state">
+            <div class="trash-icon-wrap">
+              <app-icon name="trash" [size]="32"></app-icon>
+            </div>
+            <h4>{{ languageService.t().tasks.emptyTrash }}</h4>
+            <p>{{ languageService.t().tasks.emptyTrashSubtitle }}</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="drawer-footer">
+      <app-button variant="secondary" (clicked)="closeDrawer.emit()">
+        {{ languageService.t().tasks.closeDrawer }}
+      </app-button>
+    </div>
+  </aside>
+}

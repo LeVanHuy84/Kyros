@@ -1,0 +1,305 @@
+<div class="tasks-page-container">
+  <!-- Top Header & Action Bar -->
+  <header class="tasks-header">
+    <div class="header-left">
+      <div class="header-title-group">
+        <h2>{{ languageService.t().tasks.title }}</h2>
+        <div class="header-metrics-badges">
+          <span class="badge active">{{ tasksService.taskCounts().active }} {{ languageService.t().tasks.active }}</span>
+          <span class="badge completed">{{ tasksService.taskCounts().completed }} {{ languageService.t().tasks.completed }}</span>
+          @if (tasksService.taskCounts().overdue > 0) {
+            <span class="badge overdue">{{ tasksService.taskCounts().overdue }} {{ languageService.t().tasks.overdue }}</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Productivity Metrics Modal Trigger -->
+      <button
+        type="button"
+        class="action-icon-btn"
+        (click)="isProductivityModalOpen.set(true)"
+        [title]="languageService.t().tasks.metrics.title"
+      >
+        <app-icon name="bar-chart" [size]="16"></app-icon>
+        <span class="btn-text">{{ languageService.t().tasks.productivity }}</span>
+      </button>
+
+      <!-- Tag Manager Modal Trigger -->
+      <button
+        type="button"
+        class="action-icon-btn"
+        (click)="isTagManagerModalOpen.set(true)"
+        [title]="languageService.t().tasks.tagManager.title"
+      >
+        <app-icon name="tag" [size]="16"></app-icon>
+        <span class="btn-text">{{ languageService.t().tasks.tags }}</span>
+      </button>
+
+      <!-- Trash Recovery Drawer Trigger (AD-003) -->
+      <button
+        type="button"
+        class="action-icon-btn"
+        (click)="isTrashDrawerOpen.set(true)"
+        [title]="languageService.t().tasks.trashTitle"
+      >
+        <app-icon name="trash" [size]="16"></app-icon>
+        <span class="btn-text">{{ languageService.t().tasks.trash }}</span>
+        @if (tasksService.deletedTasks().length > 0) {
+          <span class="trash-count-badge">{{ tasksService.deletedTasks().length }}</span>
+        }
+      </button>
+
+      <!-- Create New Task Button -->
+      <app-button variant="primary" (clicked)="openCreateTaskModal()">
+        <app-icon name="plus" [size]="16"></app-icon>
+        <span>{{ languageService.t().tasks.newTask }}</span>
+      </app-button>
+    </div>
+  </header>
+
+  <!-- Filter & View Controls Bar -->
+  <div class="tasks-controls-bar">
+    <div class="controls-left">
+      <!-- Dual View Switcher (List vs Kanban) -->
+      <div class="view-mode-toggle">
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="tasksService.filters().viewMode === 'list'"
+          (click)="setViewMode('list')"
+          [title]="languageService.t().tasks.listView"
+        >
+          <app-icon name="layout-list" [size]="15"></app-icon>
+          <span>{{ languageService.t().tasks.listView }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="tasksService.filters().viewMode === 'board'"
+          (click)="setViewMode('board')"
+          [title]="languageService.t().tasks.kanbanView"
+        >
+          <app-icon name="kanban" [size]="15"></app-icon>
+          <span>{{ languageService.t().tasks.kanbanView }}</span>
+        </button>
+      </div>
+
+      <!-- Search Input -->
+      <div class="search-input-wrapper">
+        <app-icon name="search" [size]="14" class="search-icon"></app-icon>
+        <input
+          type="text"
+          [ngModel]="tasksService.filters().search"
+          (ngModelChange)="onSearchChange($event)"
+          [placeholder]="languageService.t().tasks.searchPlaceholder"
+          class="search-input"
+        />
+        @if (tasksService.filters().search) {
+          <button type="button" class="clear-search-btn" (click)="onSearchChange('')">
+            <app-icon name="x" [size]="12"></app-icon>
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="controls-right">
+      <!-- Status Filter Tabs (In List View) -->
+      @if (tasksService.filters().viewMode === 'list') {
+        <div class="filter-pills">
+          <button
+            type="button"
+            class="filter-pill"
+            [class.active]="tasksService.filters().status === 'ALL'"
+            (click)="setStatusFilter('ALL')"
+          >
+            {{ languageService.t().tasks.all }}
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.active]="tasksService.filters().status === 'ACTIVE'"
+            (click)="setStatusFilter('ACTIVE')"
+          >
+            {{ languageService.t().tasks.todo }}
+          </button>
+          <button
+            type="button"
+            class="filter-pill"
+            [class.active]="tasksService.filters().status === 'COMPLETED'"
+            (click)="setStatusFilter('COMPLETED')"
+          >
+            {{ languageService.t().tasks.completed }}
+          </button>
+        </div>
+      }
+
+      <!-- Priority Filter Custom Dropdown -->
+      <div class="priority-dropdown-container">
+        <button
+          type="button"
+          class="priority-dropdown-trigger"
+          [class.open]="isPriorityDropdownOpen()"
+          (click)="togglePriorityDropdown($event)"
+          aria-haspopup="listbox"
+          [attr.aria-expanded]="isPriorityDropdownOpen()"
+        >
+          @if (tasksService.filters().priority === 'HIGH') {
+            <span class="priority-dot high"></span>
+          } @else if (tasksService.filters().priority === 'MEDIUM') {
+            <span class="priority-dot medium"></span>
+          } @else if (tasksService.filters().priority === 'LOW') {
+            <span class="priority-dot low"></span>
+          } @else {
+            <app-icon name="filter" [size]="13" class="filter-icon"></app-icon>
+          }
+          <span class="priority-label">{{ getPriorityLabel(tasksService.filters().priority) }}</span>
+          <app-icon name="chevron-down" [size]="12" class="chevron-icon" [class.rotated]="isPriorityDropdownOpen()"></app-icon>
+        </button>
+
+        @if (isPriorityDropdownOpen()) {
+          <div class="priority-dropdown-menu animate-fade-in-scale" role="listbox">
+            <button
+              type="button"
+              class="dropdown-item"
+              [class.selected]="tasksService.filters().priority === 'ALL'"
+              (click)="selectPriority('ALL', $event)"
+              role="option"
+              [attr.aria-selected]="tasksService.filters().priority === 'ALL'"
+            >
+              <div class="item-left">
+                <app-icon name="layout-list" [size]="13" class="item-icon"></app-icon>
+                <span>{{ languageService.t().tasks.all }}</span>
+              </div>
+              @if (tasksService.filters().priority === 'ALL') {
+                <app-icon name="check" [size]="13" class="check-icon"></app-icon>
+              }
+            </button>
+
+            <button
+              type="button"
+              class="dropdown-item"
+              [class.selected]="tasksService.filters().priority === 'HIGH'"
+              (click)="selectPriority('HIGH', $event)"
+              role="option"
+              [attr.aria-selected]="tasksService.filters().priority === 'HIGH'"
+            >
+              <div class="item-left">
+                <span class="priority-dot high"></span>
+                <span>{{ languageService.t().tasks.high }}</span>
+              </div>
+              @if (tasksService.filters().priority === 'HIGH') {
+                <app-icon name="check" [size]="13" class="check-icon"></app-icon>
+              }
+            </button>
+
+            <button
+              type="button"
+              class="dropdown-item"
+              [class.selected]="tasksService.filters().priority === 'MEDIUM'"
+              (click)="selectPriority('MEDIUM', $event)"
+              role="option"
+              [attr.aria-selected]="tasksService.filters().priority === 'MEDIUM'"
+            >
+              <div class="item-left">
+                <span class="priority-dot medium"></span>
+                <span>{{ languageService.t().tasks.medium }}</span>
+              </div>
+              @if (tasksService.filters().priority === 'MEDIUM') {
+                <app-icon name="check" [size]="13" class="check-icon"></app-icon>
+              }
+            </button>
+
+            <button
+              type="button"
+              class="dropdown-item"
+              [class.selected]="tasksService.filters().priority === 'LOW'"
+              (click)="selectPriority('LOW', $event)"
+              role="option"
+              [attr.aria-selected]="tasksService.filters().priority === 'LOW'"
+            >
+              <div class="item-left">
+                <span class="priority-dot low"></span>
+                <span>{{ languageService.t().tasks.low }}</span>
+              </div>
+              @if (tasksService.filters().priority === 'LOW') {
+                <app-icon name="check" [size]="13" class="check-icon"></app-icon>
+              }
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Tag Filter Chip -->
+  @if (tasksService.filters().tag) {
+    <div class="active-filter-banner animate-fade-in">
+      <span class="banner-text">#{{ tasksService.filters().tag }}</span>
+      <span class="active-tag-chip">
+        <span>#{{ tasksService.filters().tag }}</span>
+        <button type="button" class="remove-chip-btn" (click)="clearTagFilter()">
+          <app-icon name="x" [size]="12"></app-icon>
+        </button>
+      </span>
+    </div>
+  }
+
+  <!-- Main View Area (List or Kanban) -->
+  <main class="tasks-main-content">
+    @if (tasksService.filters().viewMode === 'list') {
+      <app-task-list
+        (editTask)="openEditTaskModal($event)"
+        (openTimer)="openFocusTimer($event)"
+        (openRecurrence)="openRecurrenceModal($event)"
+        (tagClicked)="onTagClicked($event)"
+        (createTask)="openCreateTaskModal()"
+      ></app-task-list>
+    } @else {
+      <app-task-board
+        (editTask)="openEditTaskModal($event)"
+        (openTimer)="openFocusTimer($event)"
+        (openRecurrence)="openRecurrenceModal($event)"
+        (tagClicked)="onTagClicked($event)"
+        (createTaskInColumn)="openCreateTaskModal($event)"
+      ></app-task-board>
+    }
+  </main>
+
+  <!-- Modal Components -->
+  <app-task-form-modal
+    [isOpen]="isFormModalOpen()"
+    [taskToEdit]="selectedTaskForEdit()"
+    [defaultPriority]="defaultPriorityForNew()"
+    (closeModal)="isFormModalOpen.set(false)"
+  ></app-task-form-modal>
+
+  <app-focus-timer-modal
+    [isOpen]="isTimerModalOpen()"
+    [task]="selectedTaskForTimer()"
+    (closeModal)="isTimerModalOpen.set(false)"
+  ></app-focus-timer-modal>
+
+  <app-recurrence-modal
+    [isOpen]="isRecurrenceModalOpen()"
+    [task]="selectedTaskForRecurrence()"
+    (closeModal)="isRecurrenceModalOpen.set(false)"
+  ></app-recurrence-modal>
+
+  <app-productivity-metrics-modal
+    [isOpen]="isProductivityModalOpen()"
+    (closeModal)="isProductivityModalOpen.set(false)"
+  ></app-productivity-metrics-modal>
+
+  <app-tag-manager-modal
+    [isOpen]="isTagManagerModalOpen()"
+    (closeModal)="isTagManagerModalOpen.set(false)"
+  ></app-tag-manager-modal>
+
+  <app-trash-recovery-drawer
+    [isOpen]="isTrashDrawerOpen()"
+    (closeDrawer)="isTrashDrawerOpen.set(false)"
+  ></app-trash-recovery-drawer>
+</div>

@@ -1,0 +1,134 @@
+<div
+  class="task-card"
+  [class.completed]="isCompleted()"
+  [class.overdue]="isOverdue()"
+  [class.compact]="isCompact()"
+>
+  <!-- Left: Custom Animated Checkbox -->
+  <button
+    type="button"
+    class="task-checkbox"
+    [class.checked]="isCompleted()"
+    (click)="toggleComplete($event)"
+    [attr.aria-label]="isCompleted() ? 'Mở lại task' : 'Hoàn thành task'"
+  >
+    @if (isCompleted()) {
+      <app-icon name="check" [size]="12" color="#ffffff"></app-icon>
+    }
+  </button>
+
+  <!-- Middle: Task Content -->
+  <div class="task-content" (click)="onEdit($event)">
+    <div class="task-header-line">
+      <span class="task-title" [class.strike]="isCompleted()">{{ task().title }}</span>
+
+      <!-- Priority Badge -->
+      <span class="priority-badge" [class]="'priority-' + task().priority.toLowerCase()">
+        {{ getPriorityLabel(task().priority) }}
+      </span>
+
+      <!-- Recurrence Icon -->
+      @if (task().hasRecurrence) {
+        <span
+          class="recurrence-indicator"
+          [class.paused]="task().recurrenceStatus === 'Paused'"
+          [title]="'Lặp lại định kỳ (' + (task().recurrencePattern || 'DAILY') + ')'"
+        >
+          <app-icon name="refresh-cw" [size]="12"></app-icon>
+        </span>
+      }
+    </div>
+
+    <!-- Description Preview -->
+    @if (task().description && !isCompact()) {
+      <p class="task-desc">{{ task().description }}</p>
+    }
+
+    <!-- Meta Info Footer: Tags, Due Date, Duration -->
+    <div class="task-meta-row">
+      <!-- Due Date -->
+      @if (task().dueDate) {
+        <span class="meta-item due-date" [class.overdue]="isOverdue()">
+          <app-icon name="clock" [size]="12"></app-icon>
+          <span>{{ formattedDueDate() }}</span>
+        </span>
+      }
+
+      <!-- Estimated Duration -->
+      @if (task().estimatedDurationMinutes) {
+        <span class="meta-item duration" title="Thời gian ước tính">
+          <app-icon name="clock" [size]="12"></app-icon>
+          <span>{{ task().estimatedDurationMinutes }}m</span>
+        </span>
+      }
+
+      <!-- Tags -->
+      <div class="task-tags-list">
+        @for (tag of task().tags; track tag) {
+          <button
+            type="button"
+            class="tag-pill"
+            [style.backgroundColor]="getTagColor(tag) + '15'"
+            [style.borderColor]="getTagColor(tag) + '35'"
+            [style.color]="getTagColor(tag)"
+            (click)="onTagClick(tag, $event)"
+          >
+            <span class="tag-dot" [style.backgroundColor]="getTagColor(tag)"></span>
+            <span>{{ tag }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Quick Actions Menu Anchor -->
+  <div class="task-actions-anchor">
+    <!-- Quick Pomodoro Button -->
+    <button
+      type="button"
+      class="quick-timer-btn"
+      (click)="onStartTimer($event)"
+      title="Bắt đầu phiên tập trung Pomodoro"
+    >
+      <app-icon name="play" [size]="12"></app-icon>
+    </button>
+
+    <!-- More Actions Dropdown Trigger -->
+    <button
+      type="button"
+      class="more-btn"
+      (click)="toggleMenu($event)"
+      [attr.aria-expanded]="isMenuOpen()"
+      title="Tùy chọn tác vụ"
+    >
+      <app-icon name="more-vertical" [size]="15"></app-icon>
+    </button>
+
+    <!-- Popover Menu -->
+    @if (isMenuOpen()) {
+      <div class="task-popover animate-fade-in-scale" (click)="$event.stopPropagation()" role="menu">
+        <button type="button" class="menu-item" (click)="onEdit($event)" role="menuitem">
+          <app-icon name="edit" [size]="14"></app-icon>
+          <span>{{ languageService.t().tasks.card.edit }}</span>
+        </button>
+
+        <button type="button" class="menu-item" (click)="onStartTimer($event)" role="menuitem">
+          <app-icon name="clock" [size]="14"></app-icon>
+          <span>{{ languageService.t().tasks.card.pomodoro }}</span>
+        </button>
+
+        <button type="button" class="menu-item" (click)="onRecurrence($event)" role="menuitem">
+          <app-icon name="refresh-cw" [size]="14"></app-icon>
+          <span>{{ languageService.t().tasks.card.recurring }}</span>
+        </button>
+
+        <div class="menu-divider"></div>
+
+        <button type="button" class="menu-item delete" (click)="onDelete($event)" role="menuitem">
+          <app-icon name="trash" [size]="14"></app-icon>
+          <span>{{ languageService.t().tasks.card.delete }}</span>
+        </button>
+      </div>
+    }
+  </div>
+</div>

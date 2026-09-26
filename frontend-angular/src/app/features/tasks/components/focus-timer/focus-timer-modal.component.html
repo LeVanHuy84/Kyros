@@ -1,0 +1,136 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="closeModal.emit()">
+    <div class="modal-card animate-fade-in-scale" (click)="$event.stopPropagation()" role="dialog">
+      <!-- Header -->
+      <div class="modal-header">
+        <div class="header-title-group">
+          <app-icon name="clock" [size]="18" class="header-icon"></app-icon>
+          <h3>{{ languageService.t().tasks.timer.title }}</h3>
+        </div>
+        <button type="button" class="close-btn" (click)="closeModal.emit()" aria-label="Close">
+          <app-icon name="x" [size]="16"></app-icon>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <!-- Attached Task Card -->
+        @if (task()) {
+          <div class="attached-task-box">
+            <span class="box-label">{{ languageService.t().tasks.timer.attachedTask }}</span>
+            <span class="task-name">{{ task()!.title }}</span>
+          </div>
+        }
+
+        <!-- Duration Preset Selectors -->
+        <div class="duration-presets-row">
+          <button
+            type="button"
+            class="preset-btn"
+            [class.active]="totalSeconds() === 15 * 60"
+            (click)="setDuration(15)"
+            [disabled]="isRunning()"
+          >
+            {{ languageService.t().tasks.timer.preset15 }}
+          </button>
+          <button
+            type="button"
+            class="preset-btn"
+            [class.active]="totalSeconds() === 25 * 60"
+            (click)="setDuration(25)"
+            [disabled]="isRunning()"
+          >
+            {{ languageService.t().tasks.timer.preset25 }}
+          </button>
+          <button
+            type="button"
+            class="preset-btn"
+            [class.active]="totalSeconds() === 45 * 60"
+            (click)="setDuration(45)"
+            [disabled]="isRunning()"
+          >
+            {{ languageService.t().tasks.timer.preset45 }}
+          </button>
+        </div>
+
+        <!-- Animated SVG Timer Ring -->
+        <div class="timer-dial-container">
+          <svg class="timer-svg" width="170" height="170" viewBox="0 0 200 200">
+            <!-- Background Track -->
+            <circle
+              class="timer-track"
+              cx="100"
+              cy="100"
+              r="88"
+              fill="none"
+              stroke="var(--border-subtle)"
+              stroke-width="8"
+            />
+            <!-- Progress Arc -->
+            <circle
+              class="timer-progress"
+              cx="100"
+              cy="100"
+              r="88"
+              fill="none"
+              stroke="var(--color-primary)"
+              stroke-width="8"
+              stroke-linecap="round"
+              [style.strokeDasharray]="2 * 3.14159265 * 88"
+              [style.strokeDashoffset]="strokeDashoffset()"
+              transform="rotate(-90 100 100)"
+            />
+          </svg>
+
+          <div class="timer-time-display">
+            <span class="time-digits">{{ minutesDisplay() }}:{{ secondsDisplay() }}</span>
+            <span class="status-text">{{ isRunning() ? languageService.t().tasks.timer.running : languageService.t().tasks.timer.ready }}</span>
+          </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="timer-controls">
+          @if (!isRunning()) {
+            <button type="button" class="ctrl-btn start" (click)="startTimer()">
+              <app-icon name="play" [size]="18"></app-icon>
+              <span>{{ secondsLeft() < totalSeconds() ? languageService.t().tasks.timer.resume : languageService.t().tasks.timer.start }}</span>
+            </button>
+          } @else {
+            <button type="button" class="ctrl-btn pause" (click)="pauseTimer()">
+              <app-icon name="pause" [size]="18"></app-icon>
+              <span>{{ languageService.t().tasks.timer.pause }}</span>
+            </button>
+          }
+
+          <button type="button" class="ctrl-btn reset" (click)="resetTimer()" [title]="languageService.t().tasks.timer.reset">
+            <app-icon name="rotate-ccw" [size]="16"></app-icon>
+          </button>
+        </div>
+
+        <!-- Session Notes -->
+        <div class="notes-form-group">
+          <label for="session-notes" class="notes-label">{{ languageService.t().tasks.timer.notesLabel }}</label>
+          <input
+            id="session-notes"
+            type="text"
+            [ngModel]="notes()"
+            (ngModelChange)="notes.set($event)"
+            [placeholder]="languageService.t().tasks.timer.notesPlaceholder"
+            class="notes-input"
+          />
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <app-button variant="secondary" (clicked)="closeModal.emit()">
+          {{ languageService.t().common.cancel }}
+        </app-button>
+        <app-button variant="primary" (clicked)="finishSession()">
+          <app-icon name="check" [size]="15"></app-icon>
+          <span>{{ languageService.t().tasks.timer.saveSession }}</span>
+        </app-button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,162 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="closeModal.emit()">
+    <div class="modal-card animate-fade-in-scale" (click)="$event.stopPropagation()" role="dialog">
+      <!-- Header -->
+      <div class="modal-header">
+        <div class="header-title-group">
+          <app-icon [name]="taskToEdit() ? 'edit' : 'plus'" [size]="18" class="header-icon"></app-icon>
+          <h3>{{ taskToEdit() ? languageService.t().tasks.form.editTitle : languageService.t().tasks.form.createTitle }}</h3>
+        </div>
+        <button type="button" class="close-btn" (click)="closeModal.emit()" aria-label="Close">
+          <app-icon name="x" [size]="16"></app-icon>
+        </button>
+      </div>
+
+      <!-- Form Body -->
+      <form (ngSubmit)="handleSave()" class="modal-body">
+        <!-- Title Input -->
+        <div class="form-group">
+          <label for="task-title" class="form-label">
+            <span>{{ languageService.t().tasks.form.titleLabel }}</span>
+            <span class="required-star">*</span>
+          </label>
+          <input
+            id="task-title"
+            type="text"
+            [ngModel]="title()"
+            (ngModelChange)="title.set($event)"
+            name="title"
+            [placeholder]="languageService.t().tasks.form.titlePlaceholder"
+            class="form-input title-input"
+            required
+            autofocus
+          />
+        </div>
+
+        <!-- Description Input -->
+        <div class="form-group">
+          <label for="task-desc" class="form-label">{{ languageService.t().tasks.form.descLabel }}</label>
+          <textarea
+            id="task-desc"
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+            name="description"
+            [placeholder]="languageService.t().tasks.form.descPlaceholder"
+            rows="3"
+            class="form-textarea"
+          ></textarea>
+        </div>
+
+        <!-- Priority Selector -->
+        <div class="form-group">
+          <label class="form-label">{{ languageService.t().tasks.form.priorityLabel }}</label>
+          <div class="priority-pills-row">
+            <button
+              type="button"
+              class="priority-pill high"
+              [class.active]="priority() === 'HIGH'"
+              (click)="setPriority('HIGH')"
+            >
+              <span class="dot"></span>
+              <span>{{ languageService.t().tasks.high }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="priority-pill medium"
+              [class.active]="priority() === 'MEDIUM'"
+              (click)="setPriority('MEDIUM')"
+            >
+              <span class="dot"></span>
+              <span>{{ languageService.t().tasks.medium }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="priority-pill low"
+              [class.active]="priority() === 'LOW'"
+              (click)="setPriority('LOW')"
+            >
+              <span class="dot"></span>
+              <span>{{ languageService.t().tasks.low }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Two Columns: Due Date & Estimated Minutes -->
+        <div class="form-grid-row">
+          <div class="form-group">
+            <label for="task-due-date" class="form-label">{{ languageService.t().tasks.form.dueDateLabel }}</label>
+            <input
+              id="task-due-date"
+              type="datetime-local"
+              [ngModel]="dueDate()"
+              (ngModelChange)="dueDate.set($event)"
+              name="dueDate"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="task-duration" class="form-label">{{ languageService.t().tasks.form.durationLabel }}</label>
+            <input
+              id="task-duration"
+              type="number"
+              min="5"
+              step="5"
+              [ngModel]="estimatedDuration()"
+              (ngModelChange)="estimatedDuration.set($event)"
+              name="estimatedDuration"
+              [placeholder]="languageService.t().tasks.form.durationPlaceholder"
+              class="form-input"
+            />
+          </div>
+        </div>
+
+        <!-- Tags Picker -->
+        <div class="form-group">
+          <label class="form-label">{{ languageService.t().tasks.form.tagsLabel }}</label>
+          <app-tag-picker
+            [selectedTags]="tags()"
+            (tagsChange)="tags.set($event)"
+          ></app-tag-picker>
+        </div>
+
+        <!-- Auto-schedule AI Flag -->
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [ngModel]="autoSchedule()"
+              (ngModelChange)="autoSchedule.set($event)"
+              name="autoSchedule"
+              class="checkbox-input"
+            />
+            <div class="checkbox-text">
+              <span class="checkbox-title">🤖 {{ languageService.t().tasks.form.autoScheduleLabel }}</span>
+            </div>
+          </label>
+        </div>
+
+        <!-- Footer / Action Buttons -->
+        <div class="modal-footer">
+          <span class="shortcut-hint">{{ languageService.t().tasks.form.shortcutHint }}</span>
+          <div class="buttons-group">
+            <app-button variant="secondary" (clicked)="closeModal.emit()">
+              {{ languageService.t().common.cancel }}
+            </app-button>
+            <app-button
+              variant="primary"
+              type="submit"
+              [loading]="isSaving()"
+              [disabled]="!title().trim()"
+            >
+              <app-icon name="check" [size]="15"></app-icon>
+              <span>{{ taskToEdit() ? languageService.t().tasks.form.saveChanges : languageService.t().tasks.form.createTask }}</span>
+            </app-button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+}

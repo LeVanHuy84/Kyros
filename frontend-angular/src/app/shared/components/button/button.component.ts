@@ -21,6 +21,7 @@ export class ButtonComponent {
   fullWidth = input<boolean>(false);
 
   clicked = output<MouseEvent>();
+  buttonClick = output<MouseEvent>();
 
   protected buttonClasses(): string {
     return [
@@ -33,6 +34,7 @@ export class ButtonComponent {
   protected onClick(event: MouseEvent): void {
     if (!this.disabled() && !this.loading()) {
       this.clicked.emit(event);
+      this.buttonClick.emit(event);
     }
   }
 }

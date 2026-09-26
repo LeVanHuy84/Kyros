@@ -1,0 +1,105 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="closeModal.emit()">
+    <div class="modal-card animate-fade-in-scale" (click)="$event.stopPropagation()" role="dialog">
+      <!-- Header -->
+      <div class="modal-header">
+        <div class="header-title-group">
+          <app-icon name="bar-chart" [size]="18" class="header-icon"></app-icon>
+          <h3>{{ languageService.t().tasks.metrics.title }}</h3>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="refresh-btn" (click)="refresh()">
+            <app-icon name="refresh-cw" [size]="15"></app-icon>
+          </button>
+          <button type="button" class="close-btn" (click)="closeModal.emit()" aria-label="Close">
+            <app-icon name="x" [size]="16"></app-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <!-- 4 Grid Stat Cards -->
+        <div class="stats-grid">
+          <!-- Total Focus Time -->
+          <div class="stat-card">
+            <div class="stat-icon-wrap time">
+              <app-icon name="clock" [size]="20"></app-icon>
+            </div>
+            <div class="stat-content">
+              <span class="stat-val">{{ formattedHours() }}</span>
+              <span class="stat-label">{{ languageService.t().tasks.metrics.totalFocus }}</span>
+            </div>
+          </div>
+
+          <!-- Total Sessions -->
+          <div class="stat-card">
+            <div class="stat-icon-wrap sessions">
+              <app-icon name="zap" [size]="20"></app-icon>
+            </div>
+            <div class="stat-content">
+              <span class="stat-val">{{ tasksService.productivityStats()?.totalSessionsCount || 0 }}</span>
+              <span class="stat-label">{{ languageService.t().tasks.metrics.completedSessions }}</span>
+            </div>
+          </div>
+
+          <!-- Average Session -->
+          <div class="stat-card">
+            <div class="stat-icon-wrap avg">
+              <app-icon name="sparkles" [size]="20"></app-icon>
+            </div>
+            <div class="stat-content">
+              <span class="stat-val">{{ tasksService.productivityStats()?.averageSessionMinutes || 0 | number:'1.0-0' }}m</span>
+              <span class="stat-label">{{ languageService.t().tasks.metrics.avgSession }}</span>
+            </div>
+          </div>
+
+          <!-- Completion Rate -->
+          <div class="stat-card">
+            <div class="stat-icon-wrap rate">
+              <app-icon name="check-circle" [size]="20"></app-icon>
+            </div>
+            <div class="stat-content">
+              <span class="stat-val">{{ completionRate() }}%</span>
+              <span class="stat-label">{{ languageService.t().tasks.metrics.completionRate }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Progress Breakdown -->
+        <div class="progress-breakdown-card">
+          <div class="breakdown-header">
+            <span class="breakdown-title">{{ languageService.t().tasks.metrics.completionRate }}</span>
+            <span class="breakdown-subtitle">{{ tasksService.taskCounts().completed }}/{{ tasksService.taskCounts().total }} {{ languageService.t().tasks.completed }}</span>
+          </div>
+
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" [style.width.%]="completionRate()"></div>
+          </div>
+
+          <div class="breakdown-metrics-row">
+            <div class="metric-item">
+              <span class="dot active"></span>
+              <span>{{ languageService.t().tasks.metrics.activeCount }}: <strong>{{ tasksService.taskCounts().active }}</strong></span>
+            </div>
+            <div class="metric-item">
+              <span class="dot completed"></span>
+              <span>{{ languageService.t().tasks.metrics.completedCount }}: <strong>{{ tasksService.taskCounts().completed }}</strong></span>
+            </div>
+            <div class="metric-item">
+              <span class="dot overdue"></span>
+              <span>{{ languageService.t().tasks.metrics.overdueCount }}: <strong>{{ tasksService.taskCounts().overdue }}</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <app-button variant="secondary" (clicked)="closeModal.emit()">
+          {{ languageService.t().common.cancel }}
+        </app-button>
+      </div>
+    </div>
+  </div>
+}

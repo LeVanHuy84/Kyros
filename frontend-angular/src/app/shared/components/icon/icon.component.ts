@@ -44,7 +44,14 @@ export type AppIconName =
   | 'loader'
   | 'log-out'
   | 'message-square'
-  | 'refresh-cw';
+  | 'refresh-cw'
+  | 'tag'
+  | 'layout-list'
+  | 'kanban'
+  | 'more-vertical'
+  | 'filter'
+  | 'bar-chart'
+  | 'edit';
 
 @Component({
   selector: 'app-icon',

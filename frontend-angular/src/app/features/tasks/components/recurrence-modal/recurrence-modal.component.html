@@ -1,0 +1,122 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="closeModal.emit()">
+    <div class="modal-card animate-fade-in-scale" (click)="$event.stopPropagation()" role="dialog">
+      <!-- Header -->
+      <div class="modal-header">
+        <div class="header-title-group">
+          <app-icon name="refresh-cw" [size]="18" class="header-icon"></app-icon>
+          <h3>{{ languageService.t().tasks.recurrence.title }}</h3>
+        </div>
+        <button type="button" class="close-btn" (click)="closeModal.emit()" aria-label="Close">
+          <app-icon name="x" [size]="16"></app-icon>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        @if (task()) {
+          <div class="task-info-box">
+            <span class="info-label">{{ languageService.t().tasks.recurrence.targetTask }}</span>
+            <span class="info-title">{{ task()!.title }}</span>
+          </div>
+        }
+
+        <!-- Recurrence Frequency Pattern -->
+        <div class="form-group">
+          <label class="form-label">{{ languageService.t().tasks.recurrence.patternLabel }}</label>
+          <div class="pattern-pills-row">
+            <button
+              type="button"
+              class="pattern-pill"
+              [class.active]="pattern() === 'DAILY'"
+              (click)="setPattern('DAILY')"
+            >
+              {{ languageService.t().tasks.recurrence.daily }}
+            </button>
+            <button
+              type="button"
+              class="pattern-pill"
+              [class.active]="pattern() === 'WEEKLY'"
+              (click)="setPattern('WEEKLY')"
+            >
+              {{ languageService.t().tasks.recurrence.weekly }}
+            </button>
+            <button
+              type="button"
+              class="pattern-pill"
+              [class.active]="pattern() === 'MONTHLY'"
+              (click)="setPattern('MONTHLY')"
+            >
+              {{ languageService.t().tasks.recurrence.monthly }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Interval Count -->
+        <div class="form-group">
+          <label for="rec-interval" class="form-label">{{ languageService.t().tasks.recurrence.intervalLabel }}</label>
+          <div class="interval-input-group">
+            <input
+              id="rec-interval"
+              type="number"
+              min="1"
+              max="99"
+              [ngModel]="interval()"
+              (ngModelChange)="interval.set($event)"
+              class="interval-input"
+            />
+          </div>
+        </div>
+
+        <!-- Current Status & Control Buttons -->
+        @if (currentStatus()) {
+          <div class="status-control-card">
+            <div class="status-row">
+              <span class="label">{{ languageService.t().tasks.recurrence.statusLabel }}</span>
+              <span
+                class="status-chip"
+                [class.active]="currentStatus() === 'Active'"
+                [class.paused]="currentStatus() === 'Paused'"
+                [class.stopped]="currentStatus() === 'Stopped'"
+              >
+                {{ currentStatus() === 'Active' ? languageService.t().tasks.recurrence.statusActive : currentStatus() === 'Paused' ? languageService.t().tasks.recurrence.statusPaused : languageService.t().tasks.recurrence.statusStopped }}
+              </span>
+            </div>
+
+            <div class="control-actions-row">
+              @if (currentStatus() === 'Active') {
+                <button type="button" class="ctrl-btn pause" (click)="pauseRecurrence()">
+                  <app-icon name="pause" [size]="13"></app-icon>
+                  <span>{{ languageService.t().tasks.recurrence.pauseBtn }}</span>
+                </button>
+              }
+              @if (currentStatus() === 'Paused') {
+                <button type="button" class="ctrl-btn resume" (click)="resumeRecurrence()">
+                  <app-icon name="play" [size]="13"></app-icon>
+                  <span>{{ languageService.t().tasks.recurrence.resumeBtn }}</span>
+                </button>
+              }
+              @if (currentStatus() !== 'Stopped') {
+                <button type="button" class="ctrl-btn stop" (click)="stopRecurrence()">
+                  <app-icon name="square" [size]="13"></app-icon>
+                  <span>{{ languageService.t().tasks.recurrence.stopBtn }}</span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <app-button variant="secondary" (clicked)="closeModal.emit()">
+          {{ languageService.t().common.cancel }}
+        </app-button>
+        <app-button variant="primary" (clicked)="saveRecurrence()">
+          <app-icon name="check" [size]="15"></app-icon>
+          <span>{{ languageService.t().tasks.recurrence.saveBtn }}</span>
+        </app-button>
+      </div>
+    </div>
+  </div>
+}
