@@ -50,12 +50,15 @@ public class AvailabilityQueryService {
         queryAvailability(workspaceId, query.rangeStart(), query.rangeEnd());
     List<TimeSlot> slots = new ArrayList<>();
 
-    Instant earliestStart = query.rangeStart().plus(query.minimumNotice());
+    Instant earliestStart =
+        roundUpToInterval(query.rangeStart().plus(query.minimumNotice()), 15);
     Duration desired = query.desiredDuration();
 
     for (AvailabilityWindow window : windows) {
       Instant candidateStart =
-          window.start().isAfter(earliestStart) ? window.start() : earliestStart;
+          window.start().isAfter(earliestStart)
+              ? roundUpToInterval(window.start(), 15)
+              : earliestStart;
       while (candidateStart.plus(desired).isBefore(window.end())
           || candidateStart.plus(desired).equals(window.end())) {
         if (candidateStart.isBefore(window.end())) {
@@ -69,5 +72,16 @@ public class AvailabilityQueryService {
     }
 
     return slots.stream().limit(query.maxResults()).collect(Collectors.toList());
+  }
+
+  private Instant roundUpToInterval(Instant instant, int intervalMinutes) {
+    long epochSec = instant.getEpochSecond();
+    long intervalSec = intervalMinutes * 60L;
+    long remainder = epochSec % intervalSec;
+    if (remainder == 0 && instant.getNano() == 0) {
+      return instant;
+    }
+    long roundedSec = epochSec + (intervalSec - remainder);
+    return Instant.ofEpochSecond(roundedSec);
   }
 }
