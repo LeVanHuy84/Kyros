@@ -14,6 +14,8 @@ import { NotificationService } from '@core/services/notification.service';
 import { LanguageService } from '@core/services/language.service';
 import { AppNotification, NotificationType } from '@core/models/notification.models';
 
+export type NotificationTabFilter = 'all' | 'task' | 'calendar' | 'system' | 'unread';
+
 @Component({
   selector: 'app-notification-dropdown',
   standalone: true,
@@ -29,14 +31,36 @@ export class NotificationDropdownComponent {
   private readonly elementRef = inject(ElementRef);
 
   readonly isOpen = signal<boolean>(false);
-  readonly activeTab = signal<'all' | 'unread'>('all');
+  readonly activeTab = signal<NotificationTabFilter>('all');
 
   readonly filteredNotifications = computed(() => {
     const list = this.notificationService.notifications();
-    if (this.activeTab() === 'unread') {
-      return list.filter((n) => !n.isRead);
+    const tab = this.activeTab();
+
+    switch (tab) {
+      case 'unread':
+        return list.filter((n) => !n.isRead);
+      case 'task':
+        return list.filter((n) => n.type === 'task');
+      case 'calendar':
+        return list.filter((n) => n.type === 'calendar' || n.type === 'reminder');
+      case 'system':
+        return list.filter((n) => n.type === 'system' || n.type === 'agent');
+      case 'all':
+      default:
+        return list;
     }
-    return list;
+  });
+
+  readonly tabCounts = computed(() => {
+    const list = this.notificationService.notifications();
+    return {
+      all: list.length,
+      unread: list.filter((n) => !n.isRead).length,
+      task: list.filter((n) => n.type === 'task').length,
+      calendar: list.filter((n) => n.type === 'calendar' || n.type === 'reminder').length,
+      system: list.filter((n) => n.type === 'system' || n.type === 'agent').length,
+    };
   });
 
   @HostListener('document:click', ['$event'])
@@ -55,7 +79,7 @@ export class NotificationDropdownComponent {
     this.isOpen.update((v) => !v);
   }
 
-  setTab(tab: 'all' | 'unread'): void {
+  setTab(tab: NotificationTabFilter): void {
     this.activeTab.set(tab);
   }
 

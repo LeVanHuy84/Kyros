@@ -169,7 +169,7 @@ export interface UserPreferences {
   workspaceId?: string;
   userId?: string;
   timezone: string;
-  defaultPriority: 'Low' | 'Medium' | 'High';
+  defaultPriority: 'Low' | 'Medium' | 'High' | 'Urgent';
   preventCalendarOverlap: boolean;
   leadTimeMinutes: number;
 }

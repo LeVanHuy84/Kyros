@@ -1,0 +1,77 @@
+<div class="turns-modal-backdrop" (click)="onClose()">
+  <div class="turns-modal-card animate-scale-up" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-left">
+        <app-icon name="message-square" [size]="18" class="header-icon"></app-icon>
+        <div class="header-text">
+          <h3>{{ conversation()?.title || languageService.t().memory.audit.modal.title }}</h3>
+          <span class="header-sub">
+            {{ languageService.t().memory.audit.modal.totalTurns.replace('{count}', turns().length.toString()) }}
+          </span>
+        </div>
+      </div>
+
+      <button type="button" class="close-btn" (click)="onClose()" [title]="languageService.t().common.close">
+        <app-icon name="x" [size]="16"></app-icon>
+      </button>
+    </div>
+
+    <!-- Body: Turn Timeline -->
+    <div class="modal-body">
+      @if (memoryService.isLoadingTurns()) {
+        <div class="loading-state">
+          <app-icon name="loader" [size]="24" class="spin-icon"></app-icon>
+          <span>{{ languageService.t().common.loading }}</span>
+        </div>
+      } @else if (turns().length > 0) {
+        <div class="turns-timeline">
+          @for (turn of turns(); track turn.turnId || $index) {
+            <div class="turn-row" [class.is-user]="isUserRole(turn.role)" [class.is-agent]="isAgentRole(turn.role)">
+              <!-- Role Avatar & Badge -->
+              <div class="role-avatar" [class.user]="isUserRole(turn.role)" [class.agent]="isAgentRole(turn.role)">
+                <app-icon [name]="isUserRole(turn.role) ? 'user' : 'bot'" [size]="14"></app-icon>
+              </div>
+
+              <!-- Message Bubble & Meta -->
+              <div class="turn-bubble-wrapper">
+                <div class="turn-meta">
+                  <span class="role-tag" [class.user]="isUserRole(turn.role)" [class.agent]="isAgentRole(turn.role)">
+                    {{ isUserRole(turn.role) ? languageService.t().memory.audit.modal.roleUser : languageService.t().memory.audit.modal.roleAgent }}
+                  </span>
+                  <span class="turn-timestamp">{{ formatDate(turn.timestamp) }}</span>
+                </div>
+
+                <div class="turn-content">
+                  @if (isUserRole(turn.role)) {
+                    <p class="user-text">{{ turn.content }}</p>
+                  } @else {
+                    <app-markdown-viewer [content]="turn.content"></app-markdown-viewer>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-turns">
+          <app-icon name="message-square" [size]="32"></app-icon>
+          <p>{{ languageService.t().memory.audit.modal.noTurns }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      @if (turns().length > 0) {
+        <button type="button" class="btn-clear" (click)="onClearHistory()">
+          <app-icon name="trash" [size]="13"></app-icon>
+          <span>{{ languageService.t().memory.audit.clearHistoryBtn }}</span>
+        </button>
+      }
+      <button type="button" class="btn-close" (click)="onClose()">
+        {{ languageService.t().memory.audit.modal.closeBtn }}
+      </button>
+    </div>
+  </div>
+</div>

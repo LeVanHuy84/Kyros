@@ -1,0 +1,268 @@
+<div class="preferences-panel">
+  <!-- Section: AI Tone & Style -->
+  <div class="settings-section">
+    <div class="section-header">
+      <app-icon name="bot" [size]="18" class="section-icon"></app-icon>
+      <div class="header-text">
+        <h4 class="section-title">{{ languageService.t().settings.preferences.aiToneTitle }}</h4>
+        <p class="section-subtitle">{{ languageService.t().settings.preferences.aiToneDesc }}</p>
+      </div>
+    </div>
+
+    <div class="tone-cards-grid">
+      <div
+        class="tone-card"
+        [class.active]="aiTone() === 'concise'"
+        (click)="setAiTone('concise')"
+        role="button"
+        tabindex="0"
+      >
+        <div class="card-radio">
+          <div class="radio-inner"></div>
+        </div>
+        <div class="card-text">
+          <span class="card-title">{{ languageService.t().settings.preferences.aiToneConcise }}</span>
+        </div>
+      </div>
+
+      <div
+        class="tone-card"
+        [class.active]="aiTone() === 'balanced'"
+        (click)="setAiTone('balanced')"
+        role="button"
+        tabindex="0"
+      >
+        <div class="card-radio">
+          <div class="radio-inner"></div>
+        </div>
+        <div class="card-text">
+          <span class="card-title">{{ languageService.t().settings.preferences.aiToneBalanced }}</span>
+        </div>
+      </div>
+
+      <div
+        class="tone-card"
+        [class.active]="aiTone() === 'detailed'"
+        (click)="setAiTone('detailed')"
+        role="button"
+        tabindex="0"
+      >
+        <div class="card-radio">
+          <div class="radio-inner"></div>
+        </div>
+        <div class="card-text">
+          <span class="card-title">{{ languageService.t().settings.preferences.aiToneDetailed }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- Section: Timezone & Working Hours -->
+  <div class="settings-section">
+    <div class="section-header">
+      <app-icon name="clock" [size]="18" class="section-icon"></app-icon>
+      <div class="header-text">
+        <h4 class="section-title">{{ languageService.t().settings.preferences.timezoneTitle }}</h4>
+        <p class="section-subtitle">{{ languageService.t().settings.preferences.timezoneDesc }}</p>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <label class="setting-label">{{ languageService.t().settings.preferences.timezoneTitle }}</label>
+      </div>
+      <div class="setting-control">
+        <select
+          class="form-select"
+          [ngModel]="timezone()"
+          (ngModelChange)="timezone.set($event)"
+        >
+          @for (tz of timezoneOptions; track tz.value) {
+            <option [value]="tz.value">{{ tz.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <label class="setting-label">{{ languageService.t().settings.preferences.workingHoursTitle }}</label>
+        <span class="setting-desc">{{ languageService.t().settings.preferences.workingHoursDesc }}</span>
+      </div>
+      <div class="setting-control time-range-control">
+        <div class="time-input-group">
+          <span>{{ languageService.t().settings.preferences.workStartLabel }}</span>
+          <input
+            type="time"
+            class="form-time-input"
+            [ngModel]="workStartTime()"
+            (ngModelChange)="workStartTime.set($event)"
+          />
+        </div>
+        <span class="time-sep">—</span>
+        <div class="time-input-group">
+          <span>{{ languageService.t().settings.preferences.workEndLabel }}</span>
+          <input
+            type="time"
+            class="form-time-input"
+            [ngModel]="workEndTime()"
+            (ngModelChange)="workEndTime.set($event)"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- Section: Calendar & Task Automation -->
+  <div class="settings-section">
+    <div class="section-header">
+      <app-icon name="calendar" [size]="18" class="section-icon"></app-icon>
+      <div class="header-text">
+        <h4 class="section-title">{{ languageService.t().settings.preferences.preventOverlapTitle }}</h4>
+        <p class="section-subtitle">{{ languageService.t().settings.preferences.preventOverlapDesc }}</p>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <label class="setting-label">{{ languageService.t().settings.preferences.preventOverlapTitle }}</label>
+        <span class="setting-desc">{{ languageService.t().settings.preferences.preventOverlapDesc }}</span>
+      </div>
+      <div class="setting-control">
+        <label class="switch">
+          <input
+            type="checkbox"
+            [checked]="preventCalendarOverlap()"
+            (change)="preventCalendarOverlap.set(!preventCalendarOverlap())"
+          />
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <label class="setting-label">{{ languageService.t().settings.preferences.leadTimeTitle }}</label>
+        <span class="setting-desc">{{ languageService.t().settings.preferences.leadTimeDesc }}</span>
+      </div>
+      <div class="setting-control">
+        <select
+          class="form-select"
+          [ngModel]="leadTimeMinutes()"
+          (ngModelChange)="leadTimeMinutes.set($event)"
+        >
+          <option [ngValue]="15">15 {{ languageService.t().settings.preferences.leadTimeMinutes }}</option>
+          <option [ngValue]="30">30 {{ languageService.t().settings.preferences.leadTimeMinutes }}</option>
+          <option [ngValue]="60">60 {{ languageService.t().settings.preferences.leadTimeMinutes }}</option>
+          <option [ngValue]="1440">1440 {{ languageService.t().settings.preferences.leadTimeMinutes }} (1 day)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <label class="setting-label">{{ languageService.t().settings.preferences.defaultPriorityTitle }}</label>
+        <span class="setting-desc">{{ languageService.t().settings.preferences.defaultPriorityDesc }}</span>
+      </div>
+      <div class="setting-control">
+        <select
+          class="form-select"
+          [ngModel]="defaultPriority()"
+          (ngModelChange)="defaultPriority.set($event)"
+        >
+          <option value="Low">Low (Thấp)</option>
+          <option value="Medium">Medium (Trung bình)</option>
+          <option value="High">High (Cao)</option>
+          <option value="Urgent">Urgent (Khẩn cấp)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- Section: DND & Sounds -->
+  <div class="settings-section">
+    <div class="section-header">
+      <app-icon name="bell" [size]="18" class="section-icon"></app-icon>
+      <div class="header-text">
+        <h4 class="section-title">{{ languageService.t().settings.preferences.dndTitle }}</h4>
+        <p class="section-subtitle">{{ languageService.t().settings.preferences.dndDesc }}</p>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <label class="setting-label">{{ languageService.t().settings.preferences.dndTitle }}</label>
+        <span class="setting-desc">{{ languageService.t().settings.preferences.dndDesc }}</span>
+      </div>
+      <div class="setting-control">
+        <label class="switch">
+          <input
+            type="checkbox"
+            [checked]="dndEnabled()"
+            (change)="toggleDnd()"
+          />
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <label class="setting-label">{{ languageService.t().settings.preferences.soundEffectsTitle }}</label>
+        <span class="setting-desc">{{ languageService.t().settings.preferences.soundEffectsDesc }}</span>
+      </div>
+      <div class="setting-control">
+        <label class="switch">
+          <input
+            type="checkbox"
+            [checked]="soundEnabled()"
+            (change)="toggleSound()"
+          />
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Banner -->
+  @if (feedbackMessage()) {
+    <div class="feedback-banner" [class.success]="feedbackMessage()?.type === 'success'" [class.error]="feedbackMessage()?.type === 'error'">
+      <app-icon [name]="feedbackMessage()?.type === 'success' ? 'check-circle' : 'alert-circle'" [size]="16"></app-icon>
+      <span>{{ feedbackMessage()?.text }}</span>
+    </div>
+  }
+
+  <!-- Footer Actions -->
+  <div class="panel-footer-actions">
+    <button
+      type="button"
+      class="btn-reset"
+      (click)="handleReset()"
+      [disabled]="preferencesService.isSaving()"
+    >
+      <app-icon name="rotate-ccw" [size]="14"></app-icon>
+      <span>{{ languageService.t().settings.preferences.resetBtn }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="btn-save"
+      (click)="handleSave()"
+      [disabled]="preferencesService.isSaving()"
+    >
+      @if (preferencesService.isSaving()) {
+        <app-icon name="loader" [size]="14" class="spin-icon"></app-icon>
+        <span>{{ languageService.t().settings.preferences.saving }}</span>
+      } @else {
+        <app-icon name="check" [size]="14"></app-icon>
+        <span>{{ languageService.t().settings.preferences.saveBtn }}</span>
+      }
+    </button>
+  </div>
+</div>

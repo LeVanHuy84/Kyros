@@ -1,0 +1,247 @@
+<div class="note-editor-container">
+  <!-- Top Editor Navigation / Action Bar -->
+  <div class="editor-header">
+    <div class="left-header-actions">
+      <div class="title-input-wrapper">
+        <input
+          type="text"
+          class="note-title-input"
+          [placeholder]="languageService.t().notes.editor.titlePlaceholder"
+          [ngModel]="title()"
+          (ngModelChange)="onTitleInput($event)"
+        />
+      </div>
+    </div>
+
+    <!-- Right Top Header Actions -->
+    <div class="header-actions">
+      <!-- Auto-save / Saving status indicator -->
+      <div class="save-status-indicator">
+        @if (autoSaveStatus() === 'saving' || notesService.isSaving()) {
+          <span class="status-badge saving">
+            <app-icon name="loader" [size]="12" class="spin-icon"></app-icon>
+            <span>{{ languageService.t().notes.editor.saving }}</span>
+          </span>
+        } @else if (autoSaveStatus() === 'saved') {
+          <span class="status-badge saved">
+            <app-icon name="check-circle" [size]="12"></app-icon>
+            <span>{{ languageService.t().notes.editor.autoSaved }}</span>
+          </span>
+        }
+      </div>
+
+      <!-- View Mode Switcher -->
+      <div class="view-mode-group">
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="viewMode() === 'edit'"
+          (click)="setViewMode('edit')"
+          [title]="languageService.t().notes.editor.editTab"
+        >
+          <app-icon name="edit" [size]="13"></app-icon>
+          <span class="btn-text">{{ languageService.t().notes.editor.editTab }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="viewMode() === 'split'"
+          (click)="setViewMode('split')"
+          [title]="languageService.t().notes.editor.splitTab"
+        >
+          <app-icon name="layout-list" [size]="13"></app-icon>
+          <span class="btn-text">{{ languageService.t().notes.editor.splitTab }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="viewMode() === 'preview'"
+          (click)="setViewMode('preview')"
+          [title]="languageService.t().notes.editor.previewTab"
+        >
+          <app-icon name="eye" [size]="13"></app-icon>
+          <span class="btn-text">{{ languageService.t().notes.editor.previewTab }}</span>
+        </button>
+      </div>
+
+      <!-- Save & Cancel Buttons -->
+      <div class="action-buttons">
+        <button
+          type="button"
+          class="btn-save"
+          (click)="saveManual()"
+          [disabled]="notesService.isSaving()"
+        >
+          <app-icon name="check" [size]="13"></app-icon>
+          <span>{{ languageService.t().notes.editor.saveBtn }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-discard"
+          (click)="onCancel()"
+          [title]="languageService.t().notes.editor.discardBtn"
+        >
+          <app-icon name="x" [size]="13"></app-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Markdown Toolbar -->
+  @if (viewMode() !== 'preview') {
+    <div class="markdown-toolbar">
+      <div class="tool-group">
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertFormatting('**', '**', 'bold text')"
+          [title]="languageService.t().notes.editor.tools.bold"
+        >
+          <strong>B</strong>
+        </button>
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertFormatting('*', '*', 'italic text')"
+          [title]="languageService.t().notes.editor.tools.italic"
+        >
+          <em>I</em>
+        </button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <div class="tool-group">
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertHeading(1)"
+          [title]="languageService.t().notes.editor.tools.heading1"
+        >
+          H1
+        </button>
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertHeading(2)"
+          [title]="languageService.t().notes.editor.tools.heading2"
+        >
+          H2
+        </button>
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertHeading(3)"
+          [title]="languageService.t().notes.editor.tools.heading3"
+        >
+          H3
+        </button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <div class="tool-group">
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertChecklist()"
+          [title]="languageService.t().notes.editor.tools.checkList"
+        >
+          <app-icon name="check-square" [size]="13"></app-icon>
+        </button>
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertLinePrefix('- ')"
+          [title]="languageService.t().notes.editor.tools.bulletList"
+        >
+          <app-icon name="layout-list" [size]="13"></app-icon>
+        </button>
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertQuote()"
+          [title]="languageService.t().notes.editor.tools.quote"
+        >
+          "
+        </button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <div class="tool-group">
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertCodeBlock()"
+          [title]="languageService.t().notes.editor.tools.codeBlock"
+        >
+          &lt;/&gt;
+        </button>
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertTable()"
+          [title]="languageService.t().notes.editor.tools.table"
+        >
+          <app-icon name="bar-chart" [size]="13"></app-icon>
+        </button>
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertLink()"
+          [title]="languageService.t().notes.editor.tools.link"
+        >
+          <app-icon name="arrow-right" [size]="12"></app-icon>
+        </button>
+        <button
+          type="button"
+          class="tool-btn"
+          (click)="insertDivider()"
+          [title]="languageService.t().notes.editor.tools.divider"
+        >
+          —
+        </button>
+      </div>
+
+      <!-- Live metrics -->
+      <div class="toolbar-stats">
+        <span>{{ languageService.t().notes.editor.stats.words.replace('{count}', wordCount().toString()) }}</span>
+        <span class="stat-bullet">•</span>
+        <span>{{ languageService.t().notes.editor.stats.characters.replace('{count}', charCount().toString()) }}</span>
+        <span class="stat-bullet">•</span>
+        <span>{{ languageService.t().notes.editor.stats.readTime.replace('{min}', readTime().toString()) }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Editor Body (Split-pane or Full) -->
+  <div class="editor-body" [class.mode-split]="viewMode() === 'split'">
+    <!-- Left: Textarea Editor -->
+    @if (viewMode() === 'edit' || viewMode() === 'split') {
+      <div class="pane-editor">
+        <textarea
+          #contentTextarea
+          class="markdown-textarea"
+          [placeholder]="languageService.t().notes.editor.contentPlaceholder"
+          [ngModel]="content()"
+          (ngModelChange)="onContentInput($event)"
+          (scroll)="onEditorScroll($event)"
+          spellcheck="false"
+        ></textarea>
+      </div>
+    }
+
+    <!-- Right: Live Markdown Preview -->
+    @if (viewMode() === 'preview' || viewMode() === 'split') {
+      <div #previewPane class="pane-preview" (scroll)="onPreviewScroll($event)">
+        <div class="preview-scroll-wrapper">
+          <app-markdown-viewer [content]="content()"></app-markdown-viewer>
+        </div>
+      </div>
+    }
+  </div>
+</div>

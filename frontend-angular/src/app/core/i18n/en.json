@@ -222,6 +222,40 @@
       "saveBtn": "Save Notification Profile",
       "saving": "Saving...",
       "savedSuccess": "Notification profile updated successfully!"
+    },
+    "preferences": {
+      "title": "Assistant & Schedule Preferences",
+      "subtitle": "Customize AI response tone, standard working hours, and workspace timezone",
+      "aiToneTitle": "AI Assistant Response Tone",
+      "aiToneDesc": "Select the level of detail and communication style matching your workflow.",
+      "aiToneConcise": "Concise & Direct (Optimized for quick actions)",
+      "aiToneBalanced": "Balanced & Natural (Recommended)",
+      "aiToneDetailed": "Detailed & Analytical (Full breakdown)",
+      "timezoneTitle": "Default Workspace Timezone",
+      "timezoneDesc": "Standard timezone used for AI calendar scheduling and reminder alerts.",
+      "workingHoursTitle": "Standard Working Hours",
+      "workingHoursDesc": "Time window prioritized for meeting distribution and focus sessions.",
+      "workStartLabel": "Start",
+      "workEndLabel": "End",
+      "preventOverlapTitle": "Automatic Overlap Prevention",
+      "preventOverlapDesc": "Alert and prevent events from conflicting with existing calendar slots.",
+      "leadTimeTitle": "Default Reminder Lead Time",
+      "leadTimeDesc": "Lead time before events or tasks trigger push notifications.",
+      "leadTimeMinutes": "minutes before start",
+      "defaultPriorityTitle": "Default Task Priority",
+      "defaultPriorityDesc": "Default priority assigned when creating new tasks without specified level.",
+      "dndTitle": "Do Not Disturb (DND)",
+      "dndDesc": "Mute all sound alerts and non-critical push notifications.",
+      "quietHoursTitle": "Quiet Hours",
+      "quietHoursDesc": "Silence notifications during off-hours and rest periods.",
+      "soundEffectsTitle": "Sound Notifications",
+      "soundEffectsDesc": "Play subtle audio cues upon new assistant events.",
+      "saveBtn": "Save Preferences",
+      "saving": "Saving...",
+      "resetBtn": "Reset to Default",
+      "resetting": "Resetting...",
+      "savedSuccess": "Preferences updated successfully!",
+      "resetSuccess": "Preferences reset to default values!"
     }
   },
   "tasks": {
@@ -482,6 +516,9 @@
     "unreadBadge": "{count} unread",
     "all": "All",
     "unread": "Unread",
+    "tabTasks": "Tasks",
+    "tabCalendar": "Calendar",
+    "tabSystem": "System",
     "markAllAsRead": "Mark all as read",
     "markAsRead": "Mark as read",
     "delete": "Delete notification",
@@ -504,6 +541,111 @@
       "agent": "AI Assistant",
       "system": "System",
       "reminder": "Reminder"
+    }
+  },
+  "notes": {
+    "title": "Notes & Documents Vault",
+    "subtitle": "Advanced Markdown editor, document knowledge base, and task context linking",
+    "newNote": "Create New Note",
+    "searchPlaceholder": "Search note title or content...",
+    "allNotes": "All Notes",
+    "pinnedNotes": "Pinned",
+    "recentNotes": "Recent",
+    "noNotes": "No notes found",
+    "noNotesSub": "Create a new note to capture ideas, meeting minutes, or project docs.",
+    "selectNotePrompt": "Select a note from the left panel or create a new one to get started",
+    "emptySelectionTitle": "No Note Selected",
+    "emptySelectionSubtitle": "Choose a note from the sidebar or click \"Create New Note\" to start writing.",
+    "editor": {
+      "titlePlaceholder": "Note Title...",
+      "contentPlaceholder": "Start writing in Markdown... (Supports rich text, code blocks, tables, and task lists)",
+      "previewTab": "Preview",
+      "editTab": "Editor",
+      "splitTab": "Split View",
+      "autoSaved": "Auto-saved",
+      "saving": "Saving...",
+      "saveBtn": "Save Note",
+      "discardBtn": "Discard",
+      "tools": {
+        "bold": "Bold (Ctrl+B)",
+        "italic": "Italic (Ctrl+I)",
+        "heading1": "Heading 1",
+        "heading2": "Heading 2",
+        "heading3": "Heading 3",
+        "bulletList": "Bullet List",
+        "numberList": "Numbered List",
+        "checkList": "Task Checklist",
+        "codeBlock": "Code Block",
+        "table": "Insert Table",
+        "quote": "Blockquote",
+        "link": "Insert Link",
+        "divider": "Horizontal Divider"
+      },
+      "stats": {
+        "words": "{count} words",
+        "characters": "{count} chars",
+        "readTime": "{min} min read"
+      }
+    },
+    "actions": {
+      "pin": "Pin note",
+      "unpin": "Unpin note",
+      "edit": "Edit",
+      "delete": "Delete note",
+      "deleteConfirm": "Are you sure you want to permanently delete this note?",
+      "copyMarkdown": "Copy Markdown",
+      "copied": "Copied to clipboard!"
+    }
+  },
+  "memory": {
+    "title": "Long-term Memory & Agent Audit",
+    "subtitle": "Inspect AI learned facts, memory privacy, and audit reasoning turn logs",
+    "tabs": {
+      "vault": "Memory Vault",
+      "audit": "Conversations & Turns Audit"
+    },
+    "vault": {
+      "searchPlaceholder": "Semantic search memories & facts...",
+      "addMemoryBtn": "Add Memory Entry",
+      "totalEntries": "Total memories stored: {count}",
+      "confidenceLabel": "Confidence Score",
+      "createdAt": "Learned at",
+      "updatedAt": "Updated at",
+      "addTitle": "Add Manual Memory Fact",
+      "editTitle": "Edit Memory Entry",
+      "contentLabel": "Memory Fact Content *",
+      "contentPlaceholder": "e.g., User prefers structured tabular summaries and morning briefing before 08:30 AM.",
+      "confidenceScoreLabel": "Confidence Score (0.1 - 1.0)",
+      "confidenceHint": "Default is 1.0 for verified user inputs.",
+      "saveBtn": "Save Memory",
+      "saving": "Saving...",
+      "deleteConfirm": "Are you sure you want to permanently delete this memory entry from AI storage?",
+      "emptyTitle": "No memory facts stored",
+      "emptySubtitle": "During conversations, the AI Assistant will autonomously record facts, or you can add them manually here."
+    },
+    "audit": {
+      "searchPlaceholder": "Search conversation sessions...",
+      "totalConversations": "Total conversations: {count}",
+      "emptyTitle": "No conversation history found",
+      "emptySubtitle": "All past chat sessions with the AI Assistant are logged here for inspection and auditing.",
+      "turnsCount": "{count} turns",
+      "lastActive": "Last active",
+      "viewTurnsBtn": "View details",
+      "clearHistoryBtn": "Clear Session Turns",
+      "clearHistoryConfirm": "Are you sure you want to clear all turns for this conversation session?",
+      "deleteConvBtn": "Delete Conversation",
+      "deleteConvConfirm": "Are you sure you want to permanently delete this entire conversation?",
+      "modal": {
+        "title": "Conversation Turns Audit",
+        "subtitle": "Detailed turn-by-turn trace, Chain-of-thought, and tool executions",
+        "totalTurns": "{count} Turns",
+        "roleUser": "User",
+        "roleAgent": "AI Assistant (Agent)",
+        "roleSystem": "System",
+        "thoughtProcess": "Chain-of-thought & Tool Execution",
+        "noTurns": "No turns recorded for this conversation session.",
+        "closeBtn": "Close Modal"
+      }
     }
   }
 }

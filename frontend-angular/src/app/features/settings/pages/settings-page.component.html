@@ -41,6 +41,32 @@
         <app-notification-settings-panel></app-notification-settings-panel>
       }
 
+      @if (activeSubTab() === 'pref') {
+        <div class="pref-tab-wrapper">
+          <div class="lang-setting-card">
+            <div class="setting-info">
+              <span class="setting-label">Ngôn ngữ hiển thị (Display Language)</span>
+              <span class="setting-desc">Chọn ngôn ngữ cho toàn bộ giao diện điều hành và hội thoại Kyros.</span>
+            </div>
+            <div class="lang-switch-buttons">
+              @for (lang of languageService.availableLanguages; track lang.code) {
+                <button
+                  type="button"
+                  class="lang-pill-btn"
+                  [class.active]="languageService.currentLanguage() === lang.code"
+                  (click)="languageService.setLanguage(lang.code)"
+                >
+                  <span>{{ lang.flag }}</span>
+                  <span>{{ lang.label }}</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <app-preferences-panel></app-preferences-panel>
+        </div>
+      }
+
       @if (activeSubTab() === 'vault') {
         <div class="placeholder-section">
           <div class="section-header">
@@ -70,37 +96,6 @@
               <div class="vault-info-badge">
                 <app-icon name="building" [size]="16" class="primary-icon"></app-icon>
                 <span>Multi-tenant Workspace Isolated Security</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-
-      @if (activeSubTab() === 'pref') {
-        <div class="placeholder-section">
-          <div class="section-header">
-            <app-icon name="settings" [size]="18" class="section-icon"></app-icon>
-            <h4 class="section-title">{{ languageService.t().settings.tabs.general }}</h4>
-          </div>
-
-          <div class="setting-row">
-            <div class="setting-info">
-              <span class="setting-label">Ngôn ngữ hiển thị</span>
-              <span class="setting-desc">Chọn ngôn ngữ mặc định cho giao diện ứng dụng và câu trả lời của trợ lý Kyros.</span>
-            </div>
-            <div class="setting-control">
-              <div class="lang-switch-buttons">
-                @for (lang of languageService.availableLanguages; track lang.code) {
-                  <button
-                    type="button"
-                    class="lang-pill-btn"
-                    [class.active]="languageService.currentLanguage() === lang.code"
-                    (click)="languageService.setLanguage(lang.code)"
-                  >
-                    <span>{{ lang.flag }}</span>
-                    <span>{{ lang.label }}</span>
-                  </button>
-                }
               </div>
             </div>
           </div>

@@ -1,0 +1,98 @@
+<div class="note-detail-container">
+  @if (note(); as currentNote) {
+    <!-- Top Action Bar -->
+    <div class="detail-header">
+      <div class="header-main">
+        <div class="title-and-meta">
+          <h2 class="detail-title">{{ currentNote.title || 'Untitled Note' }}</h2>
+          <div class="header-meta">
+            <span class="meta-item">
+              <app-icon name="clock" [size]="11"></app-icon>
+              {{ formatDate(currentNote.updatedAt || currentNote.createdAt) }}
+            </span>
+
+            @if (currentNote.taskId) {
+              <span class="meta-tag task">
+                <app-icon name="check-square" [size]="10"></app-icon>
+                Linked Task
+              </span>
+            }
+
+            @if (currentNote.eventId) {
+              <span class="meta-tag event">
+                <app-icon name="calendar" [size]="10"></app-icon>
+                Linked Event
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="header-actions">
+        <button
+          type="button"
+          class="action-btn pin-btn"
+          [class.active]="isPinned()"
+          (click)="onTogglePin()"
+          [title]="isPinned() ? languageService.t().notes.actions.unpin : languageService.t().notes.actions.pin"
+        >
+          <app-icon name="zap" [size]="13"></app-icon>
+          <span>{{ isPinned() ? languageService.t().notes.actions.unpin : languageService.t().notes.actions.pin }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="action-btn copy-btn"
+          (click)="onCopy()"
+          [title]="languageService.t().notes.actions.copyMarkdown"
+        >
+          <app-icon [name]="isCopied() ? 'check' : 'file-text'" [size]="13"></app-icon>
+          <span>{{ isCopied() ? languageService.t().notes.actions.copied : languageService.t().notes.actions.copyMarkdown }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="action-btn edit-btn primary"
+          (click)="onEdit()"
+          [title]="languageService.t().notes.actions.edit"
+        >
+          <app-icon name="edit" [size]="13"></app-icon>
+          <span>{{ languageService.t().notes.actions.edit }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="action-btn delete-btn"
+          (click)="onDelete()"
+          [title]="languageService.t().notes.actions.delete"
+        >
+          <app-icon name="trash" [size]="13"></app-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content Markdown Viewer -->
+    <div class="detail-body">
+      <div class="content-wrapper">
+        @if (currentNote.content) {
+          <app-markdown-viewer [content]="currentNote.content"></app-markdown-viewer>
+        } @else {
+          <div class="empty-content-prompt" (click)="onEdit()">
+            <app-icon name="edit" [size]="20"></app-icon>
+            <p>{{ languageService.t().notes.editor.contentPlaceholder }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <!-- Empty selection state -->
+    <div class="empty-selection-state">
+      <div class="empty-icon-wrap">
+        <app-icon name="file-text" [size]="32"></app-icon>
+      </div>
+      <h3>{{ languageService.t().notes.emptySelectionTitle }}</h3>
+      <p>{{ languageService.t().notes.emptySelectionSubtitle }}</p>
+    </div>
+  }
+</div>

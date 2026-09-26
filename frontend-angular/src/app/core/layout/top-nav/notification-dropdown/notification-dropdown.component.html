@@ -48,8 +48,8 @@
         </div>
       </div>
 
-      <!-- Filter Tabs -->
-      <div class="filter-tabs">
+      <!-- Filter Tabs: All, Tasks, Calendar, System, Unread -->
+      <div class="filter-tabs" role="tablist">
         <button
           type="button"
           class="tab-btn"
@@ -57,7 +57,43 @@
           (click)="setTab('all')"
         >
           <span>{{ languageService.t().notifications.all }}</span>
-          <span class="tab-count">{{ notificationService.notifications().length }}</span>
+          <span class="tab-count">{{ tabCounts().all }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="activeTab() === 'task'"
+          (click)="setTab('task')"
+        >
+          <span>{{ languageService.t().notifications.tabTasks }}</span>
+          @if (tabCounts().task > 0) {
+            <span class="tab-count">{{ tabCounts().task }}</span>
+          }
+        </button>
+
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="activeTab() === 'calendar'"
+          (click)="setTab('calendar')"
+        >
+          <span>{{ languageService.t().notifications.tabCalendar }}</span>
+          @if (tabCounts().calendar > 0) {
+            <span class="tab-count">{{ tabCounts().calendar }}</span>
+          }
+        </button>
+
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="activeTab() === 'system'"
+          (click)="setTab('system')"
+        >
+          <span>{{ languageService.t().notifications.tabSystem }}</span>
+          @if (tabCounts().system > 0) {
+            <span class="tab-count">{{ tabCounts().system }}</span>
+          }
         </button>
 
         <button
@@ -67,8 +103,8 @@
           (click)="setTab('unread')"
         >
           <span>{{ languageService.t().notifications.unread }}</span>
-          @if (notificationService.unreadCount() > 0) {
-            <span class="tab-count unread-tab-count">{{ notificationService.unreadCount() }}</span>
+          @if (tabCounts().unread > 0) {
+            <span class="tab-count unread-tab-count">{{ tabCounts().unread }}</span>
           }
         </button>
       </div>

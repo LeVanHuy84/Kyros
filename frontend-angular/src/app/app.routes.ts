@@ -72,16 +72,16 @@ export const routes: Routes = [
       {
         path: 'notes',
         loadComponent: () =>
-          import('@features/agent/pages/agent-placeholder.component').then(
-            (m) => m.AgentPlaceholderComponent
-          ),
+          import(
+            '@features/notes/pages/notes-management.component'
+          ).then((m) => m.NotesManagementComponent),
       },
       {
         path: 'memory',
         loadComponent: () =>
-          import('@features/agent/pages/agent-placeholder.component').then(
-            (m) => m.AgentPlaceholderComponent
-          ),
+          import(
+            '@features/memory/pages/memory-page.component'
+          ).then((m) => m.MemoryPageComponent),
       },
       {
         path: 'settings',

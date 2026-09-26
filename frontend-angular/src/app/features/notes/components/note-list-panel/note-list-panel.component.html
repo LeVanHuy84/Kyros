@@ -1,0 +1,169 @@
+<aside class="note-list-panel">
+  <!-- Header / Action Top -->
+  <div class="panel-top">
+    <div class="top-title-row">
+      <div class="title-group" [title]="languageService.t().notes.title">
+        <app-icon name="file-text" [size]="16" class="title-icon"></app-icon>
+        <h3 class="panel-heading">{{ languageService.t().notes.title }}</h3>
+      </div>
+      <div class="top-actions">
+        <!-- Compact circular + button beside title -->
+        <button
+          type="button"
+          class="circle-add-btn"
+          (click)="onCreateNew()"
+          [title]="languageService.t().notes.newNote"
+          aria-label="Tạo ghi chú mới"
+        >
+          <app-icon name="plus" [size]="14"></app-icon>
+        </button>
+
+        <!-- Collapse sidebar button -->
+        <button
+          type="button"
+          class="collapse-btn"
+          (click)="onCollapse()"
+          title="Thu gọn danh sách"
+          aria-label="Thu gọn danh sách"
+        >
+          <app-icon name="chevron-left" [size]="15"></app-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Search Box -->
+    <div class="search-box">
+      <app-icon name="search" [size]="14" class="search-icon"></app-icon>
+      <input
+        type="text"
+        [ngModel]="notesService.searchQuery()"
+        (ngModelChange)="onSearchChange($event)"
+        [placeholder]="languageService.t().notes.searchPlaceholder"
+        class="search-input"
+      />
+      @if (notesService.searchQuery()) {
+        <button
+          type="button"
+          class="clear-search-btn"
+          (click)="onSearchChange('')"
+          title="Clear search"
+        >
+          <app-icon name="x" [size]="13"></app-icon>
+        </button>
+      }
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs" role="tablist">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="notesService.filterTab() === 'all'"
+        (click)="setFilterTab('all')"
+      >
+        <span>{{ languageService.t().notes.allNotes }}</span>
+        <span class="count-pill">{{ notesService.notes().length }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="notesService.filterTab() === 'pinned'"
+        (click)="setFilterTab('pinned')"
+      >
+        <app-icon name="zap" [size]="12" class="zap-icon"></app-icon>
+        <span>{{ languageService.t().notes.pinnedNotes }}</span>
+        @if (notesService.pinnedCount() > 0) {
+          <span class="count-pill pinned-pill">{{ notesService.pinnedCount() }}</span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Notes List Scroll Area -->
+  <div class="notes-scroll-area">
+    @if (notesService.isLoading()) {
+      <div class="loading-state">
+        <app-icon name="loader" [size]="20" class="spin-icon"></app-icon>
+        <span>{{ languageService.t().common.loading }}</span>
+      </div>
+    } @else if (notesService.filteredNotes().length > 0) {
+      <div class="note-cards-container">
+        @for (note of notesService.filteredNotes(); track note.id) {
+          <div
+            class="note-card"
+            [class.active]="notesService.selectedNoteId() === note.id && !notesService.isCreatingNew()"
+            [class.is-pinned]="notesService.isPinned(note.id)"
+            (click)="onSelectNote(note)"
+            role="button"
+            tabindex="0"
+          >
+            <!-- Card Header -->
+            <div class="card-header">
+              <span class="note-title" [title]="note.title || 'Untitled'">
+                {{ note.title || 'Untitled Note' }}
+              </span>
+              <div class="card-actions">
+                <button
+                  type="button"
+                  class="action-btn pin-btn"
+                  [class.pinned]="notesService.isPinned(note.id)"
+                  (click)="onTogglePin($event, note)"
+                  [title]="notesService.isPinned(note.id) ? languageService.t().notes.actions.unpin : languageService.t().notes.actions.pin"
+                >
+                  <app-icon name="zap" [size]="12"></app-icon>
+                </button>
+                <button
+                  type="button"
+                  class="action-btn delete-btn"
+                  (click)="onDeleteNote($event, note)"
+                  [title]="languageService.t().notes.actions.delete"
+                >
+                  <app-icon name="trash" [size]="12"></app-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Card Snippet Preview -->
+            <p class="card-snippet">
+              {{ stripMarkdown(note.content) || '(No content yet)' }}
+            </p>
+
+            <!-- Card Footer Meta -->
+            <div class="card-meta">
+              <span class="note-date">
+                <app-icon name="clock" [size]="10"></app-icon>
+                {{ formatDate(note.updatedAt || note.createdAt) }}
+              </span>
+              @if (note.taskId) {
+                <span class="context-tag task-tag" title="Linked to task">
+                  <app-icon name="check-square" [size]="9"></app-icon>
+                  Task
+                </span>
+              }
+              @if (note.eventId) {
+                <span class="context-tag event-tag" title="Linked to event">
+                  <app-icon name="calendar" [size]="9"></app-icon>
+                  Event
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <!-- Empty State -->
+      <div class="empty-list-state">
+        <div class="empty-icon-box">
+          <app-icon name="file-text" [size]="24"></app-icon>
+        </div>
+        <div class="empty-title">{{ languageService.t().notes.noNotes }}</div>
+        <div class="empty-sub">{{ languageService.t().notes.noNotesSub }}</div>
+        <button type="button" class="empty-create-btn" (click)="onCreateNew()">
+          <app-icon name="plus" [size]="13"></app-icon>
+          <span>{{ languageService.t().notes.newNote }}</span>
+        </button>
+      </div>
+    }
+  </div>
+</aside>

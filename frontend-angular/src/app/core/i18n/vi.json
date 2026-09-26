@@ -222,6 +222,40 @@
       "saveBtn": "Lưu cấu hình Thông báo",
       "saving": "Đang lưu...",
       "savedSuccess": "Đã lưu cấu hình thông báo thành công!"
+    },
+    "preferences": {
+      "title": "Tùy Biến Trợ Lý & Cá Nhân Hóa",
+      "subtitle": "Cá nhân hóa phong cách phản hồi của AI, giờ làm việc tiêu chuẩn và cấu hình múi giờ",
+      "aiToneTitle": "Phong cách phản hồi của Trợ lý AI",
+      "aiToneDesc": "Chọn mức độ chi tiết và phong thái giao tiếp phù hợp với phong cách làm việc của bạn.",
+      "aiToneConcise": "Ngắn gọn, súc tích (Tối ưu hành động nhanh)",
+      "aiToneBalanced": "Cân bằng & Tự nhiên (Khuyên dùng)",
+      "aiToneDetailed": "Chi tiết & Phân tích chuyên sâu (Báo cáo đầy đủ)",
+      "timezoneTitle": "Múi giờ làm việc mặc định",
+      "timezoneDesc": "Múi giờ được áp dụng khi AI xếp lịch, kích hoạt nhắc hẹn và gửi thông báo.",
+      "workingHoursTitle": "Giờ làm việc tiêu chuẩn",
+      "workingHoursDesc": "Khung giờ AI ưu tiên sắp xếp các cuộc họp và phiên tập trung (Focus time).",
+      "workStartLabel": "Bắt đầu",
+      "workEndLabel": "Kết thúc",
+      "preventOverlapTitle": "Chống trùng lịch tự động (Overlap Prevention)",
+      "preventOverlapDesc": "Tự động cảnh báo và ngăn các sự kiện chiếm cùng một khung giờ làm việc.",
+      "leadTimeTitle": "Thời gian nhắc hẹn trước mặc định",
+      "leadTimeDesc": "Thời gian gửi thông báo trước khi sự kiện hoặc nhiệm vụ bắt đầu.",
+      "leadTimeMinutes": "phút trước khi bắt đầu",
+      "defaultPriorityTitle": "Mức ưu tiên công việc mặc định",
+      "defaultPriorityDesc": "Mức ưu tiên áp dụng cho các tác vụ mới tạo khi không chỉ định rõ ràng.",
+      "dndTitle": "Chế độ Không Làm Phiền (Do Not Disturb - DND)",
+      "dndDesc": "Tạm dừng tất cả âm thanh và thông báo đẩy không khẩn cấp.",
+      "quietHoursTitle": "Khung giờ yên tĩnh (Quiet Hours)",
+      "quietHoursDesc": "Không gửi thông báo làm phiền trong khoảng thời gian nghỉ ngơi.",
+      "soundEffectsTitle": "Âm thanh thông báo",
+      "soundEffectsDesc": "Phát âm thanh nhẹ khi nhận được tin nhắn hoặc cập nhật mới từ AI.",
+      "saveBtn": "Lưu cài đặt Tùy biến",
+      "saving": "Đang lưu...",
+      "resetBtn": "Khôi phục mặc định",
+      "resetting": "Đang khôi phục...",
+      "savedSuccess": "Đã lưu cài đặt tùy biến thành công!",
+      "resetSuccess": "Đã khôi phục cài đặt mặc định thành công!"
     }
   },
   "tasks": {
@@ -482,6 +516,9 @@
     "unreadBadge": "{count} chưa đọc",
     "all": "Tất cả",
     "unread": "Chưa đọc",
+    "tabTasks": "Công việc",
+    "tabCalendar": "Lịch biểu",
+    "tabSystem": "Hệ thống",
     "markAllAsRead": "Đánh dấu tất cả đã đọc",
     "markAsRead": "Đánh dấu đã đọc",
     "delete": "Xóa thông báo",
@@ -504,6 +541,111 @@
       "agent": "Trợ lý AI",
       "system": "Hệ thống",
       "reminder": "Nhắc hẹn"
+    }
+  },
+  "notes": {
+    "title": "Kho Ghi Chú & Tài Liệu",
+    "subtitle": "Soạn thảo Markdown chuyên sâu, lưu trữ và liên kết ngữ cảnh công việc",
+    "newNote": "Tạo ghi chú mới",
+    "searchPlaceholder": "Tìm kiếm tiêu đề hoặc nội dung...",
+    "allNotes": "Tất cả",
+    "pinnedNotes": "Ghi chú đã ghim",
+    "recentNotes": "Gần đây",
+    "noNotes": "Chưa có ghi chú nào",
+    "noNotesSub": "Tạo ghi chú mới để lưu lại ý tưởng, tài liệu hoặc biên bản cuộc họp.",
+    "selectNotePrompt": "Chọn một ghi chú bên trái hoặc tạo mới để bắt đầu",
+    "emptySelectionTitle": "Chưa chọn ghi chú",
+    "emptySelectionSubtitle": "Chọn một ghi chú từ danh sách bên trái hoặc nhấn \"Tạo ghi chú mới\" để soạn thảo.",
+    "editor": {
+      "titlePlaceholder": "Tiêu đề ghi chú...",
+      "contentPlaceholder": "Bắt đầu soạn thảo Markdown... (Hỗ trợ định dạng rich text, code, bảng và danh sách công việc)",
+      "previewTab": "Xem trước",
+      "editTab": "Soạn thảo",
+      "splitTab": "Song song",
+      "autoSaved": "Đã tự động lưu",
+      "saving": "Đang lưu...",
+      "saveBtn": "Lưu ghi chú",
+      "discardBtn": "Hủy bỏ",
+      "tools": {
+        "bold": "In đậm (Ctrl+B)",
+        "italic": "In nghiêng (Ctrl+I)",
+        "heading1": "Tiêu đề H1",
+        "heading2": "Tiêu đề H2",
+        "heading3": "Tiêu đề H3",
+        "bulletList": "Danh sách dấu đầu dòng",
+        "numberList": "Danh sách đánh số",
+        "checkList": "Danh sách công việc",
+        "codeBlock": "Khối mã (Code block)",
+        "table": "Chèn bảng",
+        "quote": "Trích dẫn",
+        "link": "Chèn liên kết",
+        "divider": "Đường phân cách"
+      },
+      "stats": {
+        "words": "{count} từ",
+        "characters": "{count} ký tự",
+        "readTime": "{min} phút đọc"
+      }
+    },
+    "actions": {
+      "pin": "Ghim ghi chú",
+      "unpin": "Bỏ ghim",
+      "edit": "Chỉnh sửa",
+      "delete": "Xóa ghi chú",
+      "deleteConfirm": "Bạn có chắc chắn muốn xóa vĩnh viễn ghi chú này không?",
+      "copyMarkdown": "Sao chép Markdown",
+      "copied": "Đã sao chép vào bộ nhớ tạm!"
+    }
+  },
+  "memory": {
+    "title": "Kho Ký Ức Dài Hạn & Lịch Sử Trợ Lý",
+    "subtitle": "Quản lý dữ liệu ghi nhớ của AI và kiểm toán các lượt suy luận hội thoại",
+    "tabs": {
+      "vault": "Kho Ký Ức (Memory Vault)",
+      "audit": "Kiểm Toán Hội Thoại (Turns Audit)"
+    },
+    "vault": {
+      "searchPlaceholder": "Tìm kiếm ký ức theo ngữ nghĩa (Semantic search)...",
+      "addMemoryBtn": "Thêm ký ức mới",
+      "totalEntries": "Tổng số ký ức đã lưu: {count}",
+      "confidenceLabel": "Độ tin cậy",
+      "createdAt": "Ghi nhận lúc",
+      "updatedAt": "Cập nhật lúc",
+      "addTitle": "Thêm Ký Ức Thủ Công",
+      "editTitle": "Chỉnh Sửa Mảnh Ký Ức",
+      "contentLabel": "Nội dung ký ức *",
+      "contentPlaceholder": "Ví dụ: Người dùng thích nhận báo cáo dạng bảng và tổng hợp ngắn gọn trước 08:30 sáng.",
+      "confidenceScoreLabel": "Hệ số tin cậy (0.1 - 1.0)",
+      "confidenceHint": "Mặc định 1.0 cho thông tin xác thực từ người dùng.",
+      "saveBtn": "Lưu ký ức",
+      "saving": "Đang lưu...",
+      "deleteConfirm": "Bạn có chắc chắn muốn xóa vĩnh viễn mảnh ký ức này khỏi bộ nhớ của AI không?",
+      "emptyTitle": "Chưa có mảnh ký ức nào",
+      "emptySubtitle": "Khi bạn trò chuyện, Trợ lý AI sẽ tự động ghi nhớ các sự thật hoặc bạn có thể thêm thủ công tại đây."
+    },
+    "audit": {
+      "searchPlaceholder": "Tìm kiếm phiên hội thoại...",
+      "totalConversations": "Tổng số phiên: {count}",
+      "emptyTitle": "Chưa có lịch sử hội thoại nào",
+      "emptySubtitle": "Các cuộc hội thoại giữa bạn và AI Assistant sẽ được lưu trữ tại đây để kiểm toán và truy vết.",
+      "turnsCount": "{count} lượt trao đổi",
+      "lastActive": "Hoạt động gần nhất",
+      "viewTurnsBtn": "Xem chi tiết",
+      "clearHistoryBtn": "Xóa sạch lịch sử lượt",
+      "clearHistoryConfirm": "Bạn có chắc chắn muốn xóa sạch toàn bộ các lượt trao đổi trong phiên này?",
+      "deleteConvBtn": "Xóa phiên hội thoại",
+      "deleteConvConfirm": "Bạn có chắc chắn muốn xóa hoàn toàn phiên hội thoại này?",
+      "modal": {
+        "title": "Kiểm Toán Lượt Hội Thoại (Conversation Turns)",
+        "subtitle": "Chi tiết các lượt trao đổi, Chain-of-thought và phản hồi giữa User & AI",
+        "totalTurns": "{count} Lượt hội thoại",
+        "roleUser": "Người dùng (User)",
+        "roleAgent": "Trợ lý AI (Agent)",
+        "roleSystem": "Hệ thống (System)",
+        "thoughtProcess": "Luồng suy nghĩ & Gọi công cụ (Tool Execution)",
+        "noTurns": "Phiên này chưa có lượt trao đổi nào.",
+        "closeBtn": "Đóng cửa sổ"
+      }
     }
   }
 }

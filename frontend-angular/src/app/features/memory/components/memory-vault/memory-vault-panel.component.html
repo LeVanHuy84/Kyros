@@ -1,0 +1,172 @@
+<div class="memory-vault-container">
+  <!-- Unified Toolbar: Search + Count + Add Memory -->
+  <div class="vault-toolbar">
+    <div class="search-wrap">
+      <app-icon name="search" [size]="15" class="search-icon"></app-icon>
+      <input
+        type="text"
+        class="vault-search-input"
+        [placeholder]="languageService.t().memory.vault.searchPlaceholder"
+        [ngModel]="memoryService.searchQuery()"
+        (ngModelChange)="onSearch($event)"
+      />
+      @if (memoryService.searchQuery()) {
+        <button
+          type="button"
+          class="clear-btn"
+          (click)="onSearch('')"
+          title="Clear search"
+          aria-label="Clear search"
+        >
+          <app-icon name="x" [size]="14"></app-icon>
+        </button>
+      }
+    </div>
+
+    <div class="toolbar-actions">
+      <span class="entry-count-badge">
+        {{ memoryService.memoryEntries().length }} {{ languageService.currentLanguage() === 'vi' ? 'ký ức' : (memoryService.memoryEntries().length === 1 ? 'memory' : 'memories') }}
+      </span>
+
+      <button type="button" class="add-memory-btn" (click)="openAddModal()">
+        <app-icon name="plus" [size]="14"></app-icon>
+        <span>{{ languageService.t().memory.vault.addMemoryBtn }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Memory Entries Grid / List -->
+  <div class="vault-content-scroll">
+    @if (memoryService.isLoadingMemories()) {
+      <div class="loading-state">
+        <app-icon name="loader" [size]="24" class="spin-icon"></app-icon>
+        <span>{{ languageService.t().common.loading }}</span>
+      </div>
+    } @else if (memoryService.memoryEntries().length > 0) {
+      <div class="entries-grid">
+        @for (entry of memoryService.memoryEntries(); track entry.id) {
+          <article class="memory-card">
+            <!-- Top Card Header with Confidence Badge & Actions -->
+            <div class="card-header">
+              <div class="confidence-pill" [class.high]="(entry.confidenceScore || 1) >= 0.8" [class.medium]="(entry.confidenceScore || 1) < 0.8 && (entry.confidenceScore || 1) >= 0.5">
+                <app-icon name="brain" [size]="12"></app-icon>
+                <span>{{ languageService.t().memory.vault.confidenceLabel }}: {{ formatConfidence(entry.confidenceScore) }}</span>
+              </div>
+
+              <div class="card-actions">
+                <button
+                  type="button"
+                  class="action-icon-btn edit-btn"
+                  (click)="openEditModal(entry)"
+                  [title]="languageService.t().notes.actions.edit"
+                  aria-label="Edit memory"
+                >
+                  <app-icon name="edit" [size]="13"></app-icon>
+                </button>
+                <button
+                  type="button"
+                  class="action-icon-btn delete-btn"
+                  (click)="deleteEntry($event, entry)"
+                  [title]="languageService.t().notes.actions.delete"
+                  aria-label="Delete memory"
+                >
+                  <app-icon name="trash" [size]="13"></app-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <p class="memory-content">{{ entry.content }}</p>
+
+            <!-- Card Footer -->
+            <div class="card-footer">
+              <span class="date-text">
+                <app-icon name="clock" [size]="11"></app-icon>
+                {{ formatDate(entry.updatedAt || entry.createdAt) }}
+              </span>
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
+      <!-- Empty State -->
+      <div class="empty-state">
+        <div class="empty-icon-wrap">
+          <app-icon name="brain" [size]="32"></app-icon>
+        </div>
+        <h3 class="empty-title">{{ languageService.t().memory.vault.emptyTitle }}</h3>
+        <p class="empty-desc">{{ languageService.t().memory.vault.emptySubtitle }}</p>
+        <button type="button" class="empty-action-btn" (click)="openAddModal()">
+          <app-icon name="plus" [size]="14"></app-icon>
+          <span>{{ languageService.t().memory.vault.addMemoryBtn }}</span>
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Add / Edit Modal -->
+  @if (isModalOpen()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-card animate-scale-up" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <app-icon name="brain" [size]="17" class="modal-icon"></app-icon>
+            <h3>{{ editingEntry() ? languageService.t().memory.vault.editTitle : languageService.t().memory.vault.addTitle }}</h3>
+          </div>
+          <button type="button" class="close-btn" (click)="closeModal()" aria-label="Close modal">
+            <app-icon name="x" [size]="15"></app-icon>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">{{ languageService.t().memory.vault.contentLabel }}</label>
+            <textarea
+              class="form-textarea"
+              rows="4"
+              [ngModel]="formContent()"
+              (ngModelChange)="formContent.set($event)"
+              [placeholder]="languageService.t().memory.vault.contentPlaceholder"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              {{ languageService.t().memory.vault.confidenceScoreLabel }}
+              <span class="confidence-val">({{ formatConfidence(formConfidence()) }})</span>
+            </label>
+            <input
+              type="range"
+              min="0.1"
+              max="1.0"
+              step="0.05"
+              class="form-range"
+              [ngModel]="formConfidence()"
+              (ngModelChange)="formConfidence.set($event)"
+            />
+            <span class="field-hint">{{ languageService.t().memory.vault.confidenceHint }}</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeModal()">
+            {{ languageService.t().common.cancel }}
+          </button>
+          <button
+            type="button"
+            class="btn-submit"
+            (click)="saveEntry()"
+            [disabled]="!formContent().trim() || memoryService.isSavingMemory()"
+          >
+            @if (memoryService.isSavingMemory()) {
+              <app-icon name="loader" [size]="14" class="spin-icon"></app-icon>
+            } @else {
+              <app-icon name="check" [size]="14"></app-icon>
+            }
+            <span>{{ languageService.t().memory.vault.saveBtn }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

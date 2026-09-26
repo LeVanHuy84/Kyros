@@ -44,7 +44,7 @@ export class CalendarSettingsPanelComponent implements OnInit {
   readonly leadTimeOptions = [5, 10, 15, 30, 45, 60, 120];
 
   readonly timezone = signal<string>('Asia/Ho_Chi_Minh');
-  readonly defaultPriority = signal<'Low' | 'Medium' | 'High'>('Medium');
+  readonly defaultPriority = signal<'Low' | 'Medium' | 'High' | 'Urgent'>('Medium');
   readonly preventCalendarOverlap = signal<boolean>(false);
   readonly leadTimeMinutes = signal<number>(15);
 
