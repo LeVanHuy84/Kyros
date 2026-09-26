@@ -1,0 +1,204 @@
+<div class="ai-config-container">
+  <form (ngSubmit)="handleSave()" class="config-form">
+    <!-- SECTION 1: Provider & Authentication -->
+    <div class="setting-section">
+      <div class="section-header">
+        <app-icon name="brain" [size]="18" class="section-icon"></app-icon>
+        <h4 class="section-title">Nhà cung cấp & Xác thực (Provider & Vault)</h4>
+      </div>
+
+      <!-- Row 1: AI Provider Selection -->
+      <div class="setting-row">
+        <div class="setting-info">
+          <label for="provider-select" class="setting-label">{{ languageService.t().settings.aiProvider.providerLabel }}</label>
+          <span class="setting-desc">Chọn dịch vụ LLM đám mây hoặc máy chủ AI cục bộ (Ollama, LM Studio).</span>
+        </div>
+        <div class="setting-control">
+          <select
+            id="provider-select"
+            [ngModel]="selectedProvider()"
+            (ngModelChange)="onPresetChange($event)"
+            name="preset"
+            class="form-select"
+          >
+            @for (group of categories(); track group.category) {
+              <optgroup [label]="group.category">
+                @for (entry of group.items; track entry.key) {
+                  <option [value]="entry.key">{{ entry.preset.name }}</option>
+                }
+              </optgroup>
+            }
+          </select>
+
+          @if (currentPreset().description) {
+            <div class="provider-info-card animate-fade-in">
+              <app-icon name="info" [size]="14" class="info-icon"></app-icon>
+              <span>{{ currentPreset().description }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Row 2: API Key Vault -->
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="label-with-badge">
+            <label for="api-key" class="setting-label">{{ languageService.t().settings.aiProvider.apiKeyLabel }}</label>
+            <span class="vault-status-chip">
+              <app-icon name="lock" [size]="11"></app-icon>
+              <span>AES-256 Vault</span>
+            </span>
+          </div>
+          <span class="setting-desc">{{ languageService.t().settings.aiProvider.apiKeyHelp }}</span>
+        </div>
+        <div class="setting-control">
+          @if (aiSettingsService.config().hasSavedKey && !isEditingKey()) {
+            <div class="saved-key-box">
+              <div class="key-info">
+                <app-icon name="check-circle" [size]="15" class="check-icon"></app-icon>
+                <span class="masked-key">•••••••••••••••••••••••• ({{ languageService.t().settings.aiProvider.hasKeyConfigured }})</span>
+              </div>
+              <button type="button" class="change-key-btn" (click)="toggleKeyEdit()">
+                {{ languageService.t().common.edit }}
+              </button>
+            </div>
+          } @else {
+            <div class="input-wrapper">
+              <input
+                id="api-key"
+                [type]="showApiKey() ? 'text' : 'password'"
+                [ngModel]="apiKeyInput()"
+                (ngModelChange)="apiKeyInput.set($event)"
+                name="apiKey"
+                [placeholder]="languageService.t().settings.aiProvider.apiKeyPlaceholder"
+                class="form-input with-action"
+                required
+              />
+              <button
+                type="button"
+                class="toggle-eye-btn"
+                (click)="showApiKey.set(!showApiKey())"
+                [attr.aria-label]="showApiKey() ? 'Hide key' : 'Show key'"
+              >
+                <app-icon [name]="showApiKey() ? 'eye-off' : 'eye'" [size]="16"></app-icon>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Row 3: Base URL -->
+      <div class="setting-row">
+        <div class="setting-info">
+          <label for="base-url" class="setting-label">{{ languageService.t().settings.aiProvider.baseUrlLabel }}</label>
+          <span class="setting-desc">Đường dẫn Base Endpoint của nhà cung cấp hoặc gateway proxy riêng.</span>
+        </div>
+        <div class="setting-control">
+          <input
+            id="base-url"
+            type="text"
+            [ngModel]="baseUrl()"
+            (ngModelChange)="baseUrl.set($event)"
+            name="baseUrl"
+            class="form-input"
+            placeholder="https://api.openai.com/v1"
+            required
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: Model & Generation Behavior -->
+    <div class="setting-section">
+      <div class="section-header">
+        <app-icon name="sparkles" [size]="18" class="section-icon"></app-icon>
+        <h4 class="section-title">Mô hình & Tham số Sinh ngôn ngữ (Generation)</h4>
+      </div>
+
+      <!-- Row 4: Target Model -->
+      <div class="setting-row">
+        <div class="setting-info">
+          <label for="target-model" class="setting-label">{{ languageService.t().settings.aiProvider.modelLabel }}</label>
+          <span class="setting-desc">Mô hình mặc định được sử dụng cho tác vụ phân tích, xếp lịch và chat.</span>
+        </div>
+        <div class="setting-control">
+          @if (currentPreset().popularModels && currentPreset().popularModels!.length > 0) {
+            <div class="model-chips-wrapper">
+              <span class="chips-label">Gợi ý nhanh:</span>
+              <div class="model-chips-list">
+                @for (m of currentPreset().popularModels; track m) {
+                  <button
+                    type="button"
+                    class="model-chip"
+                    [class.active]="model() === m"
+                    (click)="selectModel(m)"
+                  >
+                    {{ m }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <input
+            id="target-model"
+            type="text"
+            [ngModel]="model()"
+            (ngModelChange)="model.set($event)"
+            name="model"
+            class="form-input"
+            required
+          />
+        </div>
+      </div>
+
+      <!-- Row 5: Temperature Slider -->
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="label-with-badge">
+            <label for="temp-slider" class="setting-label">{{ languageService.t().settings.aiProvider.temperatureLabel }}</label>
+            <span class="temp-badge">{{ temperature() }}</span>
+          </div>
+          <span class="setting-desc">Mức nhiệt độ càng thấp câu trả lời càng chính xác và chuẩn mực; mức cao sẽ sáng tạo hơn.</span>
+        </div>
+        <div class="setting-control">
+          <div class="slider-wrapper">
+            <input
+              id="temp-slider"
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              [ngModel]="temperature()"
+              (ngModelChange)="temperature.set($event)"
+              name="temperature"
+              class="form-range"
+            />
+            <div class="range-labels">
+              <span>0.0 (Logic & Chuẩn tắc)</span>
+              <span>0.7 (Cân bằng)</span>
+              <span>1.0 (Sáng tạo)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div class="form-actions-bar">
+      <div class="actions-left-hint">
+        <app-icon name="shield-check" [size]="14"></app-icon>
+        <span>Cấu hình được lưu an toàn vào cơ sở dữ liệu riêng của bạn</span>
+      </div>
+
+      <app-button
+        variant="primary"
+        type="submit"
+        [loading]="aiSettingsService.isSaving()"
+      >
+        <app-icon name="check" [size]="15"></app-icon>
+        <span>{{ languageService.t().settings.aiProvider.saveBtn }}</span>
+      </app-button>
+    </div>
+  </form>
+</div>

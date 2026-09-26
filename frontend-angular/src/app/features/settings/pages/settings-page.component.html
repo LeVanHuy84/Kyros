@@ -1,0 +1,103 @@
+<div class="settings-page-container">
+  <div class="settings-header">
+    <div class="header-icon-wrap">
+      <app-icon name="settings" [size]="20"></app-icon>
+    </div>
+    <div class="header-text">
+      <h2>{{ languageService.t().settings.title }}</h2>
+      <p>{{ languageService.t().settings.subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="settings-card">
+    <!-- Sub Tabs Navigation -->
+    <div class="tabs-nav" role="tablist">
+      @for (tab of tabs(); track tab.id) {
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="activeSubTab() === tab.id"
+          (click)="selectTab(tab.id)"
+          role="tab"
+          [attr.aria-selected]="activeSubTab() === tab.id"
+        >
+          <app-icon [name]="tab.icon" [size]="16"></app-icon>
+          <span>{{ tab.label }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" role="tabpanel">
+      @if (activeSubTab() === 'ai') {
+        <app-ai-config-panel></app-ai-config-panel>
+      }
+
+      @if (activeSubTab() === 'vault') {
+        <div class="placeholder-section">
+          <div class="section-header">
+            <app-icon name="lock" [size]="18" class="section-icon"></app-icon>
+            <h4 class="section-title">{{ languageService.t().settings.tabs.vault }}</h4>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Chuẩn mã hóa Vault</span>
+              <span class="setting-desc">Mọi khóa API và bí mật cấu hình được mã hóa tự động ở tầng cơ sở dữ liệu.</span>
+            </div>
+            <div class="setting-control">
+              <div class="vault-info-badge">
+                <app-icon name="shield-check" [size]="16" class="success-icon"></app-icon>
+                <span>Mã hóa AES-256-GCM (Chế độ Zero-Knowledge Key Vault)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Phạm vi phân lập (Isolation)</span>
+              <span class="setting-desc">Dữ liệu được lưu trữ phân lập bảo mật theo từng Workspace ID của bạn.</span>
+            </div>
+            <div class="setting-control">
+              <div class="vault-info-badge">
+                <app-icon name="building" [size]="16" class="primary-icon"></app-icon>
+                <span>Multi-tenant Workspace Isolated Security</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (activeSubTab() === 'pref') {
+        <div class="placeholder-section">
+          <div class="section-header">
+            <app-icon name="settings" [size]="18" class="section-icon"></app-icon>
+            <h4 class="section-title">{{ languageService.t().settings.tabs.general }}</h4>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Ngôn ngữ hiển thị</span>
+              <span class="setting-desc">Chọn ngôn ngữ mặc định cho giao diện ứng dụng và câu trả lời của trợ lý Kyros.</span>
+            </div>
+            <div class="setting-control">
+              <div class="lang-switch-buttons">
+                @for (lang of languageService.availableLanguages; track lang.code) {
+                  <button
+                    type="button"
+                    class="lang-pill-btn"
+                    [class.active]="languageService.currentLanguage() === lang.code"
+                    (click)="languageService.setLanguage(lang.code)"
+                  >
+                    <span>{{ lang.flag }}</span>
+                    <span>{{ lang.label }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
