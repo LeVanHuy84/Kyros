@@ -1,3 +1,10 @@
+:host {
+  display: block;
+  width: 100%;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
 .top-nav {
   height: 56px;
   display: flex;
@@ -282,5 +289,58 @@
       background-color: rgba(239, 68, 68, 0.08);
       color: var(--color-danger);
     }
+  }
+}
+
+// Responsive layout optimizations
+@media (min-width: 768px) and (max-width: 1023px) {
+  .search-trigger-btn {
+    min-width: 150px;
+  }
+}
+
+@media (max-width: 767px) {
+  .top-nav {
+    padding: 0 10px;
+    height: 50px;
+  }
+
+  .nav-left {
+    gap: 8px;
+  }
+
+  .search-trigger-btn {
+    min-width: auto;
+    padding: 6px 8px;
+
+    .search-placeholder,
+    .search-shortcut {
+      display: none;
+    }
+  }
+
+  .nav-right {
+    gap: 4px;
+  }
+
+  .lang-switch-btn {
+    padding: 4px 6px;
+
+    .lang-code {
+      display: none;
+    }
+  }
+
+  .user-profile-btn {
+    padding: 2px;
+
+    .user-name,
+    .user-chevron {
+      display: none;
+    }
+  }
+
+  .divider {
+    display: none;
   }
 }

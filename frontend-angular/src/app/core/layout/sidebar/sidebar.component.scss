@@ -1,11 +1,18 @@
+:host {
+  display: block;
+  height: 100%;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
 .sidebar {
   width: 240px;
-  height: 100vh;
+  height: 100%;
   background: var(--bg-surface);
   border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  transition: width var(--transition-normal);
+  transition: width var(--transition-normal), transform var(--transition-normal);
   flex-shrink: 0;
   user-select: none;
 
@@ -20,6 +27,29 @@
     .nav-link {
       justify-content: center;
       padding: 10px 0;
+    }
+  }
+}
+
+// Mobile off-canvas drawer styles
+@media (max-width: 767px) {
+  :host {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  .sidebar {
+    width: 260px;
+    box-shadow: var(--shadow-xl);
+    pointer-events: auto;
+
+    &.collapsed {
+      width: 260px;
+      transform: translateX(-100%);
     }
   }
 }
@@ -39,6 +69,8 @@
   flex-direction: column;
   gap: 4px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
 }
 
 .nav-link {

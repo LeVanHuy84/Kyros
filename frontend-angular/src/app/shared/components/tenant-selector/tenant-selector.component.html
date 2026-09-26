@@ -25,37 +25,44 @@
         <span class="header-label">{{ languageService.t().workspace.title }}</span>
       </div>
 
-      <div class="workspace-list">
-        @for (ws of workspaceService.workspaces(); track ws.id) {
-          <button
-            type="button"
-            class="workspace-item"
-            [class.active]="ws.id === workspaceService.activeWorkspaceId()"
-            [class.suspended]="ws.status === 'SUSPENDED'"
-            (click)="selectWorkspace(ws)"
-            role="option"
-            [attr.aria-selected]="ws.id === workspaceService.activeWorkspaceId()"
-          >
-            <div class="item-left">
-              <span class="status-dot" [class.suspended]="ws.status === 'SUSPENDED'"></span>
-              <span class="item-name">{{ ws.name }}</span>
-            </div>
+      @if (workspaceService.isLoading() && workspaceService.workspaces().length === 0) {
+        <div class="loading-workspaces">
+          <app-icon name="loader" [size]="15" class="animate-spin"></app-icon>
+          <span>{{ languageService.t().common.loading }}</span>
+        </div>
+      } @else {
+        <div class="workspace-list">
+          @for (ws of workspaceService.workspaces(); track ws.id) {
+            <button
+              type="button"
+              class="workspace-item"
+              [class.active]="ws.id === workspaceService.activeWorkspaceId()"
+              [class.suspended]="ws.status === 'SUSPENDED'"
+              (click)="selectWorkspace(ws)"
+              role="option"
+              [attr.aria-selected]="ws.id === workspaceService.activeWorkspaceId()"
+            >
+              <div class="item-left">
+                <span class="status-dot" [class.suspended]="ws.status === 'SUSPENDED'"></span>
+                <span class="item-name">{{ ws.name }}</span>
+              </div>
 
-            <div class="item-right">
-              @if (ws.id === workspaceService.activeWorkspaceId()) {
-                <app-icon name="check" [size]="14" class="check-icon"></app-icon>
-              }
-              @if (ws.status === 'SUSPENDED') {
-                <span class="suspended-badge">{{ languageService.t().workspace.suspended }}</span>
-              }
+              <div class="item-right">
+                @if (ws.id === workspaceService.activeWorkspaceId()) {
+                  <app-icon name="check" [size]="14" class="check-icon"></app-icon>
+                }
+                @if (ws.status === 'SUSPENDED') {
+                  <span class="suspended-badge">{{ languageService.t().workspace.suspended }}</span>
+                }
+              </div>
+            </button>
+          } @empty {
+            <div class="empty-workspaces">
+              <span>{{ languageService.t().workspace.noWorkspaces }}</span>
             </div>
-          </button>
-        } @empty {
-          <div class="empty-workspaces">
-            <span>{{ languageService.t().workspace.noWorkspaces }}</span>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      }
 
       <div class="dropdown-footer">
         <button type="button" class="create-ws-btn" (click)="openCreateModal()">

@@ -43,6 +43,7 @@ export type AppIconName =
   | 'eye-off'
   | 'loader'
   | 'log-out'
+  | 'message-square'
   | 'refresh-cw';
 
 @Component({

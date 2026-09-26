@@ -10,6 +10,9 @@ export const workspaceGuard: CanActivateFn = () => {
   const workspaceService = inject(WorkspaceService);
 
   if (workspaceService.activeWorkspaceId()) {
+    if (workspaceService.workspaces().length === 0) {
+      workspaceService.fetchWorkspaces().subscribe();
+    }
     return true;
   }
 

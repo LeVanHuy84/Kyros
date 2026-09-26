@@ -1,83 +1,746 @@
-.markdown-body {
+:host ::ng-deep .markdown-body {
   font-size: 14.5px;
   line-height: 1.6;
-  color: inherit;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-weight: 400;
+
+  // Prevent long content from breaking the chat layout
   word-break: break-word;
+  overflow-wrap: break-word;
+
+  // ============================================================
+  // Paragraphs
+  // ============================================================
 
   p {
-    margin-bottom: 12px;
-    &:last-child { margin-bottom: 0; }
-  }
+    margin: 0 0 10px;
+    line-height: 1.65;
 
-  h1, h2, h3, h4 {
-    margin-top: 16px;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  h1 { font-size: 1.4rem; }
-  h2 { font-size: 1.25rem; }
-  h3 { font-size: 1.1rem; }
-
-  ul, ol {
-    margin-bottom: 12px;
-    padding-left: 20px;
-  }
-
-  li {
-    margin-bottom: 4px;
-  }
-
-  code {
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-    font-size: 88%;
-    padding: 2px 6px;
-    border-radius: var(--radius-sm);
-    background-color: var(--bg-surface-secondary);
-    color: var(--color-primary);
-    border: 1px solid var(--border-subtle);
-  }
-
-  pre {
-    margin: 12px 0;
-    padding: 12px 16px;
-    overflow-x: auto;
-    border-radius: var(--radius-md);
-    background-color: var(--bg-surface-secondary);
-    border: 1px solid var(--border-subtle);
-
-    code {
-      padding: 0;
-      border: none;
-      background: transparent;
-      color: var(--text-primary);
+    &:last-child {
+      margin-bottom: 0;
     }
   }
 
-  blockquote {
-    margin: 12px 0;
-    padding: 8px 16px;
-    border-left: 3px solid var(--color-primary);
-    background-color: var(--color-primary-subtle);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    color: var(--text-secondary);
+  // ============================================================
+  // Headings
+  // ============================================================
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: 18px;
+    margin-bottom: 7px;
+    color: var(--text-primary);
+    line-height: 1.35;
+    letter-spacing: -0.005em;
+
+    &:first-child {
+      margin-top: 0;
+    }
   }
 
-  table {
+  h1 {
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  h5,
+  h6 {
+    font-size: 0.92rem;
+    font-weight: 500;
+  }
+
+  // ============================================================
+  // Text Formatting
+  // ============================================================
+
+  strong,
+  b {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  em,
+  i {
+    font-style: italic;
+  }
+
+  del,
+  s {
+    text-decoration: line-through;
+    opacity: 0.8;
+  }
+
+  // ============================================================
+  // Links
+  // ============================================================
+
+  a {
+    color: var(--color-primary);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    transition:
+      opacity var(--transition-fast),
+      color var(--transition-fast);
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  // ============================================================
+  // Lists
+  //
+  // Markdown-standard visual rhythm:
+  // Level 1 -> 24px
+  // Level 2 -> +24px
+  // Level 3 -> +24px
+  // ============================================================
+
+  ul,
+  ol {
+    margin: 6px 0 10px;
+    padding-left: 24px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    // Level 2
+    ul,
+    ol {
+      margin-top: 4px;
+      margin-bottom: 6px;
+      padding-left: 24px;
+
+      // Level 3
+      ul,
+      ol {
+        margin-top: 3px;
+        margin-bottom: 4px;
+        padding-left: 24px;
+
+        // Level 4
+        ul,
+        ol {
+          margin-top: 3px;
+          margin-bottom: 4px;
+          padding-left: 24px;
+        }
+      }
+    }
+  }
+
+  // Unordered lists
+  ul {
+    list-style-type: disc;
+
+    ul {
+      list-style-type: circle;
+
+      ul {
+        list-style-type: square;
+
+        ul {
+          list-style-type: circle;
+        }
+      }
+    }
+  }
+
+  // Ordered lists
+  ol {
+    list-style-type: decimal;
+
+    ol {
+      list-style-type: lower-alpha;
+
+      ol {
+        list-style-type: lower-roman;
+
+        ol {
+          list-style-type: lower-alpha;
+        }
+      }
+    }
+  }
+
+  li {
+    margin: 0 0 4px;
+    padding-left: 2px;
+    line-height: 1.58;
+    font-weight: 400;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &::marker {
+      color: var(--text-muted);
+      font-size: 0.82em;
+    }
+
+    > p {
+      margin-bottom: 4px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    // Nested list directly inside list item
+    > ul,
+    > ol {
+      margin-bottom: 4px;
+    }
+  }
+
+  // ============================================================
+  // Inline Code
+  // ============================================================
+
+  code:not([class*='language-']) {
+    display: inline;
+    padding: 2px 6px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+
+    background-color: var(--bg-surface-secondary);
+    color: var(--color-primary);
+
+    font-family:
+      'JetBrains Mono',
+      'Fira Code',
+      'Cascadia Code',
+      'SFMono-Regular',
+      Consolas,
+      Menlo,
+      monospace;
+
+    font-size: 0.86em;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  // ============================================================
+  // Code Blocks
+  // ============================================================
+
+  .code-block-wrapper {
     width: 100%;
+    max-width: 100%;
+    margin: 14px 0;
+
+    overflow: hidden;
+
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+
+    background-color: #16181c;
+    box-shadow: var(--shadow-sm);
+
+    box-sizing: border-box;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    // ----------------------------------------------------------
+    // Code Block Header
+    // ----------------------------------------------------------
+
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      min-height: 30px;
+      padding: 6px 12px;
+
+      background-color: #1e2227;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+      color: #9da6b2;
+
+      font-size: 11.5px;
+
+      user-select: none;
+      box-sizing: border-box;
+
+      .code-block-lang {
+        color: #9da6b2;
+
+        font-family:
+          'JetBrains Mono',
+          'Fira Code',
+          'Cascadia Code',
+          Consolas,
+          monospace;
+
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        text-transform: lowercase;
+      }
+
+      .code-copy-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+
+        padding: 3px 8px;
+
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 4px;
+
+        background: transparent;
+        color: #abb2bf;
+
+        font-size: 11px;
+        font-weight: 400;
+
+        cursor: pointer;
+
+        transition:
+          background-color var(--transition-fast),
+          color var(--transition-fast),
+          border-color var(--transition-fast);
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.25);
+          color: #ffffff;
+        }
+
+        &.copied {
+          border-color: #52b788;
+          color: #52b788;
+        }
+
+        .copy-icon {
+          flex-shrink: 0;
+        }
+      }
+    }
+
+    // ----------------------------------------------------------
+    // Code Block Content
+    // ----------------------------------------------------------
+
+    .code-block-pre {
+      width: 100%;
+      max-width: 100%;
+
+      margin: 0;
+      padding: 13px 14px;
+
+      overflow-x: auto;
+      overflow-y: hidden;
+
+      background-color: #16181c;
+
+      box-sizing: border-box;
+
+      scrollbar-width: thin;
+      scrollbar-color:
+        rgba(255, 255, 255, 0.2)
+        transparent;
+
+      &::-webkit-scrollbar {
+        height: 5px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.18);
+        border-radius: var(--radius-full);
+      }
+
+      &::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.28);
+      }
+
+      code {
+        display: block;
+
+        padding: 0;
+        margin: 0;
+
+        border: none;
+        background: transparent;
+
+        color: #e6edf3;
+
+        font-family:
+          'JetBrains Mono',
+          'Fira Code',
+          'Cascadia Code',
+          'SFMono-Regular',
+          Consolas,
+          Menlo,
+          monospace;
+
+        font-size: 12.5px;
+        line-height: 1.55;
+
+        white-space: pre;
+        word-break: normal;
+        overflow-wrap: normal;
+
+        tab-size: 2;
+      }
+    }
+  }
+
+  // ============================================================
+  // Blockquote
+  // ============================================================
+
+  blockquote {
     margin: 12px 0;
+    padding: 8px 14px;
+
+    border-left: 3px solid var(--color-primary);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+
+    background-color: var(--bg-surface-secondary);
+
+    color: var(--text-secondary);
+
+    font-size: 13.5px;
+    font-style: normal;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    p {
+      margin-bottom: 6px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // ============================================================
+  // Horizontal Rule
+  // ============================================================
+
+  hr {
+    height: 1px;
+    margin: 16px 0;
+
+    border: 0;
+
+    background-color: var(--border-subtle);
+
+    opacity: 0.8;
+  }
+
+  // ============================================================
+  // Tables
+  // ============================================================
+
+  table {
+    display: block;
+
+    width: 100%;
+    max-width: 100%;
+
+    margin: 14px 0;
+
+    overflow-x: auto;
+
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+
     border-collapse: collapse;
-    
-    th, td {
-      padding: 8px 12px;
+
+    box-sizing: border-box;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    th,
+    td {
+      padding: 8px 14px;
+
       border: 1px solid var(--border-subtle);
+
       text-align: left;
+
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     th {
       background-color: var(--bg-surface-secondary);
+
+      color: var(--text-primary);
+
       font-weight: 600;
+      white-space: nowrap;
+    }
+
+    td {
+      color: var(--text-secondary);
+    }
+
+    tbody {
+      tr:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.015);
+      }
+    }
+  }
+
+  // ============================================================
+  // Images
+  // ============================================================
+
+  img {
+    display: block;
+
+    max-width: 100%;
+    height: auto;
+
+    margin: 10px 0;
+
+    border-radius: var(--radius-md);
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // ============================================================
+  // Keyboard
+  // ============================================================
+
+  kbd {
+    display: inline-block;
+
+    padding: 2px 6px;
+
+    border: 1px solid var(--border-subtle);
+    border-bottom-width: 2px;
+    border-radius: var(--radius-sm);
+
+    background-color: var(--bg-surface-secondary);
+    color: var(--text-primary);
+
+    font-family:
+      'JetBrains Mono',
+      'Fira Code',
+      Consolas,
+      monospace;
+
+    font-size: 0.8em;
+    line-height: 1.4;
+
+    white-space: nowrap;
+  }
+
+  // ============================================================
+  // Definition / Details
+  // ============================================================
+
+  details {
+    margin: 10px 0;
+
+    summary {
+      cursor: pointer;
+      color: var(--text-primary);
+      font-weight: 500;
+
+      &:hover {
+        color: var(--color-primary);
+      }
+    }
+  }
+
+  // ============================================================
+  // Task Lists
+  // ============================================================
+
+  ul.contains-task-list {
+    padding-left: 24px;
+
+    list-style: none;
+
+    li.task-list-item {
+      position: relative;
+
+      padding-left: 4px;
+
+      input[type='checkbox'] {
+        margin: 0 7px 0 0;
+
+        vertical-align: middle;
+
+        accent-color: var(--color-primary);
+      }
+    }
+  }
+}
+
+// ============================================================================
+// PrismJS Syntax Highlighting
+// Modern One Dark inspired palette
+// ============================================================================
+
+::ng-deep .code-block-pre {
+  .token.comment,
+  .token.prolog,
+  .token.doctype,
+  .token.cdata {
+    color: #767c88;
+    font-style: italic;
+  }
+
+  .token.punctuation {
+    color: #abb2bf;
+  }
+
+  .token.property,
+  .token.tag,
+  .token.boolean,
+  .token.number,
+  .token.constant,
+  .token.symbol,
+  .token.deleted {
+    color: #e5c07b;
+  }
+
+  .token.selector,
+  .token.attr-name,
+  .token.string,
+  .token.char,
+  .token.builtin,
+  .token.inserted {
+    color: #98c379;
+  }
+
+  .token.operator,
+  .token.entity,
+  .token.url,
+  .language-css .token.string,
+  .style .token.string {
+    color: #56b6c2;
+  }
+
+  .token.atrule,
+  .token.attr-value,
+  .token.keyword {
+    color: #c678dd;
+    font-weight: 500;
+  }
+
+  .token.function,
+  .token.class-name {
+    color: #61afef;
+  }
+
+  .token.regex,
+  .token.important,
+  .token.variable {
+    color: #e06c75;
+  }
+
+  .token.important,
+  .token.bold {
+    font-weight: 600;
+  }
+
+  .token.italic {
+    font-style: italic;
+  }
+}
+
+// ============================================================================
+// Responsive
+// ============================================================================
+
+@media (max-width: 640px) {
+  .markdown-body {
+    font-size: 14px;
+
+    ul,
+    ol {
+      padding-left: 22px;
+
+      ul,
+      ol {
+        padding-left: 22px;
+
+        ul,
+        ol {
+          padding-left: 22px;
+        }
+      }
+    }
+
+    .code-block-wrapper {
+      margin-left: 0;
+      margin-right: 0;
+
+      .code-block-pre {
+        padding: 11px 12px;
+
+        code {
+          font-size: 12px;
+        }
+      }
+    }
+
+    table {
+      th,
+      td {
+        padding: 7px 10px;
+        font-size: 12.5px;
+      }
     }
   }
 }

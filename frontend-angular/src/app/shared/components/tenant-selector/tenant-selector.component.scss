@@ -157,11 +157,16 @@
   }
 }
 
-.empty-workspaces {
+.empty-workspaces,
+.loading-workspaces {
   padding: 16px 8px;
   text-align: center;
   font-size: 12px;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .dropdown-footer {

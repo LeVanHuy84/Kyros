@@ -38,7 +38,11 @@
             "styles": [
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "prismjs",
+              "dompurify"
+            ]
           },
           "configurations": {
             "production": {

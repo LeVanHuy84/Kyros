@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   HostListener,
+  OnInit,
   inject,
   signal,
 } from '@angular/core';
@@ -21,13 +22,17 @@ import { Workspace } from '@core/workspace/models/workspace.models';
   styleUrl: './tenant-selector.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TenantSelectorComponent {
+export class TenantSelectorComponent implements OnInit {
   readonly workspaceService = inject(WorkspaceService);
   readonly languageService = inject(LanguageService);
   private readonly elementRef = inject(ElementRef);
 
   readonly isOpen = signal<boolean>(false);
   readonly isCreateModalOpen = signal<boolean>(false);
+
+  ngOnInit(): void {
+    this.workspaceService.fetchWorkspaces().subscribe();
+  }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
@@ -37,7 +42,11 @@ export class TenantSelectorComponent {
   }
 
   toggleDropdown(): void {
-    this.isOpen.update((v) => !v);
+    const nextState = !this.isOpen();
+    this.isOpen.set(nextState);
+    if (nextState) {
+      this.workspaceService.fetchWorkspaces().subscribe();
+    }
   }
 
   selectWorkspace(workspace: Workspace): void {

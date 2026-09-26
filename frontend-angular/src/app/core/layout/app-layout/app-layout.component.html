@@ -1,6 +1,10 @@
 <div class="app-layout-wrapper">
   <app-sidebar [collapsed]="sidebarCollapsed()"></app-sidebar>
 
+  @if (!sidebarCollapsed()) {
+    <div class="sidebar-backdrop" (click)="toggleSidebar()"></div>
+  }
+
   <div class="main-content-wrapper">
     <app-top-nav (toggleSidebar)="toggleSidebar()"></app-top-nav>
 
