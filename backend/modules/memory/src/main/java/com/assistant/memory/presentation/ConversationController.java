@@ -57,10 +57,14 @@ public class ConversationController {
     validateWorkspace(workspaceId);
     UserId userId = SecurityUtils.getCurrentUserId();
     UUID sessionId = request != null ? request.sessionId() : null;
+    String initialTitle =
+        (request != null && request.title() != null && !request.title().trim().isEmpty())
+            ? request.title().trim()
+            : "New Conversation";
 
     Conversation conversation =
         memoryService.startConversation(
-            new WorkspaceId(workspaceId), userId, sessionId, "New Conversation");
+            new WorkspaceId(workspaceId), userId, sessionId, initialTitle);
 
     ConversationSummaryResponse response = toSummaryResponse(conversation);
     return ResponseEntity.created(
