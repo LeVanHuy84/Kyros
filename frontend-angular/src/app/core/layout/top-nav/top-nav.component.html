@@ -46,15 +46,8 @@
       }
     </button>
 
-    <!-- Notification Bell -->
-    <button
-      class="nav-icon-btn"
-      [title]="languageService.t().topNav.notificationsTooltip"
-      aria-label="Notifications"
-    >
-      <app-icon name="bell" [size]="18"></app-icon>
-      <span class="notification-dot"></span>
-    </button>
+    <!-- Notification Dropdown -->
+    <app-notification-dropdown></app-notification-dropdown>
 
     <div class="divider"></div>
 

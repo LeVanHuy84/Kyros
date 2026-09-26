@@ -33,6 +33,14 @@
         <app-ai-config-panel></app-ai-config-panel>
       }
 
+      @if (activeSubTab() === 'calendar') {
+        <app-calendar-settings-panel></app-calendar-settings-panel>
+      }
+
+      @if (activeSubTab() === 'notif') {
+        <app-notification-settings-panel></app-notification-settings-panel>
+      }
+
       @if (activeSubTab() === 'vault') {
         <div class="placeholder-section">
           <div class="section-header">

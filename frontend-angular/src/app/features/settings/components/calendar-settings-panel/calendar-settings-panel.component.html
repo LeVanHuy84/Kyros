@@ -1,0 +1,136 @@
+<div class="calendar-settings-panel">
+  <!-- Feedback Alert Toast -->
+  @if (feedbackMessage()) {
+    <div class="feedback-toast" [class.is-success]="feedbackMessage()?.type === 'success'" [class.is-error]="feedbackMessage()?.type === 'error'">
+      <app-icon [name]="feedbackMessage()?.type === 'success' ? 'check-circle' : 'alert-circle'" [size]="16"></app-icon>
+      <span>{{ feedbackMessage()?.text }}</span>
+    </div>
+  }
+
+  <!-- Header -->
+  <div class="section-header">
+    <div class="header-icon-box">
+      <app-icon name="calendar" [size]="18" class="section-icon"></app-icon>
+    </div>
+    <div class="header-text">
+      <h3 class="section-title">{{ languageService.t().settings.calendar.title }}</h3>
+      <p class="section-subtitle">{{ languageService.t().settings.calendar.subtitle }}</p>
+    </div>
+  </div>
+
+  <div class="settings-form-body">
+    <!-- 1. Preferred Timezone -->
+    <div class="form-group">
+      <label for="timezone-select" class="group-label">
+        {{ languageService.t().settings.calendar.timezone }}
+      </label>
+      <div class="select-wrapper">
+        <select
+          id="timezone-select"
+          class="custom-select"
+          [ngModel]="timezone()"
+          (ngModelChange)="timezone.set($event)"
+        >
+          @for (tz of timezones; track tz) {
+            <option [value]="tz">{{ tz }}</option>
+          }
+        </select>
+        <app-icon name="chevron-down" [size]="14" class="select-chevron"></app-icon>
+      </div>
+      <span class="group-help">{{ languageService.t().settings.calendar.timezoneHelp }}</span>
+    </div>
+
+    <div class="divider-line"></div>
+
+    <!-- 2. Prevent Calendar Overlaps -->
+    <div class="form-group-toggle">
+      <div class="toggle-info">
+        <span class="toggle-label">{{ languageService.t().settings.calendar.preventOverlap }}</span>
+        <span class="toggle-desc">{{ languageService.t().settings.calendar.preventOverlapDesc }}</span>
+      </div>
+      <label class="switch-control">
+        <input
+          type="checkbox"
+          [checked]="preventCalendarOverlap()"
+          (change)="preventCalendarOverlap.set($any($event.target).checked)"
+        />
+        <span class="switch-slider"></span>
+      </label>
+    </div>
+
+    <div class="divider-line"></div>
+
+    <!-- 3. Default Reminder Lead Time -->
+    <div class="form-group">
+      <label for="lead-time-select" class="group-label">
+        {{ languageService.t().settings.calendar.leadTime }}
+      </label>
+      <div class="select-wrapper">
+        <select
+          id="lead-time-select"
+          class="custom-select"
+          [ngModel]="leadTimeMinutes()"
+          (ngModelChange)="leadTimeMinutes.set(+$event)"
+        >
+          @for (mins of leadTimeOptions; track mins) {
+            <option [value]="mins">
+              {{ mins }} {{ languageService.t().settings.calendar.leadTimeMinutes }}
+            </option>
+          }
+        </select>
+        <app-icon name="chevron-down" [size]="14" class="select-chevron"></app-icon>
+      </div>
+    </div>
+
+    <div class="divider-line"></div>
+
+    <!-- 4. Default Task Priority -->
+    <div class="form-group">
+      <label class="group-label">{{ languageService.t().settings.calendar.defaultPriority }}</label>
+      <div class="priority-chips">
+        @for (pri of ['Low', 'Medium', 'High']; track pri) {
+          <button
+            type="button"
+            class="priority-chip-btn"
+            [class.active]="defaultPriority() === pri"
+            [class.pri-low]="pri === 'Low'"
+            [class.pri-medium]="pri === 'Medium'"
+            [class.pri-high]="pri === 'High'"
+            (click)="defaultPriority.set($any(pri))"
+          >
+            <span class="pri-dot"></span>
+            <span>{{ getPriorityLabel(pri) }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="form-actions-bar">
+      <button
+        type="button"
+        class="save-btn"
+        [disabled]="preferencesService.isSaving() || preferencesService.isLoading()"
+        (click)="handleSave()"
+      >
+        @if (preferencesService.isSaving()) {
+          <app-icon name="loader" [size]="15" class="spin-icon"></app-icon>
+          <span>{{ languageService.t().settings.calendar.saving }}</span>
+        } @else {
+          <app-icon name="check" [size]="15"></app-icon>
+          <span>{{ languageService.t().settings.calendar.saveBtn }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="reset-btn"
+        [disabled]="preferencesService.isSaving() || preferencesService.isLoading()"
+        (click)="handleReset()"
+      >
+        <app-icon name="rotate-ccw" [size]="14"></app-icon>
+        <span>{{ languageService.t().settings.calendar.resetBtn }}</span>
+      </button>
+    </div>
+  </div>
+</div>

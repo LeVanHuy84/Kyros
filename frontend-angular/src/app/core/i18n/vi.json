@@ -159,6 +159,8 @@
     "subtitle": "Quản lý cấu hình AI Provider, bảo mật Vault và không gian làm việc",
     "tabs": {
       "aiProvider": "AI Provider & BYOK",
+      "calendar": "Lịch & Tùy chọn",
+      "notifications": "Cấu hình Thông báo",
       "vault": "Kho Khóa Bảo mật",
       "general": "Cài đặt chung"
     },
@@ -178,6 +180,48 @@
       "saving": "Đang lưu...",
       "testBtn": "Kiểm tra kết nối",
       "testing": "Đang kiểm tra..."
+    },
+    "calendar": {
+      "title": "Cài đặt Lịch & Thời gian",
+      "subtitle": "Tùy chỉnh múi giờ, thời gian nhắc hẹn mặc định và quy tắc chống trùng lịch",
+      "timezone": "Múi giờ làm việc (IANA Timezone)",
+      "timezoneHelp": "Múi giờ chuẩn được áp dụng khi xếp lịch và đồng bộ hóa sự kiện.",
+      "preventOverlap": "Chống trùng lịch tự động (Prevent Event Overlaps)",
+      "preventOverlapDesc": "Cảnh báo và tự động điều chỉnh khi có sự kiện diễn ra cùng một khung giờ.",
+      "leadTime": "Thời gian nhắc hẹn trước mặc định",
+      "leadTimeMinutes": "phút trước khi diễn ra",
+      "defaultPriority": "Mức độ ưu tiên công việc mặc định",
+      "saveBtn": "Lưu cài đặt Lịch",
+      "saving": "Đang lưu...",
+      "resetBtn": "Đặt lại mặc định",
+      "resetting": "Đang đặt lại...",
+      "savedSuccess": "Đã lưu cài đặt Lịch & Tùy chọn thành công!",
+      "resetSuccess": "Đã khôi phục cài đặt mặc định thành công!"
+    },
+    "notifications": {
+      "title": "Cấu hình Kênh Thông báo & Định tuyến",
+      "subtitle": "Định tuyến kênh phân phối thông báo theo mức độ khẩn cấp (In-App, Email, Slack)",
+      "routingMatrixTitle": "Bảng Ma trận Phân phối Thông báo",
+      "routingMatrixSubtitle": "Chọn kênh nhận tin phù hợp với từng mức độ quan trọng để tránh quá tải tin nhắn.",
+      "urgencyLevel": "Mức độ khẩn cấp",
+      "inAppChannel": "Trong ứng dụng (In-App)",
+      "emailChannel": "Thư điện tử (Email)",
+      "slackChannel": "Slack Webhook",
+      "slackConstraintNote": "Lưu ý: Kênh Slack chỉ kích hoạt cho mức Khẩn cấp (Critical) và Gấp (Urgent) để giảm thiểu tiếng ồn.",
+      "coordinatesTitle": "Thông tin Địa chỉ Nhận tin",
+      "emailLabel": "Địa chỉ Email nhận thông báo",
+      "emailPlaceholder": "ten@congty.com",
+      "slackLabel": "Slack Incoming Webhook URL",
+      "slackPlaceholder": "https://hooks.slack.com/services/...",
+      "digestTitle": "Bản tin Tổng hợp Qua Email (Email Digests)",
+      "digestToggle": "Bật gửi email tổng hợp định kỳ các thông báo chưa đọc",
+      "digestFrequency": "Tần suất nhận bản tin",
+      "frequencyDaily": "Hàng ngày (08:00 sáng)",
+      "frequencyWeekly": "Hàng tuần (Thứ Hai 08:00 sáng)",
+      "frequency12h": "Mỗi 12 tiếng một lần",
+      "saveBtn": "Lưu cấu hình Thông báo",
+      "saving": "Đang lưu...",
+      "savedSuccess": "Đã lưu cấu hình thông báo thành công!"
     }
   },
   "tasks": {
@@ -431,6 +475,35 @@
       "snooze5": "Báo lại 5p",
       "snooze15": "Báo lại 15p",
       "dismiss": "Đã xem"
+    }
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "unreadBadge": "{count} chưa đọc",
+    "all": "Tất cả",
+    "unread": "Chưa đọc",
+    "markAllAsRead": "Đánh dấu tất cả đã đọc",
+    "markAsRead": "Đánh dấu đã đọc",
+    "delete": "Xóa thông báo",
+    "clearAllRead": "Xóa tất cả đã đọc",
+    "emptyAll": "Không có thông báo nào",
+    "emptyAllSub": "Các cập nhật từ trợ lý AI, lịch biểu và nhiệm vụ sẽ xuất hiện tại đây.",
+    "emptyUnread": "Không còn thông báo chưa đọc",
+    "emptyUnreadSub": "Bạn đã nắm bắt hết mọi thông tin và lịch trình!",
+    "viewDetails": "Xem chi tiết",
+    "timeAgo": {
+      "justNow": "Vừa xong",
+      "minutesAgo": "{m} phút trước",
+      "hoursAgo": "{h} giờ trước",
+      "yesterday": "Hôm qua",
+      "daysAgo": "{d} ngày trước"
+    },
+    "types": {
+      "calendar": "Lịch biểu",
+      "task": "Công việc",
+      "agent": "Trợ lý AI",
+      "system": "Hệ thống",
+      "reminder": "Nhắc hẹn"
     }
   }
 }

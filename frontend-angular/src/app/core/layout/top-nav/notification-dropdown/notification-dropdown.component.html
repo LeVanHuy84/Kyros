@@ -1,0 +1,172 @@
+<div class="notification-dropdown-container">
+  <!-- Trigger Bell Button -->
+  <button
+    type="button"
+    class="notification-trigger-btn"
+    (click)="toggleDropdown()"
+    [class.active]="isOpen()"
+    [title]="languageService.t().topNav.notificationsTooltip"
+    aria-haspopup="dialog"
+    [attr.aria-expanded]="isOpen()"
+  >
+    <app-icon name="bell" [size]="18" class="bell-icon"></app-icon>
+
+    @if (notificationService.unreadCount() > 0) {
+      <span class="unread-count-badge">
+        {{ notificationService.unreadCount() > 99 ? '99+' : notificationService.unreadCount() }}
+      </span>
+    }
+  </button>
+
+  <!-- Notification Dropdown Panel -->
+  @if (isOpen()) {
+    <div class="notification-panel animate-fade-in-scale" role="dialog" [attr.aria-label]="languageService.t().notifications.title">
+      <!-- Header -->
+      <div class="panel-header">
+        <div class="header-title-wrap">
+          <app-icon name="bell" [size]="16" class="header-icon"></app-icon>
+          <span class="panel-title">{{ languageService.t().notifications.title }}</span>
+          @if (notificationService.unreadCount() > 0) {
+            <span class="unread-pill">
+              {{ languageService.t().notifications.unreadBadge.replace('{count}', notificationService.unreadCount().toString()) }}
+            </span>
+          }
+        </div>
+
+        <div class="header-actions">
+          @if (notificationService.hasUnread()) {
+            <button
+              type="button"
+              class="header-action-btn"
+              (click)="handleMarkAllAsRead()"
+              [title]="languageService.t().notifications.markAllAsRead"
+            >
+              <app-icon name="check-circle" [size]="14"></app-icon>
+              <span class="action-text">{{ languageService.t().notifications.markAllAsRead }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="filter-tabs">
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="activeTab() === 'all'"
+          (click)="setTab('all')"
+        >
+          <span>{{ languageService.t().notifications.all }}</span>
+          <span class="tab-count">{{ notificationService.notifications().length }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="activeTab() === 'unread'"
+          (click)="setTab('unread')"
+        >
+          <span>{{ languageService.t().notifications.unread }}</span>
+          @if (notificationService.unreadCount() > 0) {
+            <span class="tab-count unread-tab-count">{{ notificationService.unreadCount() }}</span>
+          }
+        </button>
+      </div>
+
+      <!-- Notification List -->
+      <div class="notification-list-scroll">
+        @if (filteredNotifications().length > 0) {
+          @for (item of filteredNotifications(); track item.id) {
+            <div
+              class="notification-item"
+              [class.is-unread]="!item.isRead"
+              [class.type-calendar]="item.type === 'calendar'"
+              [class.type-task]="item.type === 'task'"
+              [class.type-agent]="item.type === 'agent'"
+              [class.type-system]="item.type === 'system'"
+              [class.type-reminder]="item.type === 'reminder'"
+              (click)="handleItemClick(item)"
+              role="button"
+              tabindex="0"
+            >
+              <!-- Type Icon Avatar -->
+              <div class="item-type-avatar">
+                <app-icon [name]="getTypeIcon(item.type)" [size]="15"></app-icon>
+              </div>
+
+              <!-- Main Content -->
+              <div class="item-body">
+                <div class="item-meta-row">
+                  <span class="item-type-label">
+                    {{ languageService.t().notifications.types[item.type] || item.type }}
+                  </span>
+                  <span class="item-time">{{ formatTimeAgo(item.createdAt) }}</span>
+                </div>
+
+                <div class="item-title">{{ getNotificationTitle(item) }}</div>
+                <div class="item-message">{{ getNotificationMessage(item) }}</div>
+
+                @if (item.actionUrl) {
+                  <div class="item-action-pill">
+                    <span>{{ getNotificationActionLabel(item) }}</span>
+                    <app-icon name="arrow-right" [size]="11"></app-icon>
+                  </div>
+                }
+              </div>
+
+              <!-- Side Actions & Status Indicator -->
+              <div class="item-actions">
+                @if (!item.isRead) {
+                  <span class="unread-dot" [title]="languageService.t().notifications.unread"></span>
+                  <button
+                    type="button"
+                    class="item-action-icon-btn mark-read-btn"
+                    (click)="handleMarkRead($event, item)"
+                    [title]="languageService.t().notifications.markAsRead"
+                  >
+                    <app-icon name="check" [size]="13"></app-icon>
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="item-action-icon-btn delete-btn"
+                  (click)="handleDelete($event, item)"
+                  [title]="languageService.t().notifications.delete"
+                >
+                  <app-icon name="trash" [size]="13"></app-icon>
+                </button>
+              </div>
+            </div>
+          }
+        } @else {
+          <!-- Empty State -->
+          <div class="empty-notifications-state">
+            <div class="empty-icon-circle">
+              <app-icon [name]="activeTab() === 'unread' ? 'check-circle' : 'bell'" [size]="24"></app-icon>
+            </div>
+            <div class="empty-title">
+              {{ activeTab() === 'unread' ? languageService.t().notifications.emptyUnread : languageService.t().notifications.emptyAll }}
+            </div>
+            <div class="empty-sub">
+              {{ activeTab() === 'unread' ? languageService.t().notifications.emptyUnreadSub : languageService.t().notifications.emptyAllSub }}
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      @if (notificationService.notifications().length > 0) {
+        <div class="panel-footer">
+          <button
+            type="button"
+            class="footer-clear-btn"
+            (click)="handleClearAllRead()"
+            [title]="languageService.t().notifications.clearAllRead"
+          >
+            {{ languageService.t().notifications.clearAllRead }}
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

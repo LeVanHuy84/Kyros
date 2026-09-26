@@ -159,6 +159,8 @@
     "subtitle": "Manage AI Provider configs, Vault security, and workspace preferences",
     "tabs": {
       "aiProvider": "AI Provider & BYOK",
+      "calendar": "Calendar & Preferences",
+      "notifications": "Notification Settings",
       "vault": "Key Vault Security",
       "general": "General Settings"
     },
@@ -178,6 +180,48 @@
       "saving": "Saving...",
       "testBtn": "Test Connection",
       "testing": "Testing..."
+    },
+    "calendar": {
+      "title": "Calendar & Scheduling Preferences",
+      "subtitle": "Configure timezone, default reminder lead times, and schedule conflict prevention rules",
+      "timezone": "Preferred Timezone (IANA Timezone)",
+      "timezoneHelp": "Standard timezone applied when scheduling and syncing events.",
+      "preventOverlap": "Prevent Calendar Event Overlaps",
+      "preventOverlapDesc": "Alert and auto-adjust when two events compete for the same time slot.",
+      "leadTime": "Default Reminder Lead Time",
+      "leadTimeMinutes": "minutes before event",
+      "defaultPriority": "Default Task Priority",
+      "saveBtn": "Save Calendar Preferences",
+      "saving": "Saving...",
+      "resetBtn": "Reset to Defaults",
+      "resetting": "Resetting...",
+      "savedSuccess": "Calendar preferences updated successfully!",
+      "resetSuccess": "Preferences reset to default values!"
+    },
+    "notifications": {
+      "title": "Notification Channels & Alert Routing",
+      "subtitle": "Route alert notifications across delivery channels based on urgency levels",
+      "routingMatrixTitle": "Alert Routing Preferences",
+      "routingMatrixSubtitle": "Choose active delivery channels for each alert urgency level to reduce noise.",
+      "urgencyLevel": "Urgency Level",
+      "inAppChannel": "In-App Feed",
+      "emailChannel": "Email Notification",
+      "slackChannel": "Slack Webhook",
+      "slackConstraintNote": "Note: Slack channel is restricted to Critical and Urgent alerts only to reduce noise.",
+      "coordinatesTitle": "Delivery Coordinates",
+      "emailLabel": "Notification Email Address",
+      "emailPlaceholder": "user@example.com",
+      "slackLabel": "Slack Webhook Reference",
+      "slackPlaceholder": "https://hooks.slack.com/services/...",
+      "digestTitle": "Periodic Email Digests",
+      "digestToggle": "Enable periodic email summaries of unread notifications",
+      "digestFrequency": "Frequency Interval",
+      "frequencyDaily": "Daily (at 08:00 AM)",
+      "frequencyWeekly": "Weekly (Monday at 08:00 AM)",
+      "frequency12h": "Every 12 Hours",
+      "saveBtn": "Save Notification Profile",
+      "saving": "Saving...",
+      "savedSuccess": "Notification profile updated successfully!"
     }
   },
   "tasks": {
@@ -431,6 +475,35 @@
       "snooze5": "Snooze 5m",
       "snooze15": "Snooze 15m",
       "dismiss": "Dismiss"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unreadBadge": "{count} unread",
+    "all": "All",
+    "unread": "Unread",
+    "markAllAsRead": "Mark all as read",
+    "markAsRead": "Mark as read",
+    "delete": "Delete notification",
+    "clearAllRead": "Clear all read",
+    "emptyAll": "No notifications yet",
+    "emptyAllSub": "Updates from AI assistant, calendar, and tasks will appear here.",
+    "emptyUnread": "No unread notifications",
+    "emptyUnreadSub": "You're all caught up with your schedule and tasks!",
+    "viewDetails": "View details",
+    "timeAgo": {
+      "justNow": "Just now",
+      "minutesAgo": "{m}m ago",
+      "hoursAgo": "{h}h ago",
+      "yesterday": "Yesterday",
+      "daysAgo": "{d}d ago"
+    },
+    "types": {
+      "calendar": "Calendar",
+      "task": "Tasks",
+      "agent": "AI Assistant",
+      "system": "System",
+      "reminder": "Reminder"
     }
   }
 }

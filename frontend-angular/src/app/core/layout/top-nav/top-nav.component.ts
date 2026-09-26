@@ -14,6 +14,7 @@ import { LanguageService } from '@core/services/language.service';
 import { AvatarComponent } from '@shared/components/avatar/avatar.component';
 import { AppIconComponent } from '@shared/components/icon/icon.component';
 import { TenantSelectorComponent } from '@shared/components/tenant-selector/tenant-selector.component';
+import { NotificationDropdownComponent } from './notification-dropdown/notification-dropdown.component';
 
 @Component({
   selector: 'app-top-nav',
@@ -23,6 +24,7 @@ import { TenantSelectorComponent } from '@shared/components/tenant-selector/tena
     AvatarComponent,
     AppIconComponent,
     TenantSelectorComponent,
+    NotificationDropdownComponent,
   ],
   templateUrl: './top-nav.component.html',
   styleUrl: './top-nav.component.scss',

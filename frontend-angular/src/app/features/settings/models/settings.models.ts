@@ -165,3 +165,25 @@ export const AI_PRESETS: Record<string, AiPreset> = {
   },
 };
 
+export interface UserPreferences {
+  workspaceId?: string;
+  userId?: string;
+  timezone: string;
+  defaultPriority: 'Low' | 'Medium' | 'High';
+  preventCalendarOverlap: boolean;
+  leadTimeMinutes: number;
+}
+
+export type UrgencyLevel = 'Critical' | 'Urgent' | 'Normal' | 'Low';
+export type NotificationChannel = 'InApp' | 'Email' | 'Slack';
+
+export interface NotificationProfile {
+  workspaceId?: string;
+  userId?: string;
+  emailAddress: string;
+  slackWebhookRef: string;
+  consentPolicy: 'ENABLED' | 'DISABLED';
+  digestSchedule: string;
+  channelRoutingMap: Record<UrgencyLevel, NotificationChannel[]>;
+}
+
