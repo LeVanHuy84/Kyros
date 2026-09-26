@@ -41,6 +41,28 @@ public class TaskTimeLog {
         UUID.randomUUID(), workspaceId, taskId, userId, Instant.now(), null, 0, null);
   }
 
+  public static TaskTimeLog createCompleted(
+      WorkspaceId workspaceId,
+      TaskId taskId,
+      UserId userId,
+      long durationMinutes,
+      String notes,
+      Instant startTime,
+      Instant endTime) {
+    Instant end = endTime != null ? endTime : Instant.now();
+    Instant start =
+        startTime != null ? startTime : end.minus(Duration.ofMinutes(Math.max(1, durationMinutes)));
+    return new TaskTimeLog(
+        UUID.randomUUID(),
+        workspaceId,
+        taskId,
+        userId,
+        start,
+        end,
+        Math.max(1, durationMinutes),
+        notes);
+  }
+
   public void stop(String notes) {
     this.endTime = Instant.now();
     this.durationMinutes = Math.max(1, Duration.between(startTime, endTime).toMinutes());
