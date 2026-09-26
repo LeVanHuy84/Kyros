@@ -93,9 +93,12 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
   }
 
-  @ExceptionHandler(IllegalArgumentException.class)
+  @ExceptionHandler({
+    IllegalArgumentException.class,
+    org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class
+  })
   public ResponseEntity<ProblemDetail> handleIllegalArgument(
-      IllegalArgumentException ex, WebRequest request) {
+      Exception ex, WebRequest request) {
     Locale locale = LocaleContextHolder.getLocale();
     log.warn("Bad request at {}: {}", request.getDescription(false), ex.getMessage());
     String title = messageSource.getMessage("error.title.bad_request", null, "Bad Request", locale);

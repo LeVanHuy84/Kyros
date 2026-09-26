@@ -1,10 +1,10 @@
 <div class="ai-config-container">
   <form (ngSubmit)="handleSave()" class="config-form">
     <!-- SECTION 1: Provider & Authentication -->
-    <div class="setting-section">
+    <section class="setting-section">
       <div class="section-header">
-        <app-icon name="brain" [size]="18" class="section-icon"></app-icon>
-        <h4 class="section-title">Nhà cung cấp & Xác thực (Provider & Vault)</h4>
+        <app-icon name="brain" [size]="16" class="section-icon"></app-icon>
+        <h3 class="section-title">Nhà cung cấp & Xác thực (Provider & Vault)</h3>
       </div>
 
       <!-- Row 1: AI Provider Selection -->
@@ -31,8 +31,8 @@
           </select>
 
           @if (currentPreset().description) {
-            <div class="provider-info-card animate-fade-in">
-              <app-icon name="info" [size]="14" class="info-icon"></app-icon>
+            <div class="provider-info-note">
+              <app-icon name="info" [size]="13" class="info-icon"></app-icon>
               <span>{{ currentPreset().description }}</span>
             </div>
           }
@@ -44,8 +44,8 @@
         <div class="setting-info">
           <div class="label-with-badge">
             <label for="api-key" class="setting-label">{{ languageService.t().settings.aiProvider.apiKeyLabel }}</label>
-            <span class="vault-status-chip">
-              <app-icon name="lock" [size]="11"></app-icon>
+            <span class="vault-status-badge">
+              <app-icon name="shield-check" [size]="11"></app-icon>
               <span>AES-256 Vault</span>
             </span>
           </div>
@@ -55,8 +55,9 @@
           @if (aiSettingsService.config().hasSavedKey && !isEditingKey()) {
             <div class="saved-key-box">
               <div class="key-info">
-                <app-icon name="check-circle" [size]="15" class="check-icon"></app-icon>
-                <span class="masked-key">•••••••••••••••••••••••• ({{ languageService.t().settings.aiProvider.hasKeyConfigured }})</span>
+                <app-icon name="check-circle" [size]="14" class="check-icon"></app-icon>
+                <span class="masked-key">••••••••••••••••••••••••</span>
+                <span class="saved-tag">({{ languageService.t().settings.aiProvider.hasKeyConfigured }})</span>
               </div>
               <button type="button" class="change-key-btn" (click)="toggleKeyEdit()">
                 {{ languageService.t().common.edit }}
@@ -80,7 +81,7 @@
                 (click)="showApiKey.set(!showApiKey())"
                 [attr.aria-label]="showApiKey() ? 'Hide key' : 'Show key'"
               >
-                <app-icon [name]="showApiKey() ? 'eye-off' : 'eye'" [size]="16"></app-icon>
+                <app-icon [name]="showApiKey() ? 'eye-off' : 'eye'" [size]="15"></app-icon>
               </button>
             </div>
           }
@@ -106,13 +107,13 @@
           />
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- SECTION 2: Model & Generation Behavior -->
-    <div class="setting-section">
+    <section class="setting-section">
       <div class="section-header">
-        <app-icon name="sparkles" [size]="18" class="section-icon"></app-icon>
-        <h4 class="section-title">Mô hình & Tham số Sinh ngôn ngữ (Generation)</h4>
+        <app-icon name="sparkles" [size]="16" class="section-icon"></app-icon>
+        <h3 class="section-title">Mô hình & Tham số Sinh ngôn ngữ (Generation)</h3>
       </div>
 
       <!-- Row 4: Target Model -->
@@ -175,14 +176,14 @@
               class="form-range"
             />
             <div class="range-labels">
-              <span>0.0 (Logic & Chuẩn tắc)</span>
+              <span>0.0 (Logic)</span>
               <span>0.7 (Cân bằng)</span>
               <span>1.0 (Sáng tạo)</span>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Actions Footer -->
     <div class="form-actions-bar">
@@ -191,14 +192,19 @@
         <span>Cấu hình được lưu an toàn vào cơ sở dữ liệu riêng của bạn</span>
       </div>
 
-      <app-button
-        variant="primary"
+      <button
         type="submit"
-        [loading]="aiSettingsService.isSaving()"
+        class="save-btn"
+        [disabled]="aiSettingsService.isSaving()"
       >
-        <app-icon name="check" [size]="15"></app-icon>
-        <span>{{ languageService.t().settings.aiProvider.saveBtn }}</span>
-      </app-button>
+        @if (aiSettingsService.isSaving()) {
+          <app-icon name="loader" [size]="14" class="spin-icon"></app-icon>
+          <span>{{ languageService.t().settings.aiProvider.saving }}</span>
+        } @else {
+          <app-icon name="check" [size]="14"></app-icon>
+          <span>{{ languageService.t().settings.aiProvider.saveBtn }}</span>
+        }
+      </button>
     </div>
   </form>
 </div>

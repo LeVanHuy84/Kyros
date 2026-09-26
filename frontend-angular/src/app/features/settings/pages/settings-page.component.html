@@ -1,17 +1,18 @@
 <div class="settings-page-container">
-  <div class="settings-header">
-    <div class="header-icon-wrap">
-      <app-icon name="settings" [size]="20"></app-icon>
+  <!-- Page Header & Navigation Tabs -->
+  <header class="settings-header-section">
+    <div class="header-title-block">
+      <div class="header-icon-wrap">
+        <app-icon name="settings" [size]="20"></app-icon>
+      </div>
+      <div class="header-text">
+        <h2>{{ languageService.t().settings.title }}</h2>
+        <p>{{ languageService.t().settings.subtitle }}</p>
+      </div>
     </div>
-    <div class="header-text">
-      <h2>{{ languageService.t().settings.title }}</h2>
-      <p>{{ languageService.t().settings.subtitle }}</p>
-    </div>
-  </div>
 
-  <div class="settings-card">
-    <!-- Sub Tabs Navigation -->
-    <div class="tabs-nav" role="tablist">
+    <!-- Clean Navigation Tabs -->
+    <nav class="tabs-nav" role="tablist">
       @for (tab of tabs(); track tab.id) {
         <button
           type="button"
@@ -25,50 +26,62 @@
           <span>{{ tab.label }}</span>
         </button>
       }
-    </div>
+    </nav>
+  </header>
 
-    <!-- Tab Content -->
-    <div class="tab-content" role="tabpanel">
-      @if (activeSubTab() === 'ai') {
-        <app-ai-config-panel></app-ai-config-panel>
-      }
+  <!-- Main Settings Content Surface (Single Visual Surface) -->
+  <main class="settings-content-surface" role="tabpanel">
+    @if (activeSubTab() === 'ai') {
+      <app-ai-config-panel></app-ai-config-panel>
+    }
 
-      @if (activeSubTab() === 'calendar') {
-        <app-calendar-settings-panel></app-calendar-settings-panel>
-      }
+    @if (activeSubTab() === 'calendar') {
+      <app-calendar-settings-panel></app-calendar-settings-panel>
+    }
 
-      @if (activeSubTab() === 'notif') {
-        <app-notification-settings-panel></app-notification-settings-panel>
-      }
+    @if (activeSubTab() === 'notif') {
+      <app-notification-settings-panel></app-notification-settings-panel>
+    }
 
-      @if (activeSubTab() === 'pref') {
-        <div class="pref-tab-wrapper">
-          <div class="lang-setting-card">
-            <div class="setting-info">
-              <span class="setting-label">Ngôn ngữ hiển thị (Display Language)</span>
-              <span class="setting-desc">Chọn ngôn ngữ cho toàn bộ giao diện điều hành và hội thoại Kyros.</span>
-            </div>
-            <div class="lang-switch-buttons">
-              @for (lang of languageService.availableLanguages; track lang.code) {
-                <button
-                  type="button"
-                  class="lang-pill-btn"
-                  [class.active]="languageService.currentLanguage() === lang.code"
-                  (click)="languageService.setLanguage(lang.code)"
-                >
-                  <span>{{ lang.flag }}</span>
-                  <span>{{ lang.label }}</span>
-                </button>
-              }
-            </div>
+    @if (activeSubTab() === 'pref') {
+      <div class="general-pref-wrapper">
+        <!-- Display Language Section -->
+        <div class="setting-section">
+          <div class="section-header">
+            <app-icon name="settings" [size]="16" class="section-icon"></app-icon>
+            <h4 class="section-title">Ngôn ngữ hiển thị (Display Language)</h4>
           </div>
 
-          <app-preferences-panel></app-preferences-panel>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Ngôn ngữ giao diện</span>
+              <span class="setting-desc">Chọn ngôn ngữ cho toàn bộ giao diện điều hành và hội thoại Kyros.</span>
+            </div>
+            <div class="setting-control">
+              <div class="lang-switch-buttons">
+                @for (lang of languageService.availableLanguages; track lang.code) {
+                  <button
+                    type="button"
+                    class="lang-pill-btn"
+                    [class.active]="languageService.currentLanguage() === lang.code"
+                    (click)="languageService.setLanguage(lang.code)"
+                  >
+                    <span>{{ lang.flag }}</span>
+                    <span>{{ lang.label }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
         </div>
-      }
 
-      @if (activeSubTab() === 'vault') {
-        <div class="placeholder-section">
+        <app-preferences-panel></app-preferences-panel>
+      </div>
+    }
+
+    @if (activeSubTab() === 'vault') {
+      <div class="vault-section-wrapper">
+        <div class="setting-section">
           <div class="section-header">
             <app-icon name="lock" [size]="18" class="section-icon"></app-icon>
             <h4 class="section-title">{{ languageService.t().settings.tabs.vault }}</h4>
@@ -81,7 +94,7 @@
             </div>
             <div class="setting-control">
               <div class="vault-info-badge">
-                <app-icon name="shield-check" [size]="16" class="success-icon"></app-icon>
+                <app-icon name="shield-check" [size]="15" class="success-icon"></app-icon>
                 <span>Mã hóa AES-256-GCM (Chế độ Zero-Knowledge Key Vault)</span>
               </div>
             </div>
@@ -94,13 +107,13 @@
             </div>
             <div class="setting-control">
               <div class="vault-info-badge">
-                <app-icon name="building" [size]="16" class="primary-icon"></app-icon>
+                <app-icon name="building" [size]="15" class="primary-icon"></app-icon>
                 <span>Multi-tenant Workspace Isolated Security</span>
               </div>
             </div>
           </div>
         </div>
-      }
-    </div>
-  </div>
+      </div>
+    }
+  </main>
 </div>

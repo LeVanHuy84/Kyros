@@ -1,13 +1,19 @@
 <div class="preferences-panel">
-  <!-- Section: AI Tone & Style -->
-  <div class="settings-section">
-    <div class="section-header">
-      <app-icon name="bot" [size]="18" class="section-icon"></app-icon>
-      <div class="header-text">
-        <h4 class="section-title">{{ languageService.t().settings.preferences.aiToneTitle }}</h4>
-        <p class="section-subtitle">{{ languageService.t().settings.preferences.aiToneDesc }}</p>
-      </div>
+  <!-- Feedback Alert Toast -->
+  @if (feedbackMessage()) {
+    <div class="feedback-toast" [class.is-success]="feedbackMessage()?.type === 'success'" [class.is-error]="feedbackMessage()?.type === 'error'">
+      <app-icon [name]="feedbackMessage()?.type === 'success' ? 'check-circle' : 'alert-circle'" [size]="15"></app-icon>
+      <span>{{ feedbackMessage()?.text }}</span>
     </div>
+  }
+
+  <!-- Section 1: AI Tone & Style -->
+  <section class="setting-section">
+    <div class="section-header">
+      <app-icon name="bot" [size]="16" class="section-icon"></app-icon>
+      <h3 class="section-title">{{ languageService.t().settings.preferences.aiToneTitle }}</h3>
+    </div>
+    <p class="section-subtitle">{{ languageService.t().settings.preferences.aiToneDesc }}</p>
 
     <div class="tone-cards-grid">
       <div
@@ -20,9 +26,7 @@
         <div class="card-radio">
           <div class="radio-inner"></div>
         </div>
-        <div class="card-text">
-          <span class="card-title">{{ languageService.t().settings.preferences.aiToneConcise }}</span>
-        </div>
+        <span class="card-title">{{ languageService.t().settings.preferences.aiToneConcise }}</span>
       </div>
 
       <div
@@ -35,9 +39,7 @@
         <div class="card-radio">
           <div class="radio-inner"></div>
         </div>
-        <div class="card-text">
-          <span class="card-title">{{ languageService.t().settings.preferences.aiToneBalanced }}</span>
-        </div>
+        <span class="card-title">{{ languageService.t().settings.preferences.aiToneBalanced }}</span>
       </div>
 
       <div
@@ -50,28 +52,22 @@
         <div class="card-radio">
           <div class="radio-inner"></div>
         </div>
-        <div class="card-text">
-          <span class="card-title">{{ languageService.t().settings.preferences.aiToneDetailed }}</span>
-        </div>
+        <span class="card-title">{{ languageService.t().settings.preferences.aiToneDetailed }}</span>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="section-divider"></div>
-
-  <!-- Section: Timezone & Working Hours -->
-  <div class="settings-section">
+  <!-- Section 2: Timezone & Working Hours -->
+  <section class="setting-section">
     <div class="section-header">
-      <app-icon name="clock" [size]="18" class="section-icon"></app-icon>
-      <div class="header-text">
-        <h4 class="section-title">{{ languageService.t().settings.preferences.timezoneTitle }}</h4>
-        <p class="section-subtitle">{{ languageService.t().settings.preferences.timezoneDesc }}</p>
-      </div>
+      <app-icon name="clock" [size]="16" class="section-icon"></app-icon>
+      <h3 class="section-title">{{ languageService.t().settings.preferences.timezoneTitle }}</h3>
     </div>
 
     <div class="setting-row">
       <div class="setting-info">
         <label class="setting-label">{{ languageService.t().settings.preferences.timezoneTitle }}</label>
+        <span class="setting-desc">{{ languageService.t().settings.preferences.timezoneDesc }}</span>
       </div>
       <div class="setting-control">
         <select
@@ -91,40 +87,37 @@
         <label class="setting-label">{{ languageService.t().settings.preferences.workingHoursTitle }}</label>
         <span class="setting-desc">{{ languageService.t().settings.preferences.workingHoursDesc }}</span>
       </div>
-      <div class="setting-control time-range-control">
-        <div class="time-input-group">
-          <span>{{ languageService.t().settings.preferences.workStartLabel }}</span>
-          <input
-            type="time"
-            class="form-time-input"
-            [ngModel]="workStartTime()"
-            (ngModelChange)="workStartTime.set($event)"
-          />
-        </div>
-        <span class="time-sep">—</span>
-        <div class="time-input-group">
-          <span>{{ languageService.t().settings.preferences.workEndLabel }}</span>
-          <input
-            type="time"
-            class="form-time-input"
-            [ngModel]="workEndTime()"
-            (ngModelChange)="workEndTime.set($event)"
-          />
+      <div class="setting-control">
+        <div class="time-range-control">
+          <div class="time-input-group">
+            <span class="time-label">{{ languageService.t().settings.preferences.workStartLabel }}</span>
+            <input
+              type="time"
+              class="form-time-input"
+              [ngModel]="workStartTime()"
+              (ngModelChange)="workStartTime.set($event)"
+            />
+          </div>
+          <span class="time-sep">—</span>
+          <div class="time-input-group">
+            <span class="time-label">{{ languageService.t().settings.preferences.workEndLabel }}</span>
+            <input
+              type="time"
+              class="form-time-input"
+              [ngModel]="workEndTime()"
+              (ngModelChange)="workEndTime.set($event)"
+            />
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="section-divider"></div>
-
-  <!-- Section: Calendar & Task Automation -->
-  <div class="settings-section">
+  <!-- Section 3: Calendar & Task Automation -->
+  <section class="setting-section">
     <div class="section-header">
-      <app-icon name="calendar" [size]="18" class="section-icon"></app-icon>
-      <div class="header-text">
-        <h4 class="section-title">{{ languageService.t().settings.preferences.preventOverlapTitle }}</h4>
-        <p class="section-subtitle">{{ languageService.t().settings.preferences.preventOverlapDesc }}</p>
-      </div>
+      <app-icon name="calendar" [size]="16" class="section-icon"></app-icon>
+      <h3 class="section-title">{{ languageService.t().settings.preferences.preventOverlapTitle }}</h3>
     </div>
 
     <div class="setting-row">
@@ -133,13 +126,13 @@
         <span class="setting-desc">{{ languageService.t().settings.preferences.preventOverlapDesc }}</span>
       </div>
       <div class="setting-control">
-        <label class="switch">
+        <label class="switch-control">
           <input
             type="checkbox"
             [checked]="preventCalendarOverlap()"
             (change)="preventCalendarOverlap.set(!preventCalendarOverlap())"
           />
-          <span class="slider round"></span>
+          <span class="switch-slider"></span>
         </label>
       </div>
     </div>
@@ -181,18 +174,13 @@
         </select>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="section-divider"></div>
-
-  <!-- Section: DND & Sounds -->
-  <div class="settings-section">
+  <!-- Section 4: DND & Sounds -->
+  <section class="setting-section">
     <div class="section-header">
-      <app-icon name="bell" [size]="18" class="section-icon"></app-icon>
-      <div class="header-text">
-        <h4 class="section-title">{{ languageService.t().settings.preferences.dndTitle }}</h4>
-        <p class="section-subtitle">{{ languageService.t().settings.preferences.dndDesc }}</p>
-      </div>
+      <app-icon name="bell" [size]="16" class="section-icon"></app-icon>
+      <h3 class="section-title">{{ languageService.t().settings.preferences.dndTitle }}</h3>
     </div>
 
     <div class="setting-row">
@@ -201,13 +189,13 @@
         <span class="setting-desc">{{ languageService.t().settings.preferences.dndDesc }}</span>
       </div>
       <div class="setting-control">
-        <label class="switch">
+        <label class="switch-control">
           <input
             type="checkbox"
             [checked]="dndEnabled()"
             (change)="toggleDnd()"
           />
-          <span class="slider round"></span>
+          <span class="switch-slider"></span>
         </label>
       </div>
     </div>
@@ -218,31 +206,23 @@
         <span class="setting-desc">{{ languageService.t().settings.preferences.soundEffectsDesc }}</span>
       </div>
       <div class="setting-control">
-        <label class="switch">
+        <label class="switch-control">
           <input
             type="checkbox"
             [checked]="soundEnabled()"
             (change)="toggleSound()"
           />
-          <span class="slider round"></span>
+          <span class="switch-slider"></span>
         </label>
       </div>
     </div>
-  </div>
-
-  <!-- Feedback Banner -->
-  @if (feedbackMessage()) {
-    <div class="feedback-banner" [class.success]="feedbackMessage()?.type === 'success'" [class.error]="feedbackMessage()?.type === 'error'">
-      <app-icon [name]="feedbackMessage()?.type === 'success' ? 'check-circle' : 'alert-circle'" [size]="16"></app-icon>
-      <span>{{ feedbackMessage()?.text }}</span>
-    </div>
-  }
+  </section>
 
   <!-- Footer Actions -->
-  <div class="panel-footer-actions">
+  <div class="form-actions-bar">
     <button
       type="button"
-      class="btn-reset"
+      class="reset-btn"
       (click)="handleReset()"
       [disabled]="preferencesService.isSaving()"
     >
@@ -252,7 +232,7 @@
 
     <button
       type="button"
-      class="btn-save"
+      class="save-btn"
       (click)="handleSave()"
       [disabled]="preferencesService.isSaving()"
     >

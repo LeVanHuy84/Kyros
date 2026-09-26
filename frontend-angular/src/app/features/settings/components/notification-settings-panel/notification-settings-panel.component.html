@@ -2,125 +2,128 @@
   <!-- Feedback Alert Toast -->
   @if (feedbackMessage()) {
     <div class="feedback-toast" [class.is-success]="feedbackMessage()?.type === 'success'" [class.is-error]="feedbackMessage()?.type === 'error'">
-      <app-icon [name]="feedbackMessage()?.type === 'success' ? 'check-circle' : 'alert-circle'" [size]="16"></app-icon>
+      <app-icon [name]="feedbackMessage()?.type === 'success' ? 'check-circle' : 'alert-circle'" [size]="15"></app-icon>
       <span>{{ feedbackMessage()?.text }}</span>
     </div>
   }
 
-  <!-- Header -->
-  <div class="section-header">
-    <div class="header-icon-box">
-      <app-icon name="bell" [size]="18" class="section-icon"></app-icon>
+  <!-- 1. Alert Routing Preferences Table Matrix -->
+  <section class="setting-section">
+    <div class="section-header">
+      <app-icon name="bell" [size]="16" class="section-icon"></app-icon>
+      <h3 class="section-title">{{ languageService.t().settings.notifications.routingMatrixTitle }}</h3>
     </div>
-    <div class="header-text">
-      <h3 class="section-title">{{ languageService.t().settings.notifications.title }}</h3>
-      <p class="section-subtitle">{{ languageService.t().settings.notifications.subtitle }}</p>
-    </div>
-  </div>
+    <p class="section-subtitle">{{ languageService.t().settings.notifications.routingMatrixSubtitle }}</p>
 
-  <div class="settings-form-body">
-    <!-- 1. Alert Routing Preferences Table Matrix -->
-    <div class="matrix-section">
-      <h4 class="sub-section-title">{{ languageService.t().settings.notifications.routingMatrixTitle }}</h4>
-      <p class="sub-section-desc">{{ languageService.t().settings.notifications.routingMatrixSubtitle }}</p>
-
-      <div class="table-responsive-wrapper">
-        <table class="routing-matrix-table">
-          <thead>
-            <tr>
-              <th class="th-urgency">{{ languageService.t().settings.notifications.urgencyLevel }}</th>
+    <div class="table-responsive-wrapper">
+      <table class="routing-matrix-table">
+        <thead>
+          <tr>
+            <th class="th-urgency">{{ languageService.t().settings.notifications.urgencyLevel }}</th>
+            @for (ch of channels; track ch.id) {
+              <th class="th-channel">{{ getChannelLabel(ch.id) }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (urgency of urgencyLevels; track urgency) {
+            <tr [class.row-critical]="urgency === 'Critical'" [class.row-urgent]="urgency === 'Urgent'">
+              <td class="td-urgency">
+                <div class="urgency-badge" [class.badge-critical]="urgency === 'Critical'" [class.badge-urgent]="urgency === 'Urgent'" [class.badge-normal]="urgency === 'Normal'" [class.badge-low]="urgency === 'Low'">
+                  <span class="urgency-dot"></span>
+                  <span>{{ urgency }}</span>
+                </div>
+              </td>
               @for (ch of channels; track ch.id) {
-                <th class="th-channel">{{ getChannelLabel(ch.id) }}</th>
+                <td class="td-channel">
+                  <label
+                    class="channel-checkbox-label"
+                    [class.is-disabled]="isChannelDisabled(urgency, ch.id)"
+                  >
+                    <input
+                      type="checkbox"
+                      [checked]="isChannelChecked(urgency, ch.id)"
+                      [disabled]="isChannelDisabled(urgency, ch.id)"
+                      (change)="toggleChannel(urgency, ch.id)"
+                    />
+                    <span class="custom-checkbox-box"></span>
+                    <span class="channel-text">{{ ch.id }}</span>
+                  </label>
+                </td>
               }
             </tr>
-          </thead>
-          <tbody>
-            @for (urgency of urgencyLevels; track urgency) {
-              <tr [class.row-critical]="urgency === 'Critical'" [class.row-urgent]="urgency === 'Urgent'">
-                <td class="td-urgency">
-                  <div class="urgency-badge" [class.badge-critical]="urgency === 'Critical'" [class.badge-urgent]="urgency === 'Urgent'" [class.badge-normal]="urgency === 'Normal'" [class.badge-low]="urgency === 'Low'">
-                    <span class="urgency-dot"></span>
-                    <span>{{ urgency }}</span>
-                  </div>
-                </td>
-                @for (ch of channels; track ch.id) {
-                  <td class="td-channel">
-                    <label
-                      class="channel-checkbox-label"
-                      [class.is-disabled]="isChannelDisabled(urgency, ch.id)"
-                    >
-                      <input
-                        type="checkbox"
-                        [checked]="isChannelChecked(urgency, ch.id)"
-                        [disabled]="isChannelDisabled(urgency, ch.id)"
-                        (change)="toggleChannel(urgency, ch.id)"
-                      />
-                      <span class="custom-checkbox-box"></span>
-                      <span class="channel-text">{{ ch.id }}</span>
-                    </label>
-                  </td>
-                }
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+          }
+        </tbody>
+      </table>
+    </div>
 
-      <div class="matrix-note-row">
-        <app-icon name="info" [size]="14" class="note-icon"></app-icon>
-        <span>{{ languageService.t().settings.notifications.slackConstraintNote }}</span>
+    <div class="matrix-note-row">
+      <app-icon name="info" [size]="13" class="note-icon"></app-icon>
+      <span>{{ languageService.t().settings.notifications.slackConstraintNote }}</span>
+    </div>
+  </section>
+
+  <!-- 2. Delivery Coordinates (Email & Slack Webhook) -->
+  <section class="setting-section">
+    <div class="section-header">
+      <app-icon name="send" [size]="16" class="section-icon"></app-icon>
+      <h3 class="section-title">{{ languageService.t().settings.notifications.coordinatesTitle }}</h3>
+    </div>
+
+    <!-- Email Input -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <label for="notif-email" class="setting-label">
+          {{ languageService.t().settings.notifications.emailLabel }}
+        </label>
+        <span class="setting-desc">Địa chỉ email để nhận thông báo quan trọng và bản tin tổng hợp.</span>
+      </div>
+      <div class="setting-control">
+        <input
+          id="notif-email"
+          type="email"
+          class="form-input"
+          [placeholder]="languageService.t().settings.notifications.emailPlaceholder"
+          [ngModel]="emailAddress()"
+          (ngModelChange)="emailAddress.set($event)"
+        />
       </div>
     </div>
 
-    <div class="divider-line"></div>
-
-    <!-- 2. Delivery Coordinates (Email & Slack Webhook) -->
-    <div class="coordinates-section">
-      <h4 class="sub-section-title">{{ languageService.t().settings.notifications.coordinatesTitle }}</h4>
-
-      <div class="coordinates-grid">
-        <!-- Email Input -->
-        <div class="form-group">
-          <label for="notif-email" class="group-label">
-            {{ languageService.t().settings.notifications.emailLabel }}
-          </label>
-          <input
-            id="notif-email"
-            type="email"
-            class="custom-input"
-            [placeholder]="languageService.t().settings.notifications.emailPlaceholder"
-            [ngModel]="emailAddress()"
-            (ngModelChange)="emailAddress.set($event)"
-          />
-        </div>
-
-        <!-- Slack Webhook Input -->
-        <div class="form-group">
-          <label for="slack-webhook" class="group-label">
-            {{ languageService.t().settings.notifications.slackLabel }}
-          </label>
-          <input
-            id="slack-webhook"
-            type="text"
-            class="custom-input"
-            [placeholder]="languageService.t().settings.notifications.slackPlaceholder"
-            [ngModel]="slackWebhookRef()"
-            (ngModelChange)="slackWebhookRef.set($event)"
-          />
-        </div>
+    <!-- Slack Webhook Input -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <label for="slack-webhook" class="setting-label">
+          {{ languageService.t().settings.notifications.slackLabel }}
+        </label>
+        <span class="setting-desc">Đường dẫn Incoming Webhook tích hợp trực tiếp vào kênh Slack của đội ngũ.</span>
+      </div>
+      <div class="setting-control">
+        <input
+          id="slack-webhook"
+          type="text"
+          class="form-input"
+          [placeholder]="languageService.t().settings.notifications.slackPlaceholder"
+          [ngModel]="slackWebhookRef()"
+          (ngModelChange)="slackWebhookRef.set($event)"
+        />
       </div>
     </div>
+  </section>
 
-    <div class="divider-line"></div>
+  <!-- 3. Periodic Email Digests -->
+  <section class="setting-section">
+    <div class="section-header">
+      <app-icon name="mail" [size]="16" class="section-icon"></app-icon>
+      <h3 class="section-title">{{ languageService.t().settings.notifications.digestTitle }}</h3>
+    </div>
 
-    <!-- 3. Periodic Email Digests -->
-    <div class="digest-section">
-      <h4 class="sub-section-title">{{ languageService.t().settings.notifications.digestTitle }}</h4>
-
-      <div class="form-group-toggle">
-        <div class="toggle-info">
-          <span class="toggle-label">{{ languageService.t().settings.notifications.digestToggle }}</span>
-        </div>
+    <div class="setting-row">
+      <div class="setting-info">
+        <label class="setting-label">{{ languageService.t().settings.notifications.digestToggle }}</label>
+        <span class="setting-desc">Tự động gửi email tổng hợp các cập nhật, lịch trình và công việc chưa đọc.</span>
+      </div>
+      <div class="setting-control">
         <label class="switch-control">
           <input
             type="checkbox"
@@ -130,45 +133,47 @@
           <span class="switch-slider"></span>
         </label>
       </div>
+    </div>
 
-      @if (consentPolicy() === 'ENABLED') {
-        <div class="digest-freq-box">
-          <label for="digest-freq-select" class="group-label">
+    @if (consentPolicy() === 'ENABLED') {
+      <div class="setting-row">
+        <div class="setting-info">
+          <label for="digest-freq-select" class="setting-label">
             {{ languageService.t().settings.notifications.digestFrequency }}
           </label>
-          <div class="select-wrapper">
-            <select
-              id="digest-freq-select"
-              class="custom-select"
-              [ngModel]="digestSchedule()"
-              (ngModelChange)="digestSchedule.set($event)"
-            >
-              <option value="0 8 * * *">{{ languageService.t().settings.notifications.frequencyDaily }}</option>
-              <option value="0 8 * * 1">{{ languageService.t().settings.notifications.frequencyWeekly }}</option>
-              <option value="0 */12 * * *">{{ languageService.t().settings.notifications.frequency12h }}</option>
-            </select>
-            <app-icon name="chevron-down" [size]="14" class="select-chevron"></app-icon>
-          </div>
+          <span class="setting-desc">Khoảng thời gian định kỳ hệ thống xuất và gửi bản tin qua email.</span>
         </div>
-      }
-    </div>
+        <div class="setting-control">
+          <select
+            id="digest-freq-select"
+            class="form-select"
+            [ngModel]="digestSchedule()"
+            (ngModelChange)="digestSchedule.set($event)"
+          >
+            <option value="0 8 * * *">{{ languageService.t().settings.notifications.frequencyDaily }}</option>
+            <option value="0 8 * * 1">{{ languageService.t().settings.notifications.frequencyWeekly }}</option>
+            <option value="0 */12 * * *">{{ languageService.t().settings.notifications.frequency12h }}</option>
+          </select>
+        </div>
+      </div>
+    }
+  </section>
 
-    <!-- Save Action Button -->
-    <div class="form-actions-bar">
-      <button
-        type="button"
-        class="save-btn"
-        [disabled]="profileService.isSaving() || profileService.isLoading()"
-        (click)="handleSave()"
-      >
-        @if (profileService.isSaving()) {
-          <app-icon name="loader" [size]="15" class="spin-icon"></app-icon>
-          <span>{{ languageService.t().settings.notifications.saving }}</span>
-        } @else {
-          <app-icon name="check" [size]="15"></app-icon>
-          <span>{{ languageService.t().settings.notifications.saveBtn }}</span>
-        }
-      </button>
-    </div>
+  <!-- Save Action Button -->
+  <div class="form-actions-bar">
+    <button
+      type="button"
+      class="save-btn"
+      [disabled]="profileService.isSaving() || profileService.isLoading()"
+      (click)="handleSave()"
+    >
+      @if (profileService.isSaving()) {
+        <app-icon name="loader" [size]="14" class="spin-icon"></app-icon>
+        <span>{{ languageService.t().settings.notifications.saving }}</span>
+      } @else {
+        <app-icon name="check" [size]="14"></app-icon>
+        <span>{{ languageService.t().settings.notifications.saveBtn }}</span>
+      }
+    </button>
   </div>
 </div>

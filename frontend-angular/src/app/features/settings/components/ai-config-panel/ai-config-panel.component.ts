@@ -12,14 +12,13 @@ import { FormsModule } from '@angular/forms';
 import { AiSettingsService } from '../../services/ai-settings.service';
 import { AiConfig } from '../../models/settings.models';
 import { AppIconComponent } from '@shared/components/icon/icon.component';
-import { ButtonComponent } from '@shared/components/button/button.component';
 import { ToastService } from '@shared/components/toast/toast.service';
 import { LanguageService } from '@core/services/language.service';
 
 @Component({
   selector: 'app-ai-config-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppIconComponent, ButtonComponent],
+  imports: [CommonModule, FormsModule, AppIconComponent],
   templateUrl: './ai-config-panel.component.html',
   styleUrl: './ai-config-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
