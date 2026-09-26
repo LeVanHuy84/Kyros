@@ -1,0 +1,35 @@
+<div
+  #scrollContainer
+  class="chat-window-scroll"
+  (scroll)="onScroll($event)"
+  role="log"
+  aria-live="polite"
+>
+  <div class="messages-track">
+    @for (msg of messages(); track $index) {
+      <app-chat-bubble
+        [message]="msg"
+        [userName]="userName()"
+      ></app-chat-bubble>
+    }
+
+    @if (isThinking() && (!messages().length || messages()[messages().length - 1].sender === 'user')) {
+      <div class="thinking-bubble animate-fade-in">
+        <app-icon name="loader" [size]="16" class="animate-spin"></app-icon>
+        <span>{{ languageService.t().agent.thinking }}</span>
+      </div>
+    }
+  </div>
+
+  @if (userScrolledUp()) {
+    <button
+      type="button"
+      class="scroll-bottom-btn animate-fade-in-scale"
+      (click)="manualScrollToBottom()"
+      title="Cuộn xuống tin nhắn mới nhất"
+      aria-label="Scroll to bottom"
+    >
+      <app-icon name="chevron-down" [size]="16"></app-icon>
+    </button>
+  }
+</div>

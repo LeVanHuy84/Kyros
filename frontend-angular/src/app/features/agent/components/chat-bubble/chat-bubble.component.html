@@ -1,0 +1,78 @@
+<div class="chat-bubble-container" [class.user]="message().sender === 'user'" [class.agent]="message().sender === 'agent'">
+  <!-- Avatar -->
+  <div class="bubble-avatar">
+    @if (message().sender === 'user') {
+      <app-avatar [name]="userName()" [size]="32"></app-avatar>
+    } @else {
+      <div class="agent-avatar-box">
+        <app-kyros-logo [size]="20"></app-kyros-logo>
+      </div>
+    }
+  </div>
+
+  <!-- Content Box -->
+  <div class="bubble-content-box animate-fade-in">
+    <div class="bubble-header">
+      <span class="sender-name">
+        {{ message().sender === 'user' ? userName() : 'Kyros AI' }}
+      </span>
+      @if (message().time) {
+        <span class="message-time">{{ message().time }}</span>
+      }
+    </div>
+
+    <!-- Attached Notes Context Badges (User message) -->
+    @if (message().attachedNotes && message().attachedNotes!.length > 0) {
+      <div class="attached-notes-badges">
+        @for (note of message().attachedNotes; track note.id) {
+          <span class="attached-note-pill">
+            <app-icon name="file-text" [size]="12"></app-icon>
+            <span>{{ note.title }}</span>
+          </span>
+        }
+      </div>
+    }
+
+    <!-- Agent Thinking / Thought Process Steps -->
+    @if (message().activeThoughtStatus || (message().thoughtSteps && message().thoughtSteps!.length > 0)) {
+      <div class="thoughts-accordion" [class.expanded]="isThoughtsExpanded()">
+        <button type="button" class="thoughts-header-btn" (click)="toggleThoughts()">
+          <app-icon name="brain" [size]="13" class="brain-icon"></app-icon>
+          <span class="thought-summary">
+            {{ message().activeThoughtStatus || (languageService.t().agent.thoughtProcess + ' (' + message().thoughtSteps?.length + ')') }}
+          </span>
+          @if (message().isStreaming && message().activeThoughtStatus) {
+            <span class="pulse-dot"></span>
+          }
+          <app-icon name="chevron-down" [size]="13" class="chevron-icon"></app-icon>
+        </button>
+
+        @if (isThoughtsExpanded() && message().thoughtSteps && message().thoughtSteps!.length > 0) {
+          <div class="thoughts-body animate-fade-in">
+            @for (step of message().thoughtSteps; track $index) {
+              <div class="thought-step-item">
+                <span class="step-num">{{ $index + 1 }}.</span>
+                <span>{{ step }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Main Message Body -->
+    <div class="message-body">
+      @if (message().text) {
+        <app-markdown-viewer [content]="message().text"></app-markdown-viewer>
+      }
+      @if (message().isStreaming && !message().text) {
+        <div class="typing-indicator">
+          <span></span><span></span><span></span>
+        </div>
+      }
+      @if (message().isStreaming && message().text) {
+        <span class="streaming-cursor"></span>
+      }
+    </div>
+  </div>
+</div>

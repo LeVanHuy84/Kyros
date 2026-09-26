@@ -1,0 +1,177 @@
+<div class="agent-coordinator-container">
+  <!-- Column 1: Left Conversation History Sidebar (Drawer on tablet/mobile) -->
+  <aside class="conv-sidebar-wrapper" [class.drawer-open]="isConvSidebarOpen()">
+    <app-conversation-sidebar
+      [conversations]="agentChatService.conversations()"
+      [activeConversationId]="agentChatService.activeConversationId()"
+      (selectConversation)="onSelectConversation($event)"
+      (newConversation)="onNewConversation()"
+      (deleteConversation)="onDeleteConversation($event)"
+    ></app-conversation-sidebar>
+  </aside>
+
+  <!-- Mobile Conversation Sidebar Backdrop Overlay -->
+  @if (isConvSidebarOpen()) {
+    <div class="conv-drawer-backdrop" (click)="isConvSidebarOpen.set(false)"></div>
+  }
+
+  <!-- Column 2: Right Chat Panel -->
+  <main class="chat-panel">
+    <!-- Chat Header: History Toggle + KYROS AI + [⚙ Settings] -->
+    <header class="chat-header">
+      <div class="header-left">
+        <!-- History drawer toggle button (visible on tablet/mobile) -->
+        <button
+          type="button"
+          class="conv-toggle-btn"
+          (click)="toggleConvSidebar($event)"
+          [class.active]="isConvSidebarOpen()"
+          [title]="languageService.t().agent.history"
+          [attr.aria-label]="languageService.t().agent.history"
+        >
+          <app-icon name="message-square" [size]="15"></app-icon>
+          <span class="btn-label">{{ languageService.t().agent.history }}</span>
+        </button>
+
+        <span class="brand-title">{{ languageService.t().agent.brandTitle }}</span>
+      </div>
+
+      <div class="header-right">
+        <!-- Settings Dropdown Trigger -->
+        <div class="settings-dropdown-anchor">
+          <button
+            type="button"
+            class="settings-btn"
+            (click)="toggleSettingsMenu($event)"
+            [class.active]="isSettingsMenuOpen()"
+            [attr.aria-expanded]="isSettingsMenuOpen()"
+            [title]="languageService.t().agent.settingsMenuTitle"
+          >
+            <app-icon name="settings" [size]="15"></app-icon>
+            <span class="settings-label">{{ languageService.t().agent.settingsBtn }}</span>
+          </button>
+
+          <!-- Settings Popover Menu -->
+          @if (isSettingsMenuOpen()) {
+            <div
+              class="settings-popover animate-fade-in-scale"
+              (click)="$event.stopPropagation()"
+              role="menu"
+            >
+              <div class="popover-title">
+                <span>{{ languageService.t().agent.settingsMenuTitle }}</span>
+              </div>
+
+              <!-- Briefing Item -->
+              <button
+                type="button"
+                class="popover-item"
+                (click)="openBriefingFromMenu()"
+                role="menuitem"
+              >
+                <app-icon name="sun" [size]="15" class="item-icon briefing"></app-icon>
+                <div class="item-text">
+                  <span class="item-name">{{ languageService.t().agent.briefingBtn }}</span>
+                  <span class="item-desc">{{ languageService.t().agent.briefingTooltip }}</span>
+                </div>
+              </button>
+
+              <!-- BYOK Provider & Key Item -->
+              <button
+                type="button"
+                class="popover-item"
+                (click)="openByokFromMenu()"
+                role="menuitem"
+              >
+                <app-icon name="lock" [size]="15" class="item-icon byok"></app-icon>
+                <div class="item-text">
+                  <span class="item-name">{{ languageService.t().agent.byokBtn }}</span>
+                  <span class="item-desc">{{ languageService.t().agent.byokTooltip }}</span>
+                </div>
+              </button>
+
+              <!-- SSE Streaming Switch Item -->
+              <div
+                class="popover-item toggle-row"
+                (click)="toggleStreamingMode()"
+                role="menuitem"
+              >
+                <app-icon name="zap" [size]="15" class="item-icon stream"></app-icon>
+                <div class="item-text">
+                  <span class="item-name">{{ languageService.t().agent.streamingToggleLabel }}</span>
+                  <span class="item-desc">
+                    {{ agentChatService.isStreamingMode() ? languageService.t().agent.streamingOn : languageService.t().agent.streamingOff }}
+                  </span>
+                </div>
+                <div class="switch-toggle" [class.active]="agentChatService.isStreamingMode()">
+                  <span class="switch-thumb"></span>
+                </div>
+              </div>
+
+              <div class="popover-divider"></div>
+
+              <!-- Full Settings Page Link -->
+              <button
+                type="button"
+                class="popover-item"
+                (click)="navigateToFullSettings()"
+                role="menuitem"
+              >
+                <app-icon name="settings" [size]="15" class="item-icon"></app-icon>
+                <div class="item-text">
+                  <span class="item-name">{{ languageService.t().agent.fullSettingsLink }}</span>
+                </div>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <!-- BYOK Warning Banner (if no API Key configured) -->
+    @if (!agentChatService.hasSavedKey()) {
+      <div class="chat-banner-container">
+        <app-byok-warning-banner></app-byok-warning-banner>
+      </div>
+    }
+
+    <!-- Chat Messages Scroll Region (flex: 1; overflow-y: auto) -->
+    <div class="chat-messages-container">
+      <app-chat-window
+        [messages]="agentChatService.messages()"
+        [isThinking]="agentChatService.isThinking()"
+        [userName]="authService.currentUser()?.name || 'Executive'"
+      ></app-chat-window>
+    </div>
+
+    <!-- Human in the loop approval banner -->
+    @if (agentChatService.pendingApproval()) {
+      <div class="chat-approval-container">
+        <app-approval-banner
+          [pendingApproval]="agentChatService.pendingApproval()"
+          (approve)="onApproveAction()"
+          (reject)="onRejectAction()"
+        ></app-approval-banner>
+      </div>
+    }
+
+    <!-- Composer / Input Area (always docked at bottom, outside messages scroll) -->
+    <footer class="chat-composer-container">
+      <app-chat-input-area
+        [disabled]="!agentChatService.hasSavedKey()"
+        [isThinking]="agentChatService.isThinking()"
+        [selectedNotes]="agentChatService.selectedNotes()"
+        [isNewConversation]="agentChatService.messages().length === 0"
+        (sendMessage)="onSendMessage($event)"
+        (addNote)="onAddNote($event)"
+        (removeNote)="onRemoveNote($event)"
+      ></app-chat-input-area>
+    </footer>
+  </main>
+
+  <!-- Executive Daily Briefing Modal -->
+  <app-executive-briefing-modal
+    [isOpen]="showBriefingModal()"
+    (closeModal)="showBriefingModal.set(false)"
+  ></app-executive-briefing-modal>
+</div>

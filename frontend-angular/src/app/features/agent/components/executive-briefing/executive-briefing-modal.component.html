@@ -1,0 +1,120 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="languageService.t().agent.briefing.title"
+  maxWidth="640px"
+  (close)="closeModal.emit()"
+>
+  <div class="briefing-container">
+    @if (briefingService.isLoading() || briefingService.isGenerating()) {
+      <div class="briefing-loading">
+        <app-icon name="loader" [size]="28" class="animate-spin"></app-icon>
+        <span>{{ languageService.t().agent.briefing.loading }}</span>
+      </div>
+    } @else {
+      @if (briefingService.briefing(); as b) {
+        <div class="briefing-content">
+          <!-- Overview summary box -->
+          @if (b.summary) {
+            <div class="summary-box">
+              <div class="box-header">
+                <app-icon name="sparkles" [size]="16" class="header-icon"></app-icon>
+                <h4>{{ languageService.t().agent.briefing.summary }}</h4>
+              </div>
+              <p>{{ b.summary }}</p>
+            </div>
+          }
+
+          <!-- Top Priorities Section -->
+          @if (b.topPriorities && b.topPriorities.length > 0) {
+            <div class="section-card">
+              <h5 class="section-title">
+                <app-icon name="check-square" [size]="15"></app-icon>
+                <span>{{ languageService.t().agent.briefing.topPriorities }}</span>
+              </h5>
+              <ul class="items-list">
+                @for (item of b.topPriorities; track item) {
+                  <li class="priority-item">
+                    <span class="bullet-dot"></span>
+                    <span>{{ item }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          <!-- Schedule Overview Section -->
+          @if (b.scheduleOverview && b.scheduleOverview.length > 0) {
+            <div class="section-card">
+              <h5 class="section-title">
+                <app-icon name="calendar" [size]="15"></app-icon>
+                <span>{{ languageService.t().agent.briefing.schedule }}</span>
+              </h5>
+              <ul class="items-list">
+                @for (item of b.scheduleOverview; track item) {
+                  <li class="schedule-item">
+                    <app-icon name="clock" [size]="13" class="clock-icon"></app-icon>
+                    <span>{{ item }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          <!-- AI Recommendations Section -->
+          @if (b.aiRecommendations && b.aiRecommendations.length > 0) {
+            <div class="section-card recommendation">
+              <h5 class="section-title">
+                <app-icon name="brain" [size]="15"></app-icon>
+                <span>{{ languageService.t().agent.briefing.recommendations }}</span>
+              </h5>
+              <ul class="items-list">
+                @for (item of b.aiRecommendations; track item) {
+                  <li class="rec-item">
+                    <app-icon name="zap" [size]="13" class="rec-icon"></app-icon>
+                    <span>{{ item }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="briefing-empty">
+          <p>{{ languageService.t().agent.briefing.empty }}</p>
+          <app-button variant="primary" (clicked)="generateFresh()">
+            <app-icon name="sparkles" [size]="15"></app-icon>
+            <span>{{ languageService.t().agent.briefing.generateBtn }}</span>
+          </app-button>
+        </div>
+      }
+    }
+
+    <!-- Modal Footer Actions -->
+    <div class="briefing-actions">
+      <app-button
+        variant="secondary"
+        size="sm"
+        (clicked)="copyBriefing()"
+        [disabled]="!briefingService.briefing()"
+      >
+        <app-icon name="file-text" [size]="14"></app-icon>
+        <span>{{ copied() ? languageService.t().agent.briefing.copied : languageService.t().agent.briefing.copyBtn }}</span>
+      </app-button>
+
+      <div class="right-actions">
+        <app-button
+          variant="secondary"
+          size="sm"
+          (clicked)="generateFresh()"
+          [loading]="briefingService.isGenerating()"
+        >
+          <app-icon name="refresh-cw" [size]="14"></app-icon>
+          <span>{{ languageService.t().agent.briefing.refreshBtn }}</span>
+        </app-button>
+        <app-button variant="primary" size="sm" (clicked)="closeModal.emit()">
+          <span>{{ languageService.t().common.close }}</span>
+        </app-button>
+      </div>
+    </div>
+  </div>
+</app-modal>

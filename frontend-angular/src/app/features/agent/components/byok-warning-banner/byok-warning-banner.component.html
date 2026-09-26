@@ -1,0 +1,20 @@
+<div class="byok-warning-banner animate-fade-in-slide-down" role="alert">
+  <div class="banner-left">
+    <div class="icon-box">
+      <app-icon name="alert-triangle" [size]="18"></app-icon>
+    </div>
+    <div class="text-content">
+      <span class="banner-title">{{ languageService.t().agent.byokWarningTitle }}</span>
+      <span class="banner-desc">
+        {{ languageService.t().agent.byokWarningDesc }}
+      </span>
+    </div>
+  </div>
+
+  <div class="banner-actions">
+    <button type="button" class="action-btn primary" (click)="navigateToSettings()">
+      <app-icon name="settings" [size]="14"></app-icon>
+      <span>{{ languageService.t().agent.byokWarningBtn }}</span>
+    </button>
+  </div>
+</div>

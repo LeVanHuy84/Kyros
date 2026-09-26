@@ -1,0 +1,101 @@
+<div class="chat-input-container">
+  <!-- Tag Note Chips Bar (When notes are attached) -->
+  @if (selectedNotes().length > 0) {
+    <div class="attached-notes-bar animate-fade-in">
+      <span class="bar-label">
+        <app-icon name="file-text" [size]="13"></app-icon>
+        <span>{{ languageService.t().agent.attachedNotesLabel }}</span>
+      </span>
+      <div class="chips-list">
+        @for (note of selectedNotes(); track note.id) {
+          <span class="note-chip animate-fade-in-scale">
+            <span class="chip-title">{{ note.title }}</span>
+            <button
+              type="button"
+              class="chip-remove-btn"
+              (click)="removeNote.emit(note.id)"
+              [attr.aria-label]="languageService.t().agent.removeAttachedNote"
+            >
+              <app-icon name="x" [size]="12"></app-icon>
+            </button>
+          </span>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Quick Suggestions Bar (Only for new conversation or when triggered by shortcut/button) -->
+  @if ((isNewConversation() || showSuggestions()) && !inputText().trim() && !disabled() && selectedNotes().length === 0) {
+    <div class="suggestions-bar animate-fade-in">
+      @for (sug of languageService.t().agent.suggestions; track sug) {
+        <button type="button" class="suggestion-chip" (click)="applySuggestion(sug)">
+          <app-icon name="sparkles" [size]="12" class="sug-icon"></app-icon>
+          <span>{{ sug }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Main Input Box -->
+  <div class="input-box" [class.disabled]="disabled()" [class.thinking]="isThinking()">
+    <!-- Note Mention Picker Popover -->
+    @if (isPickerOpen()) {
+      <app-note-mention-picker
+        (noteSelected)="onNoteSelected($event)"
+        (closePicker)="isPickerOpen.set(false)"
+      ></app-note-mention-picker>
+    }
+
+    <div class="input-left-tools">
+      <button
+        type="button"
+        class="tool-btn"
+        (click)="toggleNotePicker($event)"
+        [disabled]="disabled()"
+        [title]="languageService.t().agent.attachNotes"
+      >
+        <app-icon name="file-text" [size]="17"></app-icon>
+      </button>
+
+      <!-- Suggestions Toggle Tool Button -->
+      <button
+        type="button"
+        class="tool-btn"
+        (click)="toggleSuggestions($event)"
+        [class.active]="showSuggestions()"
+        [disabled]="disabled()"
+        title="Gợi ý câu hỏi (Ctrl+/)"
+      >
+        <app-icon name="sparkles" [size]="15"></app-icon>
+      </button>
+    </div>
+
+    <textarea
+      #textareaRef
+      [ngModel]="inputText()"
+      (ngModelChange)="inputText.set($event)"
+      (input)="onInput()"
+      (keydown)="handleKeyDown($event)"
+      [placeholder]="disabled() ? languageService.t().agent.inputDisabledPlaceholder : languageService.t().agent.inputPlaceholder"
+      [disabled]="disabled() || isThinking()"
+      class="chat-textarea"
+      rows="1"
+    ></textarea>
+
+    <div class="input-right-tools">
+      <button
+        type="button"
+        class="send-btn"
+        (click)="submitMessage()"
+        [disabled]="disabled() || isThinking() || !inputText().trim()"
+        [attr.aria-label]="languageService.t().agent.send"
+      >
+        @if (isThinking()) {
+          <app-icon name="loader" [size]="16" class="animate-spin"></app-icon>
+        } @else {
+          <app-icon name="send" [size]="16"></app-icon>
+        }
+      </button>
+    </div>
+  </div>
+</div>

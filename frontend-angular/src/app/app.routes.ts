@@ -51,8 +51,8 @@ export const routes: Routes = [
       {
         path: 'agent',
         loadComponent: () =>
-          import('@features/agent/pages/agent-placeholder.component').then(
-            (m) => m.AgentPlaceholderComponent
+          import('@features/agent/pages/agent-coordinator/agent-coordinator.component').then(
+            (m) => m.AgentCoordinatorComponent
           ),
       },
       {
@@ -86,8 +86,8 @@ export const routes: Routes = [
       {
         path: 'settings',
         loadComponent: () =>
-          import('@features/agent/pages/agent-placeholder.component').then(
-            (m) => m.AgentPlaceholderComponent
+          import('@features/settings/pages/settings-page.component').then(
+            (m) => m.SettingsPageComponent
           ),
       },
     ],

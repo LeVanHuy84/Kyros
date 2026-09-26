@@ -1,7 +1,7 @@
-# KẾ HOẠCH TRIỂN KHAI ANGULAR UI - GIAI ĐOẠN 3: TRỢ LÝ AI TRÒ CHUYỆN TỰ NHIÊN (CONVERSATIONAL AI AGENT & NATURAL UI)
+# KẾ HOẠCH TRIỂN KHAI ANGULAR UI - GIAI ĐOẠN 3: TRỢ LÝ AI ĐIỀU PHỐI & TRÒ CHUYỆN TỰ NHIÊN (CONVERSATIONAL AGENT COORDINATOR & NATURAL UI)
 
 > **Tài liệu:** `docs/implementation/angular/phase-3-agent-and-natural-ui.md`  
-> **Mục tiêu:** Xây dựng trung tâm điều phối trợ lý AI (Agent Coordinator) với luồng hội thoại tự nhiên mượt mà, phản hồi realtime qua SSE stream, Human-In-The-Loop (HITL) security approval gate, Executive Daily Briefing và cấu hình BYOK (Bring Your Own Key).  
+> **Mục tiêu:** Xây dựng trung tâm điều phối trợ lý AI (Agent Coordinator) dưới dạng **Tab màn hình chuyên biệt** (full-height workspace, không dùng bong bóng chat nổi), tích hợp SSE real-time stream, kiểm tra bắt buộc cấu hình BYOK (AI Settings) trước khi chat, đính kèm Tag Note theo ngữ cảnh, Human-In-The-Loop (HITL) security approval gate và Executive Daily Briefing.  
 > **Ước lượng thời gian:** 2 - 3 ngày làm việc.
 
 ---
@@ -10,12 +10,13 @@
 
 | Mã Task | Hạng mục | Vị trí tệp tin | Backend Endpoints Tương Ứng |
 | :--- | :--- | :--- | :--- |
-| **TASK-3.1** | SSE Chat Stream Engine | `src/app/features/agent/services/agent-chat.service.ts` | `POST .../agent/chat`<br/>`GET .../agent/chat/stream` |
-| **TASK-3.2** | Giao diện Khung chat Tự nhiên | `src/app/features/agent/components/chat-window/*`<br/>`src/app/features/agent/components/chat-bubble/*` | `GET .../agent/history` |
-| **TASK-3.3** | Ô nhập liệu Thông minh & Gợi ý | `src/app/features/agent/components/chat-input-area/*` | User Input & Prompt suggestions |
-| **TASK-3.4** | Human-in-the-Loop (HITL) Gate | `src/app/features/agent/components/approval-banner/*`<br/>`src/app/features/agent/components/approval-modal/*` | `POST .../agent/approve` |
-| **TASK-3.5** | Executive Daily Briefing | `src/app/features/agent/components/executive-briefing/*` | `GET .../executive/briefing/today`<br/>`POST .../executive/briefing/generate` |
-| **TASK-3.6** | Cấu hình BYOK & AI Settings | `src/app/features/agent/components/byok-config-modal/*` | `GET .../agent/ai-config`<br/>`PUT .../agent/ai-config` |
+| **TASK-3.1** | SSE Chat Stream Engine & State Store | `src/app/features/agent/services/agent-chat.service.ts`<br/>`src/app/features/agent/models/agent.models.ts` | `POST /api/v1/workspaces/{id}/agent/chat`<br/>`GET /api/v1/workspaces/{id}/agent/chat/stream`<br/>`GET /api/v1/workspaces/{id}/conversations` |
+| **TASK-3.2** | Giao diện Tab Điều phối Agent (Full-page Workspace) | `src/app/features/agent/pages/agent-coordinator/*`<br/>`src/app/features/agent/components/chat-window/*`<br/>`src/app/features/agent/components/conversation-sidebar/*` | `GET /api/v1/workspaces/{id}/agent/history`<br/>`GET /api/v1/workspaces/{id}/conversations/{id}/turns` |
+| **TASK-3.3** | Kiểm tra BYOK Key Guard & Cảnh báo trước khi Chat | `src/app/features/agent/guards/ai-config.guard.ts`<br/>`src/app/features/agent/components/byok-warning-banner/*` | `GET /api/v1/workspaces/{id}/agent/ai-config` |
+| **TASK-3.4** | Ô nhập liệu Thông minh & Đính kèm Tag Note | `src/app/features/agent/components/chat-input-area/*`<br/>`src/app/features/agent/components/note-mention-picker/*` | `GET /api/v1/workspaces/{id}/notes`<br/>Context Injection Payload |
+| **TASK-3.5** | Human-in-the-Loop (HITL) Gate | `src/app/features/agent/components/approval-banner/*`<br/>`src/app/features/agent/components/approval-modal/*` | `POST /api/v1/workspaces/{id}/agent/approve` |
+| **TASK-3.6** | Cấu hình BYOK & AI Provider Vault (Đặt tại Settings) | `src/app/features/settings/components/ai-config-panel/*`<br/>`src/app/features/settings/services/ai-settings.service.ts` | `GET /api/v1/workspaces/{id}/agent/ai-config`<br/>`PUT /api/v1/workspaces/{id}/agent/ai-config` |
+| **TASK-3.7** | Bản tin Điều hành Hàng ngày (Executive Daily Briefing) | `src/app/features/agent/components/executive-briefing/*` | `GET /api/v1/workspaces/{id}/executive/briefing/today`<br/>`POST /api/v1/workspaces/{id}/executive/briefing/generate` |
 
 ---
 
@@ -26,7 +27,7 @@
   - `src/app/features/agent/services/agent-chat.service.ts`
   - `src/app/features/agent/models/agent.models.ts`
 - **Các bước thực hiện:**
-  1. Định nghĩa cấu trúc Message:
+  1. Định nghĩa cấu trúc dữ liệu hoàn chỉnh:
      ```typescript
      export interface ChatMessage {
        id: string;
@@ -34,6 +35,7 @@
        content: string;
        timestamp: Date;
        status: 'sending' | 'streaming' | 'done' | 'error';
+       attachedNotes?: { id: string; title: string }[];
        toolCall?: {
          toolName: string;
          arguments: Record<string, any>;
@@ -42,88 +44,157 @@
          result?: any;
        };
      }
+
+     export interface Conversation {
+       id: string;
+       title: string;
+       updatedAt: string;
+       turnCount?: number;
+     }
+
+     export interface AiConfig {
+       provider: string; // 'GEMINI' | 'OPENAI' | 'ANTHROPIC' | 'CUSTOM'
+       apiKey?: string;
+       hasSavedKey: boolean;
+       baseUrl?: string;
+       model: string;
+       temperature?: number;
+       maxOutputTokens?: number;
+     }
      ```
-  2. Triển khai `AgentChatService` với Signals:
+  2. Triển khai `AgentChatService` với Angular Signals:
+     - `conversations = signal<Conversation[]>([])`
+     - `activeConversationId = signal<string | null>(null)`
      - `messages = signal<ChatMessage[]>([])`
      - `isStreaming = signal<boolean>(false)`
-     - `pendingApprovals = computed(() => this.messages().filter(m => m.toolCall?.approvalStatus === 'PENDING'))`
-  3. Kết nối SSE Stream: Đọc từng chunk delta ký tự từ backend, tự động nối chuỗi vào tin nhắn `streaming` cuối cùng và kích hoạt render mượt mà.
+     - `isThinking = signal<boolean>(false)`
+     - `isConfigured = signal<boolean>(false)` (Trạng thái đã có API Key chưa)
+     - `pendingApproval = signal<ChatMessage | null>(null)`
+  3. Kết nối SSE Stream: Đọc từng chunk delta token từ endpoint `GET .../agent/chat/stream`, tự động ghép nối mượt mà vào tin nhắn đang stream và cập nhật giao diện thời gian thực.
 - **Tiêu chí nghiệm thu:**
-  - Chữ hiển thị mượt theo thời gian thực (token-by-token) mà không bị giật lag khung hình (duy trì 60 FPS).
+  - Chữ hiển thị mượt mà từng token, duy trì 60 FPS, không xung đột khi đổi session chat.
 
 ---
 
-### Task 3.2: Giao diện Khung Chat Tự Nhiên & Bong bóng Tin nhắn (Natural UI Bubbles)
+### Task 3.2: Giao diện Tab Điều Phối Agent Toàn Màn Hình (Full-page Workspace Layout)
 - **Vị trí tệp:**
+  - `src/app/features/agent/pages/agent-coordinator/agent-coordinator.component.ts`
+  - `src/app/features/agent/pages/agent-coordinator/agent-coordinator.component.html`
+  - `src/app/features/agent/pages/agent-coordinator/agent-coordinator.component.scss`
   - `src/app/features/agent/components/chat-window/chat-window.component.ts`
-  - `src/app/features/agent/components/chat-bubble/chat-bubble.component.ts`
+  - `src/app/features/agent/components/conversation-sidebar/conversation-sidebar.component.ts`
 - **Các bước thực hiện:**
-  1. Xây dựng Bong bóng Tin nhắn Người dùng & Trợ lý với phong cách ấm áp:
-     - Avatar bo tròn mềm mại, badge trạng thái Online.
-     - Hiệu ứng xuất hiện mượt với CSS translateY và fade-in.
-     - Render nội dung markdown an toàn, hỗ trợ syntax highlighting cho code block và bảng biểu.
-  2. Auto-scroll thông minh: Tự động cuộn xuống cuối khi có tin nhắn mới, nhưng tạm dừng auto-scroll nếu người dùng chủ động cuộn lên xem lịch sử.
-  3. Typing Indicator: Hiệu ứng 3 chấm nảy nhịp nhàng khi Agent đang suy nghĩ trước khi stream.
+  1. **Định dạng Layout:** Là **Tab chính `/agent`** trên Sidebar điều hướng (Workspace full-height 100%), **tuyệt đối không dùng widget bong bóng chat tròn nổi**.
+  2. **Cấu trúc 2 cột linh hoạt:**
+     - **Cột trái (Sidebar 200px - 240px):** Danh sách các phiên trò chuyện (`ConversationSidebar`), nút `+ Cuộc trò chuyện mới`, nút xóa phiên.
+     - **Cột phải (Chat Canvas chính):** Header điều khiển (Nút Bản tin điều hành, Shortcut cấu hình AI Key, Toggle SSE/REST), Cửa sổ cuộn tin nhắn (`ChatWindow`), và Thanh nhập liệu gắn Tag Note ở đáy.
+  3. Render nội dung Markdown an toàn với cú pháp Code highlighting, bảng biểu, trích dẫn, và avatar trợ lý Kyros.
+  4. Auto-scroll thông minh: Tự cuộn khi có token mới, tạm dừng khi người dùng chủ động cuộn lên xem lịch sử.
 - **Tiêu chí nghiệm thu:**
-  - Giao diện mang lại cảm giác đối thoại gần gũi như trò chuyện với trợ lý riêng, không bị đơ giật.
+  - Không gian làm việc chuyên nghiệp, thoáng đãng, mang phong cách Natural UI ấm áp và hiện đại.
 
 ---
 
-### Task 3.3: Ô Nhập Liệu Đa Năng & Thẻ Gợi ý Nhanh (Smart Input Area)
+### Task 3.3: Tự động Kiểm tra BYOK Key & Cảnh báo Chặn Chat (AI Key Guard)
+- **Vị trí tệp:**
+  - `src/app/features/agent/components/byok-warning-banner/byok-warning-banner.component.ts`
+  - `src/app/features/agent/components/byok-warning-banner/byok-warning-banner.component.html`
+  - `src/app/features/agent/components/byok-warning-banner/byok-warning-banner.component.scss`
+- **Các bước thực hiện:**
+  1. Khi màn hình `/agent` khởi tạo (OnInit) hoặc khi đổi Workspace:
+     - Tự động gọi `GET /api/v1/workspaces/{id}/agent/ai-config` để kiểm tra trạng thái cấu hình AI Provider.
+     - Kiểm tra cờ `hasSavedKey` và `model`.
+  2. Nếu **chưa có API Key (`hasSavedKey === false`)**:
+     - Hiển thị Banner cảnh báo màu vàng/cam nổi bật ngay trên đầu khung chat: *"Chưa cấu hình API Key cho Trợ lý AI trong Workspace này. Vui lòng thiết lập API Key cá nhân để bắt đầu trò chuyện."*
+     - **Khóa (disable) ô nhập chat (`ChatInputArea`)** và nút gửi tin nhắn.
+     - Nút hành động nhanh: **"Đến trang Cài đặt cấu hình"** $\rightarrow$ điều hướng mượt sang `/settings?tab=ai` hoặc mở dialog cấu hình tức thì.
+  3. Khi đã có API Key $\rightarrow$ mở khóa toàn bộ tính năng trò chuyện bình thường.
+- **Tiêu chí nghiệm thu:**
+  - Người dùng luôn biết rõ lý do tại sao Agent chưa thể phản hồi và được hướng dẫn trực tiếp đến nơi cấu hình Key.
+
+---
+
+### Task 3.4: Ô Nhập Liệu Đa Năng & Đính Kèm Thẻ Tag Note (Context Mention)
 - **Vị trí tệp:**
   - `src/app/features/agent/components/chat-input-area/chat-input-area.component.ts`
+  - `src/app/features/agent/components/chat-input-area/chat-input-area.component.html`
+  - `src/app/features/agent/components/chat-input-area/chat-input-area.component.scss`
+  - `src/app/features/agent/components/note-mention-picker/note-mention-picker.component.ts`
 - **Các bước thực hiện:**
-  1. Textarea tự động co giãn chiều cao theo nội dung người dùng nhập (từ 1 dòng đến tối đa 6 dòng).
-  2. Hỗ trợ phím tắt: `Enter` để gửi tin nhắn, `Shift + Enter` để xuống dòng, `Esc` để hủy focus.
-  3. Thẻ gợi ý câu lệnh mẫu (Quick Prompt Chips) hiển thị trên ô nhập:
-     - *"Tóm tắt lịch trình hôm nay"*
-     - *"Tạo task chuẩn bị báo cáo quý 3"*
-     - *"Tìm khoảng trống họp 30 phút ngày mai"*
+  1. **Textarea tự co giãn chiều cao:** Tự động tăng chiều cao từ 1 dòng đến tối đa 6 dòng theo lượng nội dung nhập (`auto-resize`).
+  2. **Hỗ trợ đính kèm Tag Note (Knowledge Reference):**
+     - Nút icon `Tag Note / FileText` hoặc gõ ký tự `@` để mở bộ chọn Note (`NoteMentionPicker`).
+     - Tải danh sách ghi chú từ `GET /api/v1/workspaces/{id}/notes`.
+     - Cho phép chọn 1 hoặc nhiều ghi chú; hiển thị dưới dạng các **Tag Chip màu xanh nhạt** nằm ngay trên ô nhập liệu (kèm nút `x` để gỡ tag).
+     - Khi gửi tin nhắn, đính kèm ID các ghi chú được chọn vào payload request để Backend nạp ngữ cảnh vào LLM prompt.
+  3. Phím tắt: `Enter` để gửi, `Shift + Enter` để xuống dòng.
 - **Tiêu chí nghiệm thu:**
-  - Nhập liệu trực quan, dễ dùng trên cả bàn phím máy tính và bàn phím ảo điện thoại.
+  - Gắn và gỡ Tag Note nhanh chóng, truyền đầy đủ ngữ cảnh ghi chú vào câu hỏi cho AI Agent.
 
 ---
 
-### Task 3.4: Cơ chế Phê duyệt Hành động Nhạy cảm (Human-in-the-Loop Security Gate)
+### Task 3.5: Cơ chế Phê duyệt Hành động Nhạy cảm (Human-in-the-Loop Security Gate)
 - **Vị trí tệp:**
   - `src/app/features/agent/components/approval-banner/approval-banner.component.ts`
-  - `src/app/features/agent/components/approval-modal/approval-modal.component.ts`
+  - `src/app/features/agent/components/approval-banner/approval-banner.component.html`
+  - `src/app/features/agent/components/approval-banner/approval-banner.component.scss`
 - **Các bước thực hiện:**
-  1. Khi Agent quyết định thực thi các Tool quan trọng (như xóa task, gửi email, hủy cuộc họp), backend sẽ yêu cầu phê duyệt (`approvalRequired: true`).
-  2. Hiển thị Card Phê duyệt nổi bật trong luồng chat:
-     - Tên công cụ (Tool Name), mục đích hành động.
-     - Bảng tham số chi tiết (Arguments Diff: ngày giờ, tiêu đề, đối tượng bị tác động).
-     - 2 nút hành động rõ ràng: **"Phê duyệt & Thực thi"** (màu xanh lá) và **"Từ chối"** (màu đỏ nhẹ).
-  3. Gửi request `POST /agent/approve` với `decision: "APPROVE" | "REJECT"` và cập nhật trạng thái UI tức thì.
+  1. Khi Agent phát hiện hành động có rủi ro cao (Tool Call xóa task, hủy lịch họp, gửi email):
+     - Hiển thị Banner Phê duyệt an toàn ở đáy khung chat với viền cảnh báo màu hổ phách/xanh.
+     - Hiển thị rõ: Tên công cụ (Tool Name), Tham số chi tiết (Arguments Diff: Ngày giờ, Người nhận, Tiêu đề).
+  2. 2 Lựa chọn rõ ràng:
+     - Nút **"Phê duyệt & Thực thi"** (màu xanh lá): Gửi `POST .../agent/approve` với `decision: "APPROVE"`.
+     - Nút **"Từ chối"** (màu đỏ nhẹ): Gửi `POST .../agent/approve` với `decision: "REJECT"`.
+  3. Cập nhật ngay trạng thái của tin nhắn thành công hoặc bị hủy bỏ.
 - **Tiêu chí nghiệm thu:**
-  - Không có hành động phá hủy dữ liệu nào của Agent được chạy ngầm mà thiếu sự xác nhận từ người dùng.
+  - Bảo vệ 100% dữ liệu của người dùng, không để Agent tự ý xóa sửa thông tin mà chưa được duyệt.
 
 ---
 
-### Task 3.5: Báo cáo Điều hành Hàng ngày (Executive Daily Briefing Dashboard)
+### Task 3.6: Cấu hình BYOK & AI Provider Vault (Đặt tại Trang Cài Đặt Settings)
+- **Vị trí tệp:**
+  - `src/app/features/settings/components/ai-config-panel/ai-config-panel.component.ts`
+  - `src/app/features/settings/components/ai-config-panel/ai-config-panel.component.html`
+  - `src/app/features/settings/components/ai-config-panel/ai-config-panel.component.scss`
+  - `src/app/features/settings/services/ai-settings.service.ts`
+- **Các bước thực hiện:**
+  1. Nằm trong trang **Settings (`/settings`) $\rightarrow$ Tab "AI Provider & Vault"** (`activeSubTab = 'ai'`).
+  2. Hỗ trợ các Presets phổ biến:
+     - **Google Gemini:** `gemini-1.5-pro`, `gemini-1.5-flash`, `gemini-2.0-flash`
+     - **OpenAI:** `gpt-4o`, `gpt-4o-mini`, `o1-mini`
+     - **Anthropic Claude:** `claude-3-5-sonnet`, `claude-3-haiku`
+     - **Custom Endpoint (Ollama / LocalAI / LiteLLM)**
+  3. Ô nhập API Key bảo mật:
+     - Nếu đã có key trong Vault $\rightarrow$ hiển thị trạng thái `🔒 ••••••••••••••••` kèm huy hiệu *"Backend AES-256 Vault Encrypted"* và nút "Thay đổi Key".
+     - Hỗ trợ nút mắt ẩn/hiện (`eye` / `eye-off`).
+  4. Lưu cấu hình qua `PUT /api/v1/workspaces/{id}/agent/ai-config` và thông báo toast thành công tức thì.
+- **Tiêu chí nghiệm thu:**
+  - Lưu và mã hóa an toàn API Key, cập nhật ngay lập tức sang màn hình Chat mà không cần reload app.
+
+---
+
+### Task 3.7: Báo cáo Điều hành Hàng ngày (Executive Daily Briefing Dashboard)
 - **Vị trí tệp:**
   - `src/app/features/agent/components/executive-briefing/executive-briefing-modal.component.ts`
+  - `src/app/features/agent/components/executive-briefing/executive-briefing-modal.component.html`
+  - `src/app/features/agent/components/executive-briefing/executive-briefing-modal.component.scss`
 - **Các bước thực hiện:**
-  1. Tích hợp API `GET /executive/briefing/today` khi người dùng nhấn nút *"Executive Briefing"* trên thanh công cụ.
-  2. Hiển thị tổng quan 3 phần chính:
-     - **Lịch trình trọng tâm trong ngày:** Các cuộc họp và sự kiện quan trọng.
-     - **Tasks ưu tiên cao (P1/P2):** Cần hoàn thành hôm nay.
-     - **Gợi ý của AI Assistant:** Đề xuất tối ưu hóa năng suất và cảnh báo xung đột thời gian.
-  3. Nút *"Tạo mới / Cập nhật lại"* gọi `POST /executive/briefing/generate` để Agent tổng hợp lại dữ liệu mới nhất.
+  1. Nút *"Bản tin điều hành"* trên header của Chat kích hoạt mở Modal Briefing.
+  2. Gọi `GET /api/v1/workspaces/{id}/executive/briefing/today`:
+     - **Lịch trình trọng tâm trong ngày:** Sự kiện họp, mốc giờ quan trọng.
+     - **Nhiệm vụ ưu tiên cao (P1/P2):** Các công việc cần giải quyết trước.
+     - **Lời khuyên năng suất từ AI:** Đề xuất phân bổ thời gian và giải quyết xung đột.
+  3. Nút *"Tạo mới / Tổng hợp lại"* gọi `POST /api/v1/workspaces/{id}/executive/briefing/generate`.
 - **Tiêu chí nghiệm thu:**
-  - Modal mở lên mượt mà, hỗ trợ in hoặc sao chép bản tóm tắt nhanh vào clipboard.
+  - Modal hiển thị trực quan, hỗ trợ copy nhanh bản tin tóm tắt vào clipboard.
 
 ---
 
-### Task 3.6: Cấu hình Tự mang API Key (BYOK & AI Provider Settings)
-- **Vị trí tệp:**
-  - `src/app/features/agent/components/byok-config-modal/byok-config-modal.component.ts`
-- **Các bước thực hiện:**
-  1. Giao diện cấu hình LLM cho phép người dùng nhập API Key riêng (Google Gemini, OpenAI GPT-4o, Anthropic Claude).
-  2. Điều chỉnh tham số:
-     - Model selector (vd: `gemini-1.5-pro`, `gpt-4o-mini`, ...).
-     - Temperature slider (`0.0` - Chính xác, logic đến `1.0` - Sáng tạo).
-     - Max Output Tokens.
-  3. Kiểm tra tính hợp lệ của API Key trước khi lưu xuống backend (`PUT /agent/ai-config`).
-- **Tiêu chí nghiệm thu:**
-  - API Key được che dấu dưới dạng mật khẩu (`••••••••`), hiển thị trạng thái *"Đã cấu hình"* an toàn.
+## 3. CHECKLIST KIỂM THỬ GIAI ĐOẠN 3
+
+- [ ] Khi chưa cấu hình API Key $\rightarrow$ Tab Chat hiển thị Banner cảnh báo và khóa ô nhập tin nhắn.
+- [ ] Bấm nút chuyển sang Settings $\rightarrow$ Lưu API Key thành công $\rightarrow$ Quay lại Chat mở khóa tức thì.
+- [ ] Gửi câu hỏi kèm đính kèm Tag Note $\rightarrow$ Agent phản hồi chính xác dựa trên nội dung Note.
+- [ ] Thử nghiệm Tool Call nhạy cảm $\rightarrow$ Banner HITL xuất hiện $\rightarrow$ Bấm Phê duyệt hoặc Từ chối hoạt động chính xác.
+- [ ] Bản tin điều hành mở mượt mà và tổng hợp đầy đủ tasks, calendar của workspace hiện tại.
+- [ ] Toàn bộ components tuân thủ OnPush, Standalone, tách file `.ts`/`.html`/`.scss` và hỗ trợ Dark Mode 100%.

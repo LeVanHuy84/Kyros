@@ -83,9 +83,101 @@
     "offline": "Ngoại tuyến",
     "loading": "Đang tải...",
     "save": "Lưu thay đổi",
+    "edit": "Thay đổi",
     "cancel": "Hủy bỏ",
     "close": "Đóng",
     "error": "Đã có lỗi xảy ra",
     "success": "Thành công"
+  },
+  "agent": {
+    "title": "Trợ lý AI",
+    "brandTitle": "KYROS AI",
+    "settingsBtn": "Cài đặt",
+    "settingsMenuTitle": "Tùy chọn & Công cụ Trợ lý",
+    "streamingToggleLabel": "SSE Realtime Streaming",
+    "fullSettingsLink": "Trang Cài đặt hệ thống",
+    "subtitle": "Hội thoại & điều phối tác vụ",
+    "newChat": "Cuộc trò chuyện mới",
+    "history": "Lịch sử hội thoại",
+    "noHistory": "Chưa có cuộc trò chuyện nào",
+    "defaultConvTitle": "Cuộc trò chuyện mới",
+    "deleteConvConfirm": "Bạn có chắc chắn muốn xóa cuộc trò chuyện này không?",
+    "inputPlaceholder": "Hỏi Kyros trợ lý AI điều hành (Enter để gửi, Shift+Enter để xuống dòng)...",
+    "inputDisabledPlaceholder": "Vui lòng cấu hình API Key trong Cài đặt để bắt đầu chat...",
+    "send": "Gửi tin nhắn",
+    "streamingOn": "SSE Bật",
+    "streamingOff": "REST Chuẩn",
+    "briefingBtn": "Bản tin điều hành",
+    "briefingTooltip": "Xem tóm tắt lịch trình & nhiệm vụ trong ngày",
+    "byokBtn": "AI Provider & Key",
+    "byokTooltip": "Cấu hình API Key cá nhân",
+    "byokWarningTitle": "Chưa cấu hình API Key cho Trợ lý AI",
+    "byokWarningDesc": "Vui lòng thiết lập API Key cá nhân (OpenAI, Gemini, Claude, Groq...) để kích hoạt tính năng trò chuyện và điều phối tác vụ thông minh.",
+    "byokWarningBtn": "Thiết lập API Key ngay",
+    "attachNotes": "Đính kèm Note",
+    "attachedNotesLabel": "Gắn kèm ngữ cảnh Note:",
+    "removeAttachedNote": "Xóa đính kèm note",
+    "searchNotesPlaceholder": "Tìm kiếm tiêu đề ghi chú (@note)...",
+    "noNotesFound": "Không tìm thấy ghi chú nào phù hợp",
+    "thoughtProcess": "Quá trình tư duy & Tool calls",
+    "thinking": "Kyros đang suy nghĩ...",
+    "greeting": "Chào bạn! Tôi là Kyros AI Executive Assistant. Bạn muốn tôi hỗ trợ xếp lịch, quản lý task hay tổng hợp note hôm nay?",
+    "approval": {
+      "title": "Yêu cầu Xác nhận Hành động (HITL)",
+      "desc": "Trợ lý AI đang yêu cầu quyền thực thi hành động nhạy cảm trên hệ thống:",
+      "tool": "Công cụ",
+      "args": "Tham số",
+      "approveBtn": "Phê duyệt & Thực thi",
+      "rejectBtn": "Từ chối hành động"
+    },
+    "briefing": {
+      "title": "Bản tin Điều hành Hàng ngày (Daily Briefing)",
+      "loading": "Agent đang tổng hợp dữ liệu lịch trình, task và báo cáo...",
+      "summary": "Tổng quan trong ngày",
+      "topPriorities": "Nhiệm vụ Trọng tâm (P1/P2)",
+      "schedule": "Lịch trình & Cuộc họp",
+      "recommendations": "Gợi ý Năng suất từ Trợ lý AI",
+      "empty": "Chưa có bản tin điều hành cho ngày hôm nay.",
+      "generateBtn": "Tạo bản tin ngay",
+      "refreshBtn": "Cập nhật mới",
+      "copyBtn": "Sao chép bản tin",
+      "copied": "Đã sao chép!"
+    },
+    "byokModal": {
+      "title": "Cấu hình AI Provider & API Key (BYOK)",
+      "savedSuccess": "Đã lưu cấu hình AI Provider thành công!"
+    },
+    "suggestions": [
+      "Tóm tắt nhiệm vụ ưu tiên hôm nay",
+      "Tạo task review báo cáo tài chính Q3",
+      "Xếp lịch họp với nhóm kỹ thuật lúc 15:00",
+      "Tổng hợp các ghi chú quan trọng trong tuần"
+    ]
+  },
+  "settings": {
+    "title": "Cài đặt Hệ thống",
+    "subtitle": "Quản lý cấu hình AI Provider, bảo mật Vault và không gian làm việc",
+    "tabs": {
+      "aiProvider": "AI Provider & BYOK",
+      "vault": "Kho Khóa Bảo mật",
+      "general": "Cài đặt chung"
+    },
+    "aiProvider": {
+      "title": "Cấu hình AI Provider",
+      "subtitle": "Kết nối mô hình ngôn ngữ lớn (LLM) bằng API Key cá nhân của bạn",
+      "providerLabel": "Nhà cung cấp AI",
+      "modelLabel": "Mô hình mặc định (Default Model)",
+      "apiKeyLabel": "API Key",
+      "apiKeyPlaceholder": "Nhập API Key của bạn (sk-... hoặc AIza...)",
+      "apiKeyHelp": "API Key được mã hóa an toàn trong Vault và không bao giờ lộ ra bên ngoài.",
+      "baseUrlLabel": "Custom Base URL (Tùy chọn)",
+      "baseUrlPlaceholder": "https://api.openai.com/v1",
+      "temperatureLabel": "Nhiệt độ sáng tạo (Temperature)",
+      "hasKeyConfigured": "Đã lưu API Key an toàn trong Vault",
+      "saveBtn": "Lưu cấu hình AI",
+      "saving": "Đang lưu...",
+      "testBtn": "Kiểm tra kết nối",
+      "testing": "Đang kiểm tra..."
+    }
   }
 }
