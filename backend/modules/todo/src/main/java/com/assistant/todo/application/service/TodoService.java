@@ -69,7 +69,10 @@ public class TodoService implements TodoPort {
     if (subtasks != null) {
       task.setSubtasks(subtasks);
     }
-    taskRepository.save(task);
+    Task saved = taskRepository.save(task);
+    if (saved != null) {
+      task = saved;
+    }
 
     eventPublisher.publishEvent(
         new TaskCreated(
@@ -149,7 +152,10 @@ public class TodoService implements TodoPort {
     if (subtasks != null) {
       task.setSubtasks(subtasks);
     }
-    taskRepository.save(task);
+    Task saved = taskRepository.save(task);
+    if (saved != null) {
+      task = saved;
+    }
 
     eventPublisher.publishEvent(
         new TaskUpdated(
@@ -173,7 +179,10 @@ public class TodoService implements TodoPort {
   public Task recoverTask(TaskId taskId, WorkspaceId workspaceId) {
     Task task = loadTask(taskId, workspaceId);
     task.recover();
-    taskRepository.save(task);
+    Task saved = taskRepository.save(task);
+    if (saved != null) {
+      task = saved;
+    }
 
     eventPublisher.publishEvent(new TaskRecovered(task.getId().value(), task.getWorkspaceId()));
 
@@ -184,7 +193,10 @@ public class TodoService implements TodoPort {
   public Task completeTask(TaskId taskId, WorkspaceId workspaceId) {
     Task task = loadTask(taskId, workspaceId);
     task.complete();
-    taskRepository.save(task);
+    Task saved = taskRepository.save(task);
+    if (saved != null) {
+      task = saved;
+    }
 
     eventPublisher.publishEvent(new TaskCompleted(task.getId().value(), task.getWorkspaceId()));
 
@@ -195,7 +207,10 @@ public class TodoService implements TodoPort {
   public Task reopenTask(TaskId taskId, WorkspaceId workspaceId) {
     Task task = loadTask(taskId, workspaceId);
     task.reopen();
-    taskRepository.save(task);
+    Task saved = taskRepository.save(task);
+    if (saved != null) {
+      task = saved;
+    }
 
     eventPublisher.publishEvent(new TaskReopened(task.getId().value(), task.getWorkspaceId()));
 
@@ -206,7 +221,10 @@ public class TodoService implements TodoPort {
   public Task addTags(TaskId taskId, WorkspaceId workspaceId, Set<Tag> tags) {
     Task task = loadTask(taskId, workspaceId);
     tags.forEach(task::addTag);
-    taskRepository.save(task);
+    Task saved = taskRepository.save(task);
+    if (saved != null) {
+      task = saved;
+    }
 
     eventPublisher.publishEvent(
         new TaskUpdated(task.getId().value(), task.getWorkspaceId(), Set.of("tags")));
@@ -218,7 +236,10 @@ public class TodoService implements TodoPort {
   public Task removeTag(TaskId taskId, WorkspaceId workspaceId, Tag tag) {
     Task task = loadTask(taskId, workspaceId);
     task.removeTag(tag);
-    taskRepository.save(task);
+    Task saved = taskRepository.save(task);
+    if (saved != null) {
+      task = saved;
+    }
 
     eventPublisher.publishEvent(
         new TaskUpdated(task.getId().value(), task.getWorkspaceId(), Set.of("tags")));
@@ -231,7 +252,10 @@ public class TodoService implements TodoPort {
       TaskId taskId, WorkspaceId workspaceId, RecurrencePattern pattern, Integer interval) {
     Task task = loadTask(taskId, workspaceId);
     task.attachRecurrence(pattern, interval != null ? interval : 1);
-    taskRepository.save(task);
+    Task saved = taskRepository.save(task);
+    if (saved != null) {
+      task = saved;
+    }
 
     eventPublisher.publishEvent(
         new RecurrenceStarted(
@@ -247,7 +271,10 @@ public class TodoService implements TodoPort {
   public Task pauseRecurrence(TaskId taskId, WorkspaceId workspaceId) {
     Task task = loadTask(taskId, workspaceId);
     task.pauseRecurrence();
-    taskRepository.save(task);
+    Task saved = taskRepository.save(task);
+    if (saved != null) {
+      task = saved;
+    }
 
     eventPublisher.publishEvent(new RecurrencePaused(task.getId().value(), task.getWorkspaceId()));
 
@@ -258,7 +285,10 @@ public class TodoService implements TodoPort {
   public Task resumeRecurrence(TaskId taskId, WorkspaceId workspaceId) {
     Task task = loadTask(taskId, workspaceId);
     task.resumeRecurrence();
-    taskRepository.save(task);
+    Task saved = taskRepository.save(task);
+    if (saved != null) {
+      task = saved;
+    }
 
     eventPublisher.publishEvent(new RecurrenceResumed(task.getId().value(), task.getWorkspaceId()));
 
@@ -269,7 +299,10 @@ public class TodoService implements TodoPort {
   public Task stopRecurrence(TaskId taskId, WorkspaceId workspaceId) {
     Task task = loadTask(taskId, workspaceId);
     task.stopRecurrence();
-    taskRepository.save(task);
+    Task saved = taskRepository.save(task);
+    if (saved != null) {
+      task = saved;
+    }
 
     eventPublisher.publishEvent(new RecurrenceStopped(task.getId().value(), task.getWorkspaceId()));
 

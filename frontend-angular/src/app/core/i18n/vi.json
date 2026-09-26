@@ -155,8 +155,8 @@
     ]
   },
   "settings": {
-    "title": "Cài đặt Hệ thống",
-    "subtitle": "Quản lý cấu hình AI Provider, bảo mật Vault và không gian làm việc",
+    "title": "Cài đặt",
+    "subtitle": "Cấu hình AI, bảo mật và tùy chọn hệ thống",
     "tabs": {
       "aiProvider": "AI Provider & BYOK",
       "calendar": "Lịch & Tùy chọn",
@@ -259,7 +259,8 @@
     }
   },
   "tasks": {
-    "title": "Quản Lý Công Việc & Năng Suất",
+    "title": "Công việc",
+    "subtitle": "Theo dõi tiến độ và hiệu suất làm việc",
     "newTask": "Nhiệm vụ mới",
     "productivity": "Năng suất",
     "tags": "Nhãn (Tags)",
@@ -372,8 +373,8 @@
     }
   },
   "calendar": {
-    "title": "Lịch Biểu & Xếp Lịch Tự Động",
-    "subtitle": "Quản lý sự kiện, cuộc họp và tối ưu thời gian bằng AI",
+    "title": "Lịch biểu",
+    "subtitle": "Quản lý sự kiện và lịch trình công việc",
     "today": "Hôm nay",
     "prev": "Trước",
     "next": "Tiếp theo",
@@ -544,8 +545,8 @@
     }
   },
   "notes": {
-    "title": "Kho Ghi Chú & Tài Liệu",
-    "subtitle": "Soạn thảo Markdown chuyên sâu, lưu trữ và liên kết ngữ cảnh công việc",
+    "title": "Ghi chú",
+    "subtitle": "Soạn thảo và quản lý tài liệu",
     "newNote": "Tạo ghi chú mới",
     "searchPlaceholder": "Tìm kiếm tiêu đề hoặc nội dung...",
     "allNotes": "Tất cả",
@@ -598,8 +599,8 @@
     }
   },
   "memory": {
-    "title": "Kho Ký Ức Dài Hạn & Lịch Sử Trợ Lý",
-    "subtitle": "Quản lý dữ liệu ghi nhớ của AI và kiểm toán các lượt suy luận hội thoại",
+    "title": "Ký ức AI",
+    "subtitle": "Bộ nhớ dài hạn và lịch sử kiểm toán",
     "tabs": {
       "vault": "Kho Ký Ức (Memory Vault)",
       "audit": "Kiểm Toán Hội Thoại (Turns Audit)"

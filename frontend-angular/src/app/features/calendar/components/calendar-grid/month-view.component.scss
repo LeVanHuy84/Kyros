@@ -76,11 +76,6 @@
   &.is-today {
     background-color: var(--color-primary-subtle);
   }
-
-  &.is-selected:not(.is-today) {
-    outline: 2px solid var(--color-primary);
-    outline-offset: -2px;
-  }
 }
 
 .cell-top {

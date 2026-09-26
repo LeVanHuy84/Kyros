@@ -571,11 +571,22 @@ export class CalendarService {
 
   // Navigation helpers
   nextPeriod(): void {
-    const d = new Date(this.selectedDate());
+    let d = new Date(this.selectedDate());
     const mode = this.viewMode();
 
     if (mode === 'month') {
-      d.setMonth(d.getMonth() + 1);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const today = new Date();
+      const targetDate = new Date(year, month + 1, 1);
+      if (
+        today.getFullYear() === targetDate.getFullYear() &&
+        today.getMonth() === targetDate.getMonth()
+      ) {
+        d = new Date(today);
+      } else {
+        d = targetDate;
+      }
     } else if (mode === 'week') {
       d.setDate(d.getDate() + 7);
     } else if (mode === 'day') {
@@ -588,11 +599,22 @@ export class CalendarService {
   }
 
   prevPeriod(): void {
-    const d = new Date(this.selectedDate());
+    let d = new Date(this.selectedDate());
     const mode = this.viewMode();
 
     if (mode === 'month') {
-      d.setMonth(d.getMonth() - 1);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const today = new Date();
+      const targetDate = new Date(year, month - 1, 1);
+      if (
+        today.getFullYear() === targetDate.getFullYear() &&
+        today.getMonth() === targetDate.getMonth()
+      ) {
+        d = new Date(today);
+      } else {
+        d = targetDate;
+      }
     } else if (mode === 'week') {
       d.setDate(d.getDate() - 7);
     } else if (mode === 'day') {

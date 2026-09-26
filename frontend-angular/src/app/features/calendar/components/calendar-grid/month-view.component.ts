@@ -84,7 +84,7 @@ export class MonthViewComponent {
         dayNumber: cellDate.getDate(),
         isCurrentMonth: cellDate.getMonth() === month,
         isToday: cellDateStr === todayStr,
-        isSelected: cellDateStr === selStr,
+        isSelected: false,
         events: dayEvents,
       });
     }

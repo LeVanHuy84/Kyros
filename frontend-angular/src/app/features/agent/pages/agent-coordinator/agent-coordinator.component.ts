@@ -83,10 +83,6 @@ export class AgentCoordinatorComponent implements OnInit {
     this.showBriefingModal.set(true);
   }
 
-  openByokFromMenu(): void {
-    this.navigateToFullSettings();
-  }
-
   navigateToFullSettings(): void {
     this.isSettingsMenuOpen.set(false);
     this.router.navigate(['/settings'], { queryParams: { tab: 'ai' } });

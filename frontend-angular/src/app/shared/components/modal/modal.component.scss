@@ -28,6 +28,7 @@
   justify-content: space-between;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 
   h3 {
     font-size: 17px;
@@ -57,6 +58,7 @@
   overflow-x: hidden;
   flex: 1;
   min-width: 0;
+  min-height: 0;
 }
 
 .modal-footer {
@@ -67,4 +69,5 @@
   padding: 14px 20px;
   border-top: 1px solid var(--border-subtle);
   background-color: var(--bg-surface-secondary);
+  flex-shrink: 0;
 }

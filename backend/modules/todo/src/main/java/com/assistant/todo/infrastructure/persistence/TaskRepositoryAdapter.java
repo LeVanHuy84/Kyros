@@ -31,9 +31,10 @@ public class TaskRepositoryAdapter implements TaskRepository {
   }
 
   @Override
-  public void save(Task task) {
+  public Task save(Task task) {
     TaskJpaEntity jpa = toJpa(task);
-    repository.save(jpa);
+    TaskJpaEntity saved = repository.saveAndFlush(jpa);
+    return toDomain(saved);
   }
 
   @Override

@@ -93,7 +93,7 @@
     }
   </div>
 
-  <div footer class="modal-footer-actions">
+  <div slot="footer" class="modal-footer-actions">
     @if (scheduledResults() !== null) {
       <app-button variant="primary" (buttonClick)="onResetAndClose()">
         {{ languageService.t().calendar.autoScheduleModal.close }}

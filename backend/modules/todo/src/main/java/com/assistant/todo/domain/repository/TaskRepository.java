@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface TaskRepository {
   Optional<Task> findById(TaskId taskId, WorkspaceId workspaceId);
 
-  void save(Task task);
+  Task save(Task task);
 
   List<Task> findActiveRecurrenceTemplates();
 

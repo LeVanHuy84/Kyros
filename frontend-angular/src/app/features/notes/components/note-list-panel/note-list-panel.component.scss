@@ -38,12 +38,20 @@
 .title-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
   flex: 1;
 
-  .title-icon {
+  .title-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-primary-subtle);
     color: var(--color-primary);
+    border: 1px solid var(--border-subtle);
     flex-shrink: 0;
   }
 
@@ -124,14 +132,16 @@
 
   .search-input {
     width: 100%;
+    height: 32px;
     padding: 6px 28px 6px 28px;
     font-size: 12.5px;
     color: var(--text-primary);
     background-color: var(--bg-surface);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     outline: none;
     transition: all var(--transition-fast);
+    box-sizing: border-box;
 
     &::placeholder {
       color: var(--text-muted);
@@ -275,13 +285,15 @@
   padding: 10px 12px;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
 
   &:hover {
     background-color: var(--bg-hover);
     border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
     transform: translateY(-1px);
   }
 

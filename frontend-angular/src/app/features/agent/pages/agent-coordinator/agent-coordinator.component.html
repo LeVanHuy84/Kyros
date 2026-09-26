@@ -33,7 +33,15 @@
           <span class="btn-label">{{ languageService.t().agent.history }}</span>
         </button>
 
-        <span class="brand-title">{{ languageService.t().agent.brandTitle }}</span>
+        <div class="header-brand-group">
+          <div class="header-icon-wrap">
+            <app-icon name="bot" [size]="15"></app-icon>
+          </div>
+          <div class="brand-text-block">
+            <span class="brand-title">{{ languageService.t().agent.brandTitle }}</span>
+            <span class="brand-subtitle">{{ languageService.t().agent.subtitle }}</span>
+          </div>
+        </div>
       </div>
 
       <div class="header-right">
@@ -73,20 +81,6 @@
                 <div class="item-text">
                   <span class="item-name">{{ languageService.t().agent.briefingBtn }}</span>
                   <span class="item-desc">{{ languageService.t().agent.briefingTooltip }}</span>
-                </div>
-              </button>
-
-              <!-- BYOK Provider & Key Item -->
-              <button
-                type="button"
-                class="popover-item"
-                (click)="openByokFromMenu()"
-                role="menuitem"
-              >
-                <app-icon name="lock" [size]="15" class="item-icon byok"></app-icon>
-                <div class="item-text">
-                  <span class="item-name">{{ languageService.t().agent.byokBtn }}</span>
-                  <span class="item-desc">{{ languageService.t().agent.byokTooltip }}</span>
                 </div>
               </button>
 

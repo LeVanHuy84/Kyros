@@ -11,8 +11,16 @@
   flex-direction: column;
   gap: 16px;
   min-height: 100%;
-  padding: 16px 24px 32px 24px;
+  padding: 20px 24px 36px 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
   box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 16px 14px 28px 14px;
+    gap: 12px;
+  }
 }
 
 .calendar-header-banner {
@@ -21,25 +29,46 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-}
 
-.title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 
-  .page-title {
-    font-size: 1.45rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    margin: 0;
-    letter-spacing: -0.02em;
-  }
+    .header-icon-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      background-color: var(--color-primary-subtle);
+      color: var(--color-primary);
+      border: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
 
-  .page-subtitle {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin: 0;
+    .title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      .page-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+        letter-spacing: -0.02em;
+        line-height: 1.3;
+      }
+
+      .page-subtitle {
+        font-size: 12.5px;
+        color: var(--text-secondary);
+        margin: 0;
+        line-height: 1.4;
+      }
+    }
   }
 }
 
@@ -57,26 +86,32 @@
 
   .search-icon {
     position: absolute;
-    left: 12px;
+    left: 10px;
     color: var(--text-muted);
     pointer-events: none;
   }
 
   .search-input {
-    padding: 8px 14px 8px 34px;
-    border-radius: var(--radius-sm);
+    height: 32px;
+    padding: 6px 12px 6px 32px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-subtle);
-    background-color: var(--bg-surface);
+    background-color: var(--bg-surface-secondary);
     color: var(--text-primary);
-    font-size: 0.85rem;
+    font-size: 12.5px;
     width: 200px;
     transition: all var(--transition-fast);
+    box-sizing: border-box;
+
+    &:hover {
+      border-color: var(--border-strong);
+    }
 
     &:focus {
       outline: none;
       border-color: var(--color-primary);
-      width: 240px;
-      box-shadow: 0 0 0 3px var(--color-primary-subtle);
+      width: 230px;
+      box-shadow: 0 0 0 2px var(--color-primary-subtle);
     }
   }
 }

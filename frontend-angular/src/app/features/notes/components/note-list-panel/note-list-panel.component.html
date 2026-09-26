@@ -3,7 +3,9 @@
   <div class="panel-top">
     <div class="top-title-row">
       <div class="title-group" [title]="languageService.t().notes.title">
-        <app-icon name="file-text" [size]="16" class="title-icon"></app-icon>
+        <div class="title-icon-wrap">
+          <app-icon name="file-text" [size]="15" class="title-icon"></app-icon>
+        </div>
         <h3 class="panel-heading">{{ languageService.t().notes.title }}</h3>
       </div>
       <div class="top-actions">

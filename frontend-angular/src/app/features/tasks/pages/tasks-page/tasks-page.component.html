@@ -2,15 +2,21 @@
   <!-- Top Header & Action Bar -->
   <header class="tasks-header">
     <div class="header-left">
+      <div class="header-icon-wrap">
+        <app-icon name="check-square" [size]="20"></app-icon>
+      </div>
       <div class="header-title-group">
-        <h2>{{ languageService.t().tasks.title }}</h2>
-        <div class="header-metrics-badges">
-          <span class="badge active">{{ tasksService.taskCounts().active }} {{ languageService.t().tasks.active }}</span>
-          <span class="badge completed">{{ tasksService.taskCounts().completed }} {{ languageService.t().tasks.completed }}</span>
-          @if (tasksService.taskCounts().overdue > 0) {
-            <span class="badge overdue">{{ tasksService.taskCounts().overdue }} {{ languageService.t().tasks.overdue }}</span>
-          }
+        <div class="title-row">
+          <h2>{{ languageService.t().tasks.title }}</h2>
+          <div class="header-metrics-badges">
+            <span class="badge active">{{ tasksService.taskCounts().active }} {{ languageService.t().tasks.active }}</span>
+            <span class="badge completed">{{ tasksService.taskCounts().completed }} {{ languageService.t().tasks.completed }}</span>
+            @if (tasksService.taskCounts().overdue > 0) {
+              <span class="badge overdue">{{ tasksService.taskCounts().overdue }} {{ languageService.t().tasks.overdue }}</span>
+            }
+          </div>
         </div>
+        <p class="header-subtitle">{{ languageService.t().tasks.subtitle }}</p>
       </div>
     </div>
 

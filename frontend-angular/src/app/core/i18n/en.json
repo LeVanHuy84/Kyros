@@ -96,7 +96,7 @@
     "settingsMenuTitle": "Agent Settings & Tools",
     "streamingToggleLabel": "SSE Realtime Streaming",
     "fullSettingsLink": "Full System Settings",
-    "subtitle": "Conversational & Multi-tool Coordinator",
+    "subtitle": "Conversational assistant & coordinator",
     "newChat": "New Conversation",
     "history": "Chat History",
     "noHistory": "No conversations yet",
@@ -155,8 +155,8 @@
     ]
   },
   "settings": {
-    "title": "System Settings",
-    "subtitle": "Manage AI Provider configs, Vault security, and workspace preferences",
+    "title": "Settings",
+    "subtitle": "AI configuration, security, and workspace preferences",
     "tabs": {
       "aiProvider": "AI Provider & BYOK",
       "calendar": "Calendar & Preferences",
@@ -259,7 +259,8 @@
     }
   },
   "tasks": {
-    "title": "Smart Tasks & Productivity",
+    "title": "Tasks",
+    "subtitle": "Track progress and optimize workflow",
     "newTask": "New Task",
     "productivity": "Productivity",
     "tags": "Tags",
@@ -372,8 +373,8 @@
     }
   },
   "calendar": {
-    "title": "Calendar & Smart Scheduling",
-    "subtitle": "Manage events, meetings, and optimize your executive schedule with AI",
+    "title": "Calendar",
+    "subtitle": "Manage events and schedule",
     "today": "Today",
     "prev": "Prev",
     "next": "Next",
@@ -544,8 +545,8 @@
     }
   },
   "notes": {
-    "title": "Notes & Documents Vault",
-    "subtitle": "Advanced Markdown editor, document knowledge base, and task context linking",
+    "title": "Notes",
+    "subtitle": "Document editing and knowledge base",
     "newNote": "Create New Note",
     "searchPlaceholder": "Search note title or content...",
     "allNotes": "All Notes",
@@ -598,8 +599,8 @@
     }
   },
   "memory": {
-    "title": "Long-term Memory & Agent Audit",
-    "subtitle": "Inspect AI learned facts, memory privacy, and audit reasoning turn logs",
+    "title": "AI Memory",
+    "subtitle": "Long-term memory and conversation audit",
     "tabs": {
       "vault": "Memory Vault",
       "audit": "Conversations & Turns Audit"
