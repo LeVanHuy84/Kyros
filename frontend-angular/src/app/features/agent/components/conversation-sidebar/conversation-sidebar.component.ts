@@ -37,7 +37,13 @@ export class ConversationSidebarComponent {
     ) {
       return this.languageService.t().agent.defaultConvTitle;
     }
-    return rawTitle;
+    const clean = rawTitle
+      .replace(
+        /^\/(event|task|todo|note|notes|memory|rule|rules|vault|recall|find|search|list|help)\s*/i,
+        ''
+      )
+      .trim();
+    return clean.length > 0 ? clean : rawTitle;
   }
 
   onDelete(event: MouseEvent, id: string): void {

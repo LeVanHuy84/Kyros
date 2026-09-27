@@ -1,0 +1,47 @@
+<div class="slash-command-popover animate-fade-in-up">
+  <div class="popover-header">
+    <div class="header-left">
+      <app-icon name="sparkles" [size]="14" class="header-icon"></app-icon>
+      <span class="header-title">Lệnh nhanh (Slash Commands)</span>
+    </div>
+    <span class="header-badge">Enter / Tab để chọn</span>
+  </div>
+
+  <div class="commands-list custom-scrollbar">
+    @for (cmd of filteredCommands(); track cmd.name; let idx = $index) {
+      <button
+        type="button"
+        class="command-item"
+        [class.selected]="idx === selectedIndex()"
+        (mouseenter)="selectedIndex.set(idx)"
+        (click)="select(cmd)"
+      >
+        <div class="cmd-icon-box">
+          <app-icon [name]="cmd.icon" [size]="15"></app-icon>
+        </div>
+        <div class="cmd-info">
+          <div class="cmd-name-row">
+            <span class="cmd-name">{{ cmd.name }}</span>
+            <span class="cmd-syntax">{{ cmd.syntax }}</span>
+          </div>
+          <p class="cmd-desc">
+            {{ languageService.currentLanguage() === 'vi' ? cmd.descriptionVi : cmd.descriptionEn }}
+          </p>
+        </div>
+      </button>
+    }
+
+    @if (filteredCommands().length === 0) {
+      <div class="empty-state">
+        <app-icon name="info" [size]="16"></app-icon>
+        <span>Không tìm thấy lệnh nào phù hợp với "{{ filterQuery() }}"</span>
+      </div>
+    }
+  </div>
+
+  <div class="popover-footer">
+    <span class="footer-tip">
+      <kbd>↑</kbd> <kbd>↓</kbd> điều hướng • <kbd>Enter</kbd> áp dụng • <kbd>Esc</kbd> đóng
+    </span>
+  </div>
+</div>

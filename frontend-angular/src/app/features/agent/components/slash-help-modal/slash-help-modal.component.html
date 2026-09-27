@@ -1,0 +1,66 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="languageService.currentLanguage() === 'vi' ? 'Bảng Tra Cứu Lệnh Nhanh (Slash Commands)' : 'Slash Commands Cheatsheet'"
+  maxWidth="640px"
+  [showFooter]="true"
+  (close)="closeModal.emit()"
+>
+  <div class="help-modal-body">
+    <div class="intro-banner">
+      <app-icon name="sparkles" [size]="18" class="banner-icon"></app-icon>
+      <div class="banner-text">
+        <p class="banner-title">
+          {{ languageService.currentLanguage() === 'vi' ? 'Điều phối AI nhanh chóng & chính xác 100%' : 'Fast & 100% deterministic AI orchestration' }}
+        </p>
+        <p class="banner-desc">
+          {{ languageService.currentLanguage() === 'vi' 
+            ? 'Gõ ký tự "/" trong ô chat để mở menu gợi ý lệnh, hoặc bấm nút "Thử ngay" để điền cú pháp.' 
+            : 'Type "/" in the chat input to trigger command suggestions, or click "Try" to insert syntax.' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="commands-grid">
+      @for (cmd of commands; track cmd.name) {
+        <div class="cmd-card">
+          <div class="cmd-card-header">
+            <div class="cmd-badge-group">
+              <div class="cmd-icon-box">
+                <app-icon [name]="cmd.icon" [size]="15"></app-icon>
+              </div>
+              <span class="cmd-badge">{{ cmd.name }}</span>
+            </div>
+            @if (cmd.name !== '/help') {
+              <button type="button" class="try-btn" (click)="onSelect(cmd)">
+                {{ languageService.currentLanguage() === 'vi' ? 'Thử ngay' : 'Try' }}
+                <app-icon name="arrow-right" [size]="12"></app-icon>
+              </button>
+            }
+          </div>
+
+          <p class="cmd-card-desc">
+            {{ languageService.currentLanguage() === 'vi' ? cmd.descriptionVi : cmd.descriptionEn }}
+          </p>
+
+          <div class="cmd-card-syntax">
+            <span class="syntax-label">Cú pháp:</span>
+            <code class="syntax-code">{{ cmd.syntax }}</code>
+          </div>
+
+          @if (cmd.example) {
+            <div class="cmd-card-example">
+              <span class="example-label">Ví dụ:</span>
+              <span class="example-val">{{ cmd.example }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div modal-footer class="modal-footer-actions">
+    <button type="button" class="btn-close" (click)="closeModal.emit()">
+      {{ languageService.currentLanguage() === 'vi' ? 'Đóng' : 'Close' }}
+    </button>
+  </div>
+</app-modal>

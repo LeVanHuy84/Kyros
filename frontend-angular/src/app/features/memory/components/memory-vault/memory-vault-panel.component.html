@@ -1,4 +1,54 @@
 <div class="memory-vault-container">
+  <!-- Category Navigation Tabs -->
+  <div class="vault-category-tabs">
+    <button
+      type="button"
+      class="cat-tab-btn"
+      [class.active]="selectedCategory() === 'all'"
+      (click)="setCategory('all')"
+    >
+      <app-icon name="layout-list" [size]="14"></app-icon>
+      <span>{{ languageService.t().memory.vault.categories.all }}</span>
+      <span class="tab-count">({{ memoryService.memoryEntries().length }})</span>
+    </button>
+    <button
+      type="button"
+      class="cat-tab-btn"
+      [class.active]="selectedCategory() === 'USER_PREFERENCE'"
+      (click)="setCategory('USER_PREFERENCE')"
+    >
+      <app-icon name="user" [size]="14"></app-icon>
+      <span>{{ languageService.t().memory.vault.categories.preferences }}</span>
+    </button>
+    <button
+      type="button"
+      class="cat-tab-btn"
+      [class.active]="selectedCategory() === 'WORK_RULE'"
+      (click)="setCategory('WORK_RULE')"
+    >
+      <app-icon name="shield-check" [size]="14"></app-icon>
+      <span>{{ languageService.t().memory.vault.categories.rules }}</span>
+    </button>
+    <button
+      type="button"
+      class="cat-tab-btn"
+      [class.active]="selectedCategory() === 'PROJECT_CONTEXT'"
+      (click)="setCategory('PROJECT_CONTEXT')"
+    >
+      <app-icon name="file-text" [size]="14"></app-icon>
+      <span>{{ languageService.t().memory.vault.categories.projects }}</span>
+    </button>
+    <button
+      type="button"
+      class="cat-tab-btn"
+      [class.active]="selectedCategory() === 'CONSTRAINT'"
+      (click)="setCategory('CONSTRAINT')"
+    >
+      <app-icon name="clock" [size]="14"></app-icon>
+      <span>{{ languageService.t().memory.vault.categories.constraints }}</span>
+    </button>
+  </div>
+
   <!-- Unified Toolbar: Search + Count + Add Memory -->
   <div class="vault-toolbar">
     <div class="search-wrap">
@@ -25,7 +75,7 @@
 
     <div class="toolbar-actions">
       <span class="entry-count-badge">
-        {{ memoryService.memoryEntries().length }} {{ languageService.currentLanguage() === 'vi' ? 'ký ức' : (memoryService.memoryEntries().length === 1 ? 'memory' : 'memories') }}
+        {{ filteredEntries().length }} {{ languageService.currentLanguage() === 'vi' ? 'ký ức' : (filteredEntries().length === 1 ? 'memory' : 'memories') }}
       </span>
 
       <button type="button" class="add-memory-btn" (click)="openAddModal()">
@@ -42,15 +92,19 @@
         <app-icon name="loader" [size]="24" class="spin-icon"></app-icon>
         <span>{{ languageService.t().common.loading }}</span>
       </div>
-    } @else if (memoryService.memoryEntries().length > 0) {
+    } @else if (filteredEntries().length > 0) {
       <div class="entries-grid">
-        @for (entry of memoryService.memoryEntries(); track entry.id) {
+        @for (entry of filteredEntries(); track entry.id) {
           <article class="memory-card">
-            <!-- Top Card Header with Confidence Badge & Actions -->
+            <!-- Top Card Header with Category Tag, Source Badge & Actions -->
             <div class="card-header">
-              <div class="confidence-pill" [class.high]="(entry.confidenceScore || 1) >= 0.8" [class.medium]="(entry.confidenceScore || 1) < 0.8 && (entry.confidenceScore || 1) >= 0.5">
-                <app-icon name="brain" [size]="12"></app-icon>
-                <span>{{ languageService.t().memory.vault.confidenceLabel }}: {{ formatConfidence(entry.confidenceScore) }}</span>
+              <div class="badges-row">
+                <span class="category-pill" [attr.data-cat]="extractCategory(entry.content)">
+                  {{ getCategoryBadgeLabel(extractCategory(entry.content)) }}
+                </span>
+                <span class="source-badge" [class.auto]="isAutoSynthesized(entry)">
+                  {{ isAutoSynthesized(entry) ? languageService.t().memory.vault.sourceAuto : languageService.t().memory.vault.sourceManual }}
+                </span>
               </div>
 
               <div class="card-actions">
@@ -76,10 +130,23 @@
             </div>
 
             <!-- Content -->
-            <p class="memory-content">{{ entry.content }}</p>
+            <p class="memory-content">{{ cleanFactContent(entry.content) }}</p>
 
-            <!-- Card Footer -->
+            <!-- Card Footer with Confidence Meter & Timestamp -->
             <div class="card-footer">
+              <div class="confidence-meter-wrap" [title]="languageService.t().memory.vault.confidenceLabel + ': ' + formatConfidence(entry.confidenceScore)">
+                <div class="meter-bar-track">
+                  <div
+                    class="meter-bar-fill"
+                    [class.high]="(entry.confidenceScore || 1) >= 0.9"
+                    [class.medium]="(entry.confidenceScore || 1) < 0.9 && (entry.confidenceScore || 1) >= 0.7"
+                    [class.low]="(entry.confidenceScore || 1) < 0.7"
+                    [style.width]="formatConfidence(entry.confidenceScore)"
+                  ></div>
+                </div>
+                <span class="confidence-text">{{ formatConfidence(entry.confidenceScore) }}</span>
+              </div>
+
               <span class="date-text">
                 <app-icon name="clock" [size]="11"></app-icon>
                 {{ formatDate(entry.updatedAt || entry.createdAt) }}
@@ -119,6 +186,21 @@
         </div>
 
         <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">{{ languageService.t().memory.vault.categoryLabel }}</label>
+            <select
+              class="form-select"
+              [ngModel]="formCategory()"
+              (ngModelChange)="formCategory.set($event)"
+            >
+              <option value="USER_PREFERENCE">{{ languageService.t().memory.vault.categories.preferences }}</option>
+              <option value="WORK_RULE">{{ languageService.t().memory.vault.categories.rules }}</option>
+              <option value="PROJECT_CONTEXT">{{ languageService.t().memory.vault.categories.projects }}</option>
+              <option value="CONSTRAINT">{{ languageService.t().memory.vault.categories.constraints }}</option>
+              <option value="GENERAL">{{ languageService.t().memory.vault.categories.general }}</option>
+            </select>
+          </div>
+
           <div class="form-group">
             <label class="form-label">{{ languageService.t().memory.vault.contentLabel }}</label>
             <textarea

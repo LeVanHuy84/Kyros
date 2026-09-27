@@ -236,14 +236,29 @@ export class AgentChatService {
     this.selectedNotes.set([]);
     this.isThinking.set(true);
 
-    // Persist user turn
+    // Update local conversation title if it is default
     if (currentConvId) {
-      this.http
-        .post(`/api/v1/workspaces/${wsId}/conversations/${currentConvId}/turns`, {
-          senderRole: 'USER',
-          messageContent: userText,
-        })
-        .subscribe();
+      const convList = this.conversations();
+      const targetConv = convList.find((c) => c.id === currentConvId);
+      if (
+        targetConv &&
+        (targetConv.title === 'Cuộc trò chuyện mới' ||
+          targetConv.title === 'New Conversation' ||
+          !targetConv.title)
+      ) {
+        let cleanPrompt = userText
+          .replace(
+            /^\/(event|task|todo|note|notes|memory|rule|rules|vault|recall|find|search|list|help)\s*/i,
+            ''
+          )
+          .trim();
+        if (!cleanPrompt) cleanPrompt = userText;
+        const generatedTitle =
+          cleanPrompt.length > 30 ? cleanPrompt.substring(0, 30) + '...' : cleanPrompt;
+        this.conversations.set(
+          convList.map((c) => (c.id === currentConvId ? { ...c, title: generatedTitle } : c))
+        );
+      }
     }
 
     const token = localStorage.getItem('kyros_access_token');
@@ -287,6 +302,50 @@ export class AgentChatService {
         let buffer = '';
         let fullAgentResponse = '';
         let currentEvent = 'message';
+        let currentDataLines: string[] = [];
+
+        const dispatchSseEvent = (event: string, dataLines: string[]) => {
+          if (dataLines.length === 0) return;
+          const rawData = dataLines.join('\n');
+          let textPayload = rawData;
+          try {
+            const parsed = JSON.parse(rawData);
+            if (typeof parsed === 'string') {
+              textPayload = parsed;
+            } else if (parsed && typeof parsed.text === 'string') {
+              textPayload = parsed.text;
+            } else if (parsed && typeof parsed.content === 'string') {
+              textPayload = parsed.content;
+            } else if (parsed && typeof parsed.chunk === 'string') {
+              textPayload = parsed.chunk;
+            }
+          } catch {
+            // plain text
+          }
+
+          if (event === 'thought') {
+            this.updateLastMessageThought(textPayload.trim());
+          } else if (event === 'observation') {
+            this.updateLastMessageThought(`🔧 ${textPayload.trim()}`);
+          } else if (event === 'approval') {
+            try {
+              const data = JSON.parse(rawData.trim());
+              this.pendingApproval.set({
+                toolName: data.toolName,
+                argumentsJson: data.argumentsJson,
+                reason: data.reason,
+              });
+              fullAgentResponse += `\n\n⚠️ **[CẦN PHÊ DUYỆT]**: ${data.reason}\n*Công cụ:* \`${data.toolName}\`\n\n`;
+            } catch {
+              // ignore
+            }
+          } else if (event === 'completed') {
+            this.finishLastMessageStreaming();
+          } else if (event === 'chunk' || event === 'message') {
+            fullAgentResponse += textPayload;
+            this.updateLastMessageText(fullAgentResponse);
+          }
+        };
 
         while (true) {
           const { done, value } = await reader.read();
@@ -296,51 +355,26 @@ export class AgentChatService {
           const lines = buffer.split('\n');
           buffer = lines.pop() || '';
 
-          for (const line of lines) {
-            if (line.startsWith('event:')) {
+          for (const rawLine of lines) {
+            const line = rawLine.replace(/\r$/, '');
+            if (line === '') {
+              dispatchSseEvent(currentEvent, currentDataLines);
+              currentEvent = 'message';
+              currentDataLines = [];
+            } else if (line.startsWith('event:')) {
               currentEvent = line.slice(6).trim();
             } else if (line.startsWith('data:')) {
               const rawData = line.slice(5);
-              const dataText = rawData.startsWith(' ') ? rawData.slice(1) : rawData;
-
-              if (currentEvent === 'thought') {
-                this.updateLastMessageThought(dataText.trim());
-              } else if (currentEvent === 'observation') {
-                this.updateLastMessageThought(`🔧 ${dataText.trim()}`);
-              } else if (currentEvent === 'approval') {
-                try {
-                  const data = JSON.parse(dataText.trim());
-                  this.pendingApproval.set({
-                    toolName: data.toolName,
-                    argumentsJson: data.argumentsJson,
-                    reason: data.reason,
-                  });
-                  fullAgentResponse += `⚠️ **[CẦN PHÊ DUYỆT]**: ${data.reason}\n*Công cụ:* \`${data.toolName}\`\n\n`;
-                } catch {
-                  // ignore
-                }
-              } else if (currentEvent === 'completed') {
-                this.finishLastMessageStreaming();
-              } else if (currentEvent === 'chunk' || currentEvent === 'message') {
-                fullAgentResponse += dataText;
-                this.updateLastMessageText(fullAgentResponse);
-              }
+              currentDataLines.push(rawData);
             }
           }
         }
 
-        this.finishLastMessageStreaming();
-
-        // Persist assistant turn
-        if (currentConvId && fullAgentResponse.trim()) {
-          this.http
-            .post(`/api/v1/workspaces/${wsId}/conversations/${currentConvId}/turns`, {
-              senderRole: 'ASSISTANT',
-              messageContent: fullAgentResponse.trim(),
-            })
-            .subscribe();
+        if (currentDataLines.length > 0) {
+          dispatchSseEvent(currentEvent, currentDataLines);
         }
 
+        this.finishLastMessageStreaming();
         this.isThinking.set(false);
       } catch (err: any) {
         this.isThinking.set(false);

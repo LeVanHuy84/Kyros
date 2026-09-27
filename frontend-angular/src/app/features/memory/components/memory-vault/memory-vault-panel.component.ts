@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -12,6 +13,8 @@ import { MemoryService } from '../../services/memory.service';
 import { MemoryEntry } from '../../models/memory.models';
 import { LanguageService } from '@core/services/language.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+
+export type MemoryCategoryFilter = 'all' | 'USER_PREFERENCE' | 'WORK_RULE' | 'PROJECT_CONTEXT' | 'CONSTRAINT' | 'GENERAL';
 
 @Component({
   selector: 'app-memory-vault-panel',
@@ -25,12 +28,23 @@ export class MemoryVaultPanelComponent implements OnInit {
   readonly memoryService = inject(MemoryService);
   readonly languageService = inject(LanguageService);
 
+  readonly selectedCategory = signal<MemoryCategoryFilter>('all');
   readonly isModalOpen = signal<boolean>(false);
   readonly editingEntry = signal<MemoryEntry | null>(null);
   readonly formContent = signal<string>('');
+  readonly formCategory = signal<string>('USER_PREFERENCE');
   readonly formConfidence = signal<number>(1.0);
 
   private readonly search$ = new Subject<string>();
+
+  readonly filteredEntries = computed(() => {
+    const entries = this.memoryService.memoryEntries();
+    const category = this.selectedCategory();
+    if (category === 'all') {
+      return entries;
+    }
+    return entries.filter((e) => this.extractCategory(e.content) === category);
+  });
 
   ngOnInit(): void {
     this.memoryService.fetchMemoryEntries().subscribe();
@@ -47,16 +61,24 @@ export class MemoryVaultPanelComponent implements OnInit {
     this.search$.next(val);
   }
 
+  setCategory(cat: MemoryCategoryFilter): void {
+    this.selectedCategory.set(cat);
+  }
+
   openAddModal(): void {
     this.editingEntry.set(null);
     this.formContent.set('');
+    this.formCategory.set('USER_PREFERENCE');
     this.formConfidence.set(1.0);
     this.isModalOpen.set(true);
   }
 
   openEditModal(entry: MemoryEntry): void {
     this.editingEntry.set(entry);
-    this.formContent.set(entry.content);
+    const cat = this.extractCategory(entry.content);
+    const cleanContent = this.cleanFactContent(entry.content);
+    this.formCategory.set(cat === 'GENERAL' ? 'USER_PREFERENCE' : cat);
+    this.formContent.set(cleanContent);
     this.formConfidence.set(entry.confidenceScore || 1.0);
     this.isModalOpen.set(true);
   }
@@ -67,9 +89,11 @@ export class MemoryVaultPanelComponent implements OnInit {
   }
 
   saveEntry(): void {
-    const contentVal = this.formContent().trim();
-    if (!contentVal) return;
+    const rawContent = this.formContent().trim();
+    if (!rawContent) return;
 
+    const cat = this.formCategory();
+    const contentVal = `[${cat}] ${rawContent}`;
     const confidenceVal = Number(this.formConfidence()) || 1.0;
     const editing = this.editingEntry();
 
@@ -99,6 +123,38 @@ export class MemoryVaultPanelComponent implements OnInit {
     const confirmMsg = this.languageService.t().memory.vault.deleteConfirm;
     if (confirm(confirmMsg)) {
       this.memoryService.deleteMemoryEntry(entry.id).subscribe();
+    }
+  }
+
+  extractCategory(content: string): string {
+    if (!content) return 'GENERAL';
+    const match = content.match(/^\[([A-Z_]+)\]/);
+    return match ? match[1] : 'GENERAL';
+  }
+
+  cleanFactContent(content: string): string {
+    if (!content) return '';
+    return content.replace(/^\[[A-Z_]+\]\s*/, '');
+  }
+
+  isAutoSynthesized(entry: MemoryEntry): boolean {
+    if (!entry.content) return false;
+    return /^\[[A-Z_]+\]/.test(entry.content) || (entry.confidenceScore !== undefined && entry.confidenceScore < 1.0);
+  }
+
+  getCategoryBadgeLabel(cat: string): string {
+    const t = this.languageService.t().memory.vault.categories;
+    switch (cat) {
+      case 'USER_PREFERENCE':
+        return t.preferences;
+      case 'WORK_RULE':
+        return t.rules;
+      case 'PROJECT_CONTEXT':
+        return t.projects;
+      case 'CONSTRAINT':
+        return t.constraints;
+      default:
+        return t.general;
     }
   }
 

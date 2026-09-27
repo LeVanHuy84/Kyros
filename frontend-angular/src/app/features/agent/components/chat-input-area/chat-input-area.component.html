@@ -38,6 +38,15 @@
 
   <!-- Main Input Box -->
   <div class="input-box" [class.disabled]="disabled()" [class.thinking]="isThinking()">
+    <!-- Slash Command Picker Popover -->
+    @if (isSlashPickerOpen()) {
+      <app-slash-command-picker
+        [filterQuery]="slashQuery()"
+        (commandSelected)="onSlashCommandSelected($event)"
+        (closePicker)="isSlashPickerOpen.set(false)"
+      ></app-slash-command-picker>
+    }
+
     <!-- Note Mention Picker Popover -->
     @if (isPickerOpen()) {
       <app-note-mention-picker
@@ -47,6 +56,7 @@
     }
 
     <div class="input-left-tools">
+      <!-- Attach Notes Button -->
       <button
         type="button"
         class="tool-btn"
@@ -98,4 +108,11 @@
       </button>
     </div>
   </div>
+
+  <!-- Slash Commands Help Modal -->
+  <app-slash-help-modal
+    [isOpen]="isHelpModalOpen()"
+    (closeModal)="isHelpModalOpen.set(false)"
+    (selectCommand)="onTryCommandFromModal($event)"
+  ></app-slash-help-modal>
 </div>

@@ -102,9 +102,10 @@
     "noHistory": "Chưa có cuộc trò chuyện nào",
     "defaultConvTitle": "Cuộc trò chuyện mới",
     "deleteConvConfirm": "Bạn có chắc chắn muốn xóa cuộc trò chuyện này không?",
-    "inputPlaceholder": "Hỏi Kyros trợ lý AI điều hành (Enter để gửi, Shift+Enter để xuống dòng)...",
+    "inputPlaceholder": "Hỏi Kyros hoặc gõ / để mở bảng lệnh nhanh (/task, /event, /memory, /help)...",
     "inputDisabledPlaceholder": "Vui lòng cấu hình API Key trong Cài đặt để bắt đầu chat...",
     "send": "Gửi tin nhắn",
+    "slashCommandsBtn": "Bảng lệnh nhanh (/)",
     "streamingOn": "SSE Bật",
     "streamingOff": "REST Chuẩn",
     "briefingBtn": "Bản tin điều hành",
@@ -121,7 +122,7 @@
     "noNotesFound": "Không tìm thấy ghi chú nào phù hợp",
     "thoughtProcess": "Quá trình tư duy & Tool calls",
     "thinking": "Kyros đang suy nghĩ...",
-    "greeting": "Chào bạn! Tôi là Kyros AI Executive Assistant. Bạn muốn tôi hỗ trợ xếp lịch, quản lý task hay tổng hợp note hôm nay?",
+    "greeting": "Chào bạn! Tôi là Kyros AI Executive Assistant. Bạn có thể gõ tự nhiên hoặc dùng các lệnh nhanh như /task, /event, /memory, /help.",
     "approval": {
       "title": "Yêu cầu Xác nhận Hành động (HITL)",
       "desc": "Trợ lý AI đang yêu cầu quyền thực thi hành động nhạy cảm trên hệ thống:",
@@ -616,13 +617,24 @@
       "editTitle": "Chỉnh Sửa Mảnh Ký Ức",
       "contentLabel": "Nội dung ký ức *",
       "contentPlaceholder": "Ví dụ: Người dùng thích nhận báo cáo dạng bảng và tổng hợp ngắn gọn trước 08:30 sáng.",
+      "categoryLabel": "Danh mục phân loại",
       "confidenceScoreLabel": "Hệ số tin cậy (0.1 - 1.0)",
       "confidenceHint": "Mặc định 1.0 cho thông tin xác thực từ người dùng.",
       "saveBtn": "Lưu ký ức",
       "saving": "Đang lưu...",
       "deleteConfirm": "Bạn có chắc chắn muốn xóa vĩnh viễn mảnh ký ức này khỏi bộ nhớ của AI không?",
       "emptyTitle": "Chưa có mảnh ký ức nào",
-      "emptySubtitle": "Khi bạn trò chuyện, Trợ lý AI sẽ tự động ghi nhớ các sự thật hoặc bạn có thể thêm thủ công tại đây."
+      "emptySubtitle": "Khi bạn trò chuyện, Trợ lý AI sẽ tự động ghi nhớ các sự thật hoặc bạn có thể thêm thủ công tại đây.",
+      "sourceAuto": "🤖 Tự động tổng hợp",
+      "sourceManual": "✍️ Nhập tay",
+      "categories": {
+        "all": "Tất cả",
+        "preferences": "Thói quen / Sở thích",
+        "rules": "Quy tắc làm việc",
+        "projects": "Dự án & Cộng sự",
+        "constraints": "Hạn chế & Múi giờ",
+        "general": "Khác"
+      }
     },
     "audit": {
       "searchPlaceholder": "Tìm kiếm phiên hội thoại...",
