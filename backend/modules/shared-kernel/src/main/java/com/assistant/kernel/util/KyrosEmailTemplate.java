@@ -58,6 +58,35 @@ public final class KyrosEmailTemplate {
             + " qua email.</p></div>");
   }
 
+  public static String buildPasswordResetEmail(String resetLink) {
+    return buildEmailLayout(
+        "Reset Your Kyros Password",
+        "<h3 style='margin: 0 0 16px; color: "
+            + TEXT_MAIN
+            + "; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;'>Đặt Lại Mật Khẩu /"
+            + " Reset Password</h3><p style='margin: 0 0 24px; color: "
+            + TEXT_MAIN
+            + "; font-size: 15px; line-height: 24px;'>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản"
+            + " <strong>Kyros AI</strong> của bạn. Vui lòng nhấn vào nút bên dưới để thiết lập mật khẩu mới.</p><div"
+            + " style='text-align: center; margin: 32px 0;'>  <a href='"
+            + resetLink
+            + "' style='background: linear-gradient(135deg, "
+            + BRAND_COLOR_DARK
+            + " 0%, "
+            + BRAND_COLOR_PRIMARY
+            + " 50%, "
+            + BRAND_COLOR_LIGHT
+            + " 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; font-weight: 600;"
+            + " font-size: 15px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 12px"
+            + " rgba(45, 106, 79, 0.25);'>Đặt Lại Mật Khẩu (Reset Password)</a></div><div"
+            + " style='background-color: #fefce8; border: 1px solid #fef08a; border-radius: 8px;"
+            + " padding: 12px 16px; margin-top: 24px;'>  <p style='color: "
+            + TEXT_MUTED
+            + "; font-size: 13px; line-height: 18px; margin: 0;'>⏱️ Liên kết này có hiệu lực trong vòng"
+            + " <strong>1 giờ</strong>. Nếu bạn không yêu cầu đặt lại mật khẩu, bạn có thể yên tâm bỏ qua email này"
+            + " và tài khoản của bạn vẫn được bảo vệ an toàn.</p></div>");
+  }
+
   public static String buildNotificationEmail(
       String title, String content, String urgencyLevel, String frontendUrl) {
     String urgencyBadgeColor;
