@@ -4,6 +4,7 @@ import com.assistant.agent.domain.model.ToolExecutionResult;
 import com.assistant.agent.domain.tool.AgentToolContract;
 import com.assistant.calendar.application.port.in.CalendarPort;
 import com.assistant.calendar.domain.model.EventId;
+import com.assistant.kernel.context.WorkspaceContextHolder;
 import com.assistant.kernel.domain.WorkspaceId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
+/** Tool adapter for deleting calendar events (Human-in-the-loop protected). */
 @Component
 public class DeleteEventsToolAdapter implements AgentToolContract {
 
@@ -39,14 +41,13 @@ public class DeleteEventsToolAdapter implements AgentToolContract {
     {
       "type": "object",
       "properties": {
-        "workspaceId": { "type": "string" },
         "eventIds": {
           "type": "array",
           "items": { "type": "string" },
           "description": "Danh sách các ID sự kiện cần xóa"
-        }
-      },
-      "required": ["eventIds"]
+        },
+        "id": { "type": "string", "description": "ID nếu xóa 1 sự kiện duy nhất" }
+      }
     }
     """;
   }
@@ -61,10 +62,7 @@ public class DeleteEventsToolAdapter implements AgentToolContract {
       try {
         wsUuid = UUID.fromString(workspaceIdStr);
       } catch (Exception e) {
-        wsUuid =
-            com.assistant.kernel.context.WorkspaceContextHolder.get()
-                .map(WorkspaceId::value)
-                .orElseGet(UUID::randomUUID);
+        wsUuid = WorkspaceContextHolder.get().map(WorkspaceId::value).orElseGet(UUID::randomUUID);
       }
       WorkspaceId workspaceId = new WorkspaceId(wsUuid);
 
@@ -87,7 +85,6 @@ public class DeleteEventsToolAdapter implements AgentToolContract {
           calendarPort.deleteEvent(workspaceId, eventId);
           deletedCount++;
         } catch (Exception ignored) {
-          // skip not found
         }
       }
 

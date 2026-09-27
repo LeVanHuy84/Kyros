@@ -6,6 +6,7 @@ import com.assistant.agent.domain.model.AgentThought;
 import com.assistant.agent.domain.model.AgentTurn;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -13,10 +14,13 @@ import org.springframework.stereotype.Component;
 
 /**
  * Safety guard for intercepting destructive agent operations and enforcing Human-in-the-loop
- * approvals.
+ * approvals across Events, Tasks, Notes, and Memory.
  */
 @Component
 public class AgentSafetyGuard {
+
+  private static final Set<String> DESTRUCTIVE_TOOLS =
+      Set.of("delete_events", "delete_tasks", "delete_notes", "delete_memory");
 
   private final MessageSource messageSource;
 
@@ -33,6 +37,34 @@ public class AgentSafetyGuard {
       String argumentsJson,
       AgentTurn pendingTurn) {}
 
+  public boolean isDestructiveTool(String toolName) {
+    return toolName != null && DESTRUCTIVE_TOOLS.contains(toolName.trim().toLowerCase(Locale.ROOT));
+  }
+
+  public SafetyCheckResult evaluateToolCall(String toolName, String argumentsJson, Locale locale) {
+    if (!isDestructiveTool(toolName)) {
+      return new SafetyCheckResult(false, toolName, null, argumentsJson, null);
+    }
+
+    String approvalReason = getApprovalReasonForTool(toolName, locale);
+
+    AgentTurn pendingTurn =
+        new AgentTurn(
+            1,
+            new AgentThought(
+                msg(
+                    "agent.thought.dangerous_action_detected",
+                    new Object[] {toolName},
+                    "Dangerous operation detected (" + toolName + "), pausing for user approval.",
+                    locale)),
+            new AgentAction(toolName, argumentsJson),
+            msg("agent.thought.waiting_approval", null, "Waiting for user confirmation.", locale),
+            true,
+            approvalReason);
+
+    return new SafetyCheckResult(true, toolName, approvalReason, argumentsJson, pendingTurn);
+  }
+
   public SafetyCheckResult evaluatePrompt(UUID workspaceId, String prompt, Locale locale) {
     String lowerPrompt = prompt.toLowerCase(Locale.ROOT);
     boolean isDelete =
@@ -48,19 +80,26 @@ public class AgentSafetyGuard {
       return new SafetyCheckResult(false, null, null, null, null);
     }
 
-    String toolName =
-        (lowerPrompt.contains("lịch")
-                || lowerPrompt.contains("event")
-                || lowerPrompt.contains("meeting"))
-            ? "delete_events"
-            : "delete_tasks";
+    String toolName;
+    if (lowerPrompt.contains("ghi chú")
+        || lowerPrompt.contains("note")
+        || lowerPrompt.contains("bản nháp")) {
+      toolName = "delete_notes";
+    } else if (lowerPrompt.contains("trí nhớ")
+        || lowerPrompt.contains("memory")
+        || lowerPrompt.contains("thói quen")
+        || lowerPrompt.contains("vault")) {
+      toolName = "delete_memory";
+    } else if (lowerPrompt.contains("lịch")
+        || lowerPrompt.contains("event")
+        || lowerPrompt.contains("meeting")
+        || lowerPrompt.contains("họp")) {
+      toolName = "delete_events";
+    } else {
+      toolName = "delete_tasks";
+    }
 
-    String approvalReason =
-        msg(
-            "agent.approval.delete_requires_confirmation",
-            null,
-            "Destructive deletion operation requires user confirmation.",
-            locale);
+    String approvalReason = getApprovalReasonForTool(toolName, locale);
     String argsJson =
         String.format("{\"workspaceId\":\"%s\",\"target\":\"%s\"}", workspaceId, prompt);
 
@@ -79,6 +118,26 @@ public class AgentSafetyGuard {
             approvalReason);
 
     return new SafetyCheckResult(true, toolName, approvalReason, argsJson, pendingTurn);
+  }
+
+  private String getApprovalReasonForTool(String toolName, Locale locale) {
+    String itemType =
+        switch (toolName) {
+          case "delete_events" -> "Lịch hẹn / Sự kiện";
+          case "delete_notes" -> "Ghi chú";
+          case "delete_memory" -> "Trí nhớ / Memory Vault";
+          default -> "Công việc / Tasks";
+        };
+
+    return msg(
+        "agent.approval.delete_requires_confirmation",
+        new Object[] {itemType},
+        "Xác nhận an toàn: Thao tác xóa "
+            + itemType
+            + " ("
+            + toolName
+            + ") yêu cầu bạn xác nhận trước khi thực hiện.",
+        locale);
   }
 
   public AgentExecutionResult createApprovalResult(SafetyCheckResult safetyResult) {

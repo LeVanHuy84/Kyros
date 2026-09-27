@@ -266,8 +266,12 @@ public final class EnglishDateTimeParser {
     String cleaned =
         input
             .replaceAll(
+                "(?i)^/(event|task|todo|note|notes|memory|rule|rules|vault|recall|find|search|list|help)\\s*",
+                "")
+            .replaceAll(
                 "(?i)^(schedule|plan|book|remind me to|create task|add task|create|add|please|help"
-                    + " me)\\s*",
+                    + " me|i need to schedule|i need to create|i want to schedule|i want to"
+                    + " create)\\s*",
                 "")
             .replaceAll("(?i)(at|from|to|until)\\s*\\d{1,2}(?::\\d{2})?\\s*(?:am|pm)?", "")
             .replaceAll(
@@ -280,6 +284,7 @@ public final class EnglishDateTimeParser {
                     + " week|\\s*this week)?",
                 "")
             .replaceAll("(?i)(for \\d+ (?:minutes|mins|min|m|hours|hour|hrs|hr|h))", "")
+            .replaceAll("(?i)(,\\s*please|\\s*please|,\\s*for me|\\s*for me)$", "")
             .replaceAll("\\s+", " ")
             .trim();
     return cleaned.isEmpty() ? input : cleaned;

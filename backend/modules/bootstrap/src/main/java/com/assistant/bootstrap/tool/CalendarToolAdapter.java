@@ -4,6 +4,7 @@ import com.assistant.agent.domain.model.ToolExecutionResult;
 import com.assistant.agent.domain.tool.AgentToolContract;
 import com.assistant.calendar.application.port.in.CalendarPort;
 import com.assistant.calendar.domain.model.EventId;
+import com.assistant.kernel.context.WorkspaceContextHolder;
 import com.assistant.kernel.domain.WorkspaceId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
+/** Token-efficient Calendar tool adapter for creating or updating events. */
 @Component
 public class CalendarToolAdapter implements AgentToolContract {
 
@@ -31,8 +33,7 @@ public class CalendarToolAdapter implements AgentToolContract {
 
   @Override
   public String getDescription() {
-    return "Create or update one or more calendar events. If 'id' is provided, update existing"
-        + " event; otherwise create a new event.";
+    return "Create or update one or more calendar events with specific start and end times.";
   }
 
   @Override
@@ -41,15 +42,14 @@ public class CalendarToolAdapter implements AgentToolContract {
     {
       "type": "object",
       "properties": {
-        "workspaceId": { "type": "string" },
         "events": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "id": { "type": "string", "description": "Event ID if updating an existing event" },
+              "id": { "type": "string", "description": "Optional event ID if updating" },
               "title": { "type": "string", "description": "Event title" },
-              "description": { "type": "string", "description": "Detailed description of the event" },
+              "description": { "type": "string", "description": "Detailed description" },
               "startTime": { "type": "string", "description": "Start time in ISO-8601 format" },
               "endTime": { "type": "string", "description": "End time in ISO-8601 format" }
             },
@@ -78,10 +78,7 @@ public class CalendarToolAdapter implements AgentToolContract {
       try {
         wsUuid = UUID.fromString(workspaceIdStr);
       } catch (Exception e) {
-        wsUuid =
-            com.assistant.kernel.context.WorkspaceContextHolder.get()
-                .map(WorkspaceId::value)
-                .orElseGet(UUID::randomUUID);
+        wsUuid = WorkspaceContextHolder.get().map(WorkspaceId::value).orElseGet(UUID::randomUUID);
       }
       WorkspaceId workspaceId = new WorkspaceId(wsUuid);
       String dummyUserId = UUID.randomUUID().toString();

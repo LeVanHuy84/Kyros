@@ -52,6 +52,7 @@ public class ReActOrchestratorService {
   private final AgentSystemPromptBuilder promptBuilder;
   private final AgentContextAugmenter contextAugmenter;
   private final AgentRulePlanner rulePlanner;
+  private final com.assistant.memory.application.ports.in.CoreProfilePort coreProfilePort;
 
   @org.springframework.beans.factory.annotation.Autowired
   public ReActOrchestratorService(
@@ -71,7 +72,9 @@ public class ReActOrchestratorService {
       @org.springframework.beans.factory.annotation.Autowired(required = false)
           AgentContextAugmenter contextAugmenter,
       @org.springframework.beans.factory.annotation.Autowired(required = false)
-          AgentRulePlanner rulePlanner) {
+          AgentRulePlanner rulePlanner,
+      @org.springframework.beans.factory.annotation.Autowired(required = false)
+          com.assistant.memory.application.ports.in.CoreProfilePort coreProfilePort) {
     this.toolList = toolContracts != null ? toolContracts : List.of();
     this.toolRegistry =
         this.toolList.stream()
@@ -86,6 +89,7 @@ public class ReActOrchestratorService {
     this.contextAugmenter =
         contextAugmenter != null ? contextAugmenter : new AgentContextAugmenter(noteRepository);
     this.rulePlanner = rulePlanner != null ? rulePlanner : new AgentRulePlanner(messageSource);
+    this.coreProfilePort = coreProfilePort;
   }
 
   public ReActOrchestratorService(
@@ -102,6 +106,7 @@ public class ReActOrchestratorService {
         conversationHistoryPort,
         noteRepository,
         userAiConfigService,
+        null,
         null,
         null,
         null,
@@ -126,6 +131,7 @@ public class ReActOrchestratorService {
         null,
         null,
         null,
+        null,
         null);
   }
 
@@ -140,7 +146,16 @@ public class ReActOrchestratorService {
       String model) {
     Locale locale = LocaleContextHolder.getLocale();
     WorkspaceId activeWsId = new WorkspaceId(workspaceId);
-    String augmentedPrompt = contextAugmenter.augmentWithNotes(prompt, noteIds, activeWsId);
+
+    // 0. Slash Commands (Help Cheatsheet)
+    String trimmed = prompt != null ? prompt.trim() : "";
+    if (trimmed.equalsIgnoreCase("/help")
+        || trimmed.equals("/?")
+        || trimmed.equalsIgnoreCase("/commands")) {
+      return AgentExecutionResult.completed(getSlashHelpMessage(locale), List.of());
+    }
+
+    String augmentedPrompt = contextAugmenter.augmentPrompt(prompt, noteIds, activeWsId);
 
     // 1. Safety Guard Evaluation
     var safetyResult = safetyGuard.evaluatePrompt(workspaceId, prompt, locale);
@@ -148,11 +163,13 @@ public class ReActOrchestratorService {
       return safetyGuard.createApprovalResult(safetyResult);
     }
 
-    // 2. Custom LLM Execution Loop
+    // 2. Custom LLM Execution Loop (Handles slash commands with high intelligence when LLM key is
+    // configured)
     EffectiveAiConfig config =
         resolveEffectiveConfig(workspaceId, userId, provider, apiKey, baseUrl, model);
     if (config.hasCustomConfig()) {
-      AgentExecutionResult llmResult = executeLlmOrchestration(augmentedPrompt, config, locale);
+      AgentExecutionResult llmResult =
+          executeLlmOrchestration(activeWsId, userId, augmentedPrompt, config, locale);
       if (llmResult != null) {
         return llmResult;
       }
@@ -198,10 +215,29 @@ public class ReActOrchestratorService {
             WorkspaceContextHolder.set(activeWsId);
             LocaleContextHolder.setLocale(callerLocale);
 
+            String trimmed = prompt != null ? prompt.trim() : "";
+
+            // 0. Slash Commands (Help Cheatsheet)
+            if (trimmed.equalsIgnoreCase("/help")
+                || trimmed.equals("/?")
+                || trimmed.equalsIgnoreCase("/commands")) {
+              String helpText = getSlashHelpMessage(callerLocale);
+              persistFinalAnswer(activeWsId, targetMemoryId, conversationId, helpText);
+              sendSafe(emitter, SseEmitter.event().name("chunk").data(helpText));
+              sendSafe(
+                  emitter,
+                  SseEmitter.event()
+                      .name("completed")
+                      .data(msg("agent.status.completed", null, "Completed.", callerLocale)));
+              completeSafe(emitter);
+              return;
+            }
+
             // 1. Safety Guard
             var safetyResult = safetyGuard.evaluatePrompt(workspaceId, prompt, callerLocale);
             if (safetyResult.isDestructive()) {
-              emitter.send(
+              sendSafe(
+                  emitter,
                   SseEmitter.event()
                       .name("approval")
                       .data(
@@ -210,11 +246,11 @@ public class ReActOrchestratorService {
                               safetyResult.toolName(),
                               safetyResult.approvalReason(),
                               objectMapperEscape(safetyResult.argumentsJson()))));
-              emitter.complete();
+              completeSafe(emitter);
               return;
             }
 
-            String augmentedPrompt = contextAugmenter.augmentWithNotes(prompt, noteIds, activeWsId);
+            String augmentedPrompt = contextAugmenter.augmentPrompt(prompt, noteIds, activeWsId);
             EffectiveAiConfig config =
                 resolveEffectiveConfig(workspaceId, userId, provider, apiKey, baseUrl, model);
 
@@ -227,6 +263,7 @@ public class ReActOrchestratorService {
                   activeWsId,
                   targetMemoryId,
                   conversationId,
+                  userId,
                   prompt,
                   augmentedPrompt,
                   history,
@@ -235,7 +272,6 @@ public class ReActOrchestratorService {
                   emitter);
               return;
             }
-
             // Fallback Rule-based execution
             streamRuleBasedPlan(
                 activeWsId,
@@ -249,14 +285,12 @@ public class ReActOrchestratorService {
                 emitter);
 
           } catch (Exception e) {
-            try {
-              emitter.send(
-                  SseEmitter.event()
-                      .name("chunk")
-                      .data("\n\n⚠️ **[System Error]**: " + e.getMessage()));
-              emitter.complete();
-            } catch (Exception ignored) {
-            }
+            sendSafe(
+                emitter,
+                SseEmitter.event()
+                    .name("chunk")
+                    .data("\n\n⚠️ **[System Error]**: " + e.getMessage()));
+            completeSafe(emitter);
           } finally {
             WorkspaceContextHolder.clear();
             LocaleContextHolder.resetLocaleContext();
@@ -309,10 +343,19 @@ public class ReActOrchestratorService {
   }
 
   private AgentExecutionResult executeLlmOrchestration(
-      String augmentedPrompt, EffectiveAiConfig config, Locale locale) {
+      WorkspaceId workspaceId,
+      UUID userId,
+      String augmentedPrompt,
+      EffectiveAiConfig config,
+      Locale locale) {
     List<AgentTurn> turns = new ArrayList<>();
     ZonedDateTime nowLocal = ZonedDateTime.now(NaturalDateTimeParser.DEFAULT_ZONE);
-    String systemPrompt = promptBuilder.buildSystemPrompt(nowLocal, augmentedPrompt);
+    String coreProfile =
+        coreProfilePort != null && workspaceId != null && userId != null
+            ? coreProfilePort.getSynthesizedCoreProfile(
+                workspaceId, new com.assistant.kernel.domain.UserId(userId))
+            : "";
+    String systemPrompt = promptBuilder.buildSystemPrompt(nowLocal, augmentedPrompt, coreProfile);
 
     LlmPort.LlmResponse llmResp =
         llmPort.callLlm(
@@ -327,6 +370,11 @@ public class ReActOrchestratorService {
       StringBuilder resultSummary = new StringBuilder();
       int step = 1;
       for (LlmPort.ToolCall tc : llmResp.toolCalls()) {
+        if (safetyGuard.isDestructiveTool(tc.name())) {
+          var safetyCheck = safetyGuard.evaluateToolCall(tc.name(), tc.argumentsJson(), locale);
+          return safetyGuard.createApprovalResult(safetyCheck);
+        }
+
         if (toolRegistry.containsKey(tc.name())) {
           AgentToolContract tool = toolRegistry.get(tc.name());
           ToolExecutionResult execRes = tool.execute(tc.argumentsJson());
@@ -382,6 +430,7 @@ public class ReActOrchestratorService {
       WorkspaceId activeWsId,
       UUID targetMemoryId,
       UUID conversationId,
+      UUID userId,
       String originalPrompt,
       String augmentedPrompt,
       List<Map<String, String>> history,
@@ -401,10 +450,15 @@ public class ReActOrchestratorService {
                 + (config.model() != null ? config.model() : "default")
                 + ")...",
             locale);
-    emitter.send(SseEmitter.event().name("thought").data(connMsg));
+    sendSafe(emitter, SseEmitter.event().name("thought").data(connMsg));
 
     ZonedDateTime nowLocal = ZonedDateTime.now(NaturalDateTimeParser.DEFAULT_ZONE);
-    String systemPrompt = promptBuilder.buildSystemPrompt(nowLocal, originalPrompt);
+    String coreProfile =
+        coreProfilePort != null && activeWsId != null && userId != null
+            ? coreProfilePort.getSynthesizedCoreProfile(
+                activeWsId, new com.assistant.kernel.domain.UserId(userId))
+            : "";
+    String systemPrompt = promptBuilder.buildSystemPrompt(nowLocal, originalPrompt, coreProfile);
 
     StringBuilder accumulativeContext = new StringBuilder(augmentedPrompt);
     StringBuilder finalExecutionSummary = new StringBuilder();
@@ -424,10 +478,7 @@ public class ReActOrchestratorService {
               history,
               toolList,
               chunk -> {
-                try {
-                  emitter.send(SseEmitter.event().name("chunk").data(chunk));
-                } catch (Exception ignored) {
-                }
+                sendSafe(emitter, SseEmitter.event().name("chunk").data(chunk));
               });
 
       if (llmResp.toolCalls() != null && !llmResp.toolCalls().isEmpty()) {
@@ -435,6 +486,22 @@ public class ReActOrchestratorService {
         boolean hasNewAction = false;
 
         for (LlmPort.ToolCall tc : llmResp.toolCalls()) {
+          if (safetyGuard.isDestructiveTool(tc.name())) {
+            var safetyCheck = safetyGuard.evaluateToolCall(tc.name(), tc.argumentsJson(), locale);
+            sendSafe(
+                emitter,
+                SseEmitter.event()
+                    .name("approval")
+                    .data(
+                        String.format(
+                            "{\"pendingApproval\":true,\"toolName\":\"%s\",\"reason\":\"%s\",\"argumentsJson\":%s}",
+                            safetyCheck.toolName(),
+                            safetyCheck.approvalReason(),
+                            objectMapperEscape(safetyCheck.argumentsJson()))));
+            completeSafe(emitter);
+            return;
+          }
+
           if (toolRegistry.containsKey(tc.name())) {
             String sig = tc.name() + ":" + tc.argumentsJson().replaceAll("\\s+", "");
             if (executedActionSignatures.contains(sig)) {
@@ -444,7 +511,8 @@ public class ReActOrchestratorService {
             hasNewAction = true;
 
             AgentToolContract tool = toolRegistry.get(tc.name());
-            emitter.send(
+            sendSafe(
+                emitter,
                 SseEmitter.event()
                     .name("thought")
                     .data(
@@ -466,7 +534,8 @@ public class ReActOrchestratorService {
                           locale));
             }
 
-            emitter.send(
+            sendSafe(
+                emitter,
                 SseEmitter.event()
                     .name("observation")
                     .data(
@@ -535,16 +604,17 @@ public class ReActOrchestratorService {
                   "The system has received your request.",
                   locale);
       if (!streamTokensEmitted) {
-        emitter.send(SseEmitter.event().name("chunk").data(finalAnswerText));
+        sendSafe(emitter, SseEmitter.event().name("chunk").data(finalAnswerText));
       }
     }
 
     persistFinalAnswer(activeWsId, targetMemoryId, conversationId, finalAnswerText);
-    emitter.send(
+    sendSafe(
+        emitter,
         SseEmitter.event()
             .name("completed")
             .data(msg("agent.status.completed", null, "Completed.", locale)));
-    emitter.complete();
+    completeSafe(emitter);
   }
 
   private AgentExecutionResult executeRuleBasedPlan(
@@ -633,8 +703,8 @@ public class ReActOrchestratorService {
               "Received request: \"" + prompt + "\". The system is ready to assist you.",
               locale);
       memoryStore.addMessage(targetMemoryId, "assistant", fallbackReply);
-      emitter.send(SseEmitter.event().name("chunk").data(fallbackReply));
-      emitter.complete();
+      sendSafe(emitter, SseEmitter.event().name("chunk").data(fallbackReply));
+      completeSafe(emitter);
       return;
     }
 
@@ -643,7 +713,8 @@ public class ReActOrchestratorService {
     for (AgentAction action : plannedActions) {
       AgentToolContract tool = toolRegistry.get(action.toolName());
       if (tool != null) {
-        emitter.send(
+        sendSafe(
+            emitter,
             SseEmitter.event()
                 .name("thought")
                 .data(
@@ -653,7 +724,8 @@ public class ReActOrchestratorService {
                         "Step " + step + ": Executing tool " + tool.getName() + "...",
                         locale)));
         ToolExecutionResult result = tool.execute(action.argumentsJson());
-        emitter.send(
+        sendSafe(
+            emitter,
             SseEmitter.event()
                 .name("observation")
                 .data(
@@ -668,14 +740,11 @@ public class ReActOrchestratorService {
     }
 
     String summaryAnswer =
-        msg(
-            "agent.fallback.completed_operations",
-            new Object[] {resultSummary.toString().trim()},
-            "Completed your requests:\n" + resultSummary.toString().trim(),
-            locale);
+        formatFallbackTable(plannedActions, resultSummary.toString().trim(), locale);
     persistFinalAnswer(activeWsId, targetMemoryId, conversationId, summaryAnswer);
-    emitter.send(SseEmitter.event().name("chunk").data(summaryAnswer));
-    emitter.send(
+    sendSafe(emitter, SseEmitter.event().name("chunk").data(summaryAnswer));
+    sendSafe(
+        emitter,
         SseEmitter.event()
             .name("completed")
             .data(
@@ -684,7 +753,69 @@ public class ReActOrchestratorService {
                     null,
                     "Completed all agentic processing steps.",
                     locale)));
-    emitter.complete();
+    completeSafe(emitter);
+  }
+
+  private String formatFallbackTable(
+      List<AgentAction> actions, String resultSummary, Locale locale) {
+    boolean isEn = locale != null && "en".equalsIgnoreCase(locale.getLanguage());
+    StringBuilder sb = new StringBuilder();
+    if (isEn) {
+      sb.append("📌 **Kyros AI — Summary of Completed Operations**\n\n");
+      sb.append("| Operation | Target Tool | Status |\n");
+      sb.append("| :--- | :--- | :--- |\n");
+      for (AgentAction a : actions) {
+        String opName =
+            switch (a.toolName()) {
+              case "upsert_events" -> "📅 Calendar Event";
+              case "upsert_tasks" -> "🎯 Task / Todo";
+              case "upsert_notes" -> "📝 Note";
+              case "save_memory" -> "🧠 Memory Vault";
+              case "list_events" -> "📅 List Events";
+              case "list_tasks" -> "🎯 List Tasks";
+              case "list_notes" -> "📝 List Notes";
+              case "recall_memory" -> "🔍 Recall Memory";
+              default -> a.toolName();
+            };
+        sb.append("| ")
+            .append(opName)
+            .append(" | `")
+            .append(a.toolName())
+            .append("`")
+            .append(" | ✅ Success |\n");
+      }
+      if (!resultSummary.isEmpty()) {
+        sb.append("\n**Execution Details:**\n").append(resultSummary);
+      }
+    } else {
+      sb.append("📌 **Kyros AI — Tóm tắt công việc đã thực hiện**\n\n");
+      sb.append("| Loại tác vụ | Thao tác | Trạng thái |\n");
+      sb.append("| :--- | :--- | :--- |\n");
+      for (AgentAction a : actions) {
+        String opName =
+            switch (a.toolName()) {
+              case "upsert_events" -> "📅 Lịch hẹn (Event)";
+              case "upsert_tasks" -> "🎯 Nhiệm vụ (Task)";
+              case "upsert_notes" -> "📝 Ghi chú (Note)";
+              case "save_memory" -> "🧠 Trí nhớ (Vault)";
+              case "list_events" -> "📅 Xem sự kiện";
+              case "list_tasks" -> "🎯 Xem nhiệm vụ";
+              case "list_notes" -> "📝 Xem ghi chú";
+              case "recall_memory" -> "🔍 Tra cứu trí nhớ";
+              default -> a.toolName();
+            };
+        sb.append("| ")
+            .append(opName)
+            .append(" | `")
+            .append(a.toolName())
+            .append("`")
+            .append(" | ✅ Hoàn tất |\n");
+      }
+      if (!resultSummary.isEmpty()) {
+        sb.append("\n**Chi tiết thực thi:**\n").append(resultSummary);
+      }
+    }
+    return sb.toString();
   }
 
   private void syncConversationMemory(
@@ -749,6 +880,22 @@ public class ReActOrchestratorService {
     return new EffectiveAiConfig(effProvider, effApiKey, effBaseUrl, effModel);
   }
 
+  private boolean sendSafe(SseEmitter emitter, SseEmitter.SseEventBuilder event) {
+    try {
+      emitter.send(event);
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  private void completeSafe(SseEmitter emitter) {
+    try {
+      emitter.complete();
+    } catch (Exception ignored) {
+    }
+  }
+
   private record EffectiveAiConfig(String provider, String apiKey, String baseUrl, String model) {
     public boolean hasCustomConfig() {
       return (apiKey != null && !apiKey.isBlank()) || (baseUrl != null && !baseUrl.isBlank());
@@ -757,6 +904,44 @@ public class ReActOrchestratorService {
     public String displayName() {
       return provider != null && !provider.isBlank() ? provider : "LLM";
     }
+  }
+
+  public String getSlashHelpMessage(Locale locale) {
+    boolean isEn = locale != null && "en".equalsIgnoreCase(locale.getLanguage());
+    if (isEn) {
+      return """
+      ### 📋 Slash Commands Cheatsheet
+
+      | Command | Example Syntax | Description |
+      | :--- | :--- | :--- |
+      | **`/memory <content>`** | `/memory Always address me as Kyros and summarize in tables` | Save user preference or rule to **Memory Vault** |
+      | **`/rule <content>`** | `/rule Never schedule meetings on Monday mornings` | Save a fixed working rule to **Memory Vault** |
+      | **`/task <title> [due]`** | `/task Finish revenue report 5pm tomorrow` | Create a new task in Todo list |
+      | **`/event <title> [time]`** | `/event Sprint Review meeting 2pm Friday` | Schedule an event on Calendar |
+      | **`/note <title>: <content>`**| `/note Phase 5 Architecture: Added Slash Commands` | Create a new Note |
+      | **`/recall <query>`** | `/recall meeting rules` | Search knowledge & rules in Memory Vault |
+      | **`/list <tasks|events|notes>`** | `/list tasks` | Quick view list of tasks, events, or notes |
+      | **`/help`** | `/help` | Display this command cheatsheet |
+
+      💡 **Shortcut Tip:** Type `/` in the chat input at any time to open the Command Palette!
+      """;
+    }
+    return """
+    ### 📋 Bảng Tra Cứu Lệnh Nhanh (Slash Commands Cheatsheet)
+
+    | Lệnh (Command) | Cú pháp mẫu | Mô tả chức năng |
+    | :--- | :--- | :--- |
+    | **`/memory <nội dung>`** | `/memory Xưng hô là Kyros, luôn tóm tắt dạng bảng` | Lưu quy tắc / sở thích vào **Memory Vault** |
+    | **`/rule <nội dung>`** | `/rule Không nhận lịch họp vào sáng thứ 2` | Thiết lập nguyên tắc làm việc cố định |
+    | **`/task <tiêu đề> [thời gian]`** | `/task Hoàn thành slide báo cáo 17:00 ngày mai` | Tạo nhiệm vụ mới (Todo List) |
+    | **`/event <tiêu đề> [thời gian]`**| `/event Họp Sprint Review 14:00 thứ 6` | Lên lịch hẹn / cuộc họp (Calendar) |
+    | **`/note <tiêu đề>: <nội dung>`** | `/note Kiến trúc Phase 5: Thêm Slash Commands` | Tạo ghi chú mới |
+    | **`/recall <từ khóa>`** | `/recall quy tắc họp` | Tìm kiếm trí nhớ trong Memory Vault |
+    | **`/list <tasks|events|notes>`** | `/list tasks` | Liệt kê danh sách tác vụ nhanh |
+    | **`/help`** | `/help` | Hiển thị bảng hướng dẫn lệnh này |
+
+    💡 **Mẹo phím tắt:** Bạn có thể gõ ký tự `/` bất kỳ lúc nào để mở Menu gợi ý lệnh nhanh!
+    """;
   }
 
   private String msg(String code, Object[] args, String defaultMessage, Locale locale) {

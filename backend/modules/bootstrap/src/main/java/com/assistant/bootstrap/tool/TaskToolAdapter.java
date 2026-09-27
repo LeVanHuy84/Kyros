@@ -2,6 +2,7 @@ package com.assistant.bootstrap.tool;
 
 import com.assistant.agent.domain.model.ToolExecutionResult;
 import com.assistant.agent.domain.tool.AgentToolContract;
+import com.assistant.kernel.context.WorkspaceContextHolder;
 import com.assistant.kernel.domain.WorkspaceId;
 import com.assistant.todo.application.port.in.TodoPort;
 import com.assistant.todo.domain.model.Priority;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
+/** Token-efficient Task tool adapter for creating or updating actionable to-dos. */
 @Component
 public class TaskToolAdapter implements AgentToolContract {
 
@@ -32,8 +34,7 @@ public class TaskToolAdapter implements AgentToolContract {
 
   @Override
   public String getDescription() {
-    return "Create or update one or more tasks. If 'id' is provided, update existing task;"
-        + " otherwise create a new task.";
+    return "Create or update one or more tasks with deadlines and priority levels.";
   }
 
   @Override
@@ -42,18 +43,16 @@ public class TaskToolAdapter implements AgentToolContract {
     {
       "type": "object",
       "properties": {
-        "workspaceId": { "type": "string" },
-        "userId": { "type": "string" },
         "tasks": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "id": { "type": "string", "description": "Task ID if updating an existing task" },
+              "id": { "type": "string", "description": "Optional task ID if updating" },
               "title": { "type": "string", "description": "Task title" },
               "description": { "type": "string", "description": "Detailed description of the task" },
-              "dueDate": { "type": "string", "description": "Due date in ISO-8601 format" },
-              "priority": { "type": "string", "description": "Priority level: Low, Medium, High, Critical" }
+              "dueDate": { "type": "string", "description": "Due date/deadline in ISO-8601 format (e.g. 2026-09-30T17:00:00Z or 2026-09-30)" },
+              "priority": { "type": "string", "description": "Low, Medium, High, or Critical" }
             },
             "required": ["title"]
           }
@@ -80,39 +79,43 @@ public class TaskToolAdapter implements AgentToolContract {
       try {
         wsUuid = UUID.fromString(workspaceIdStr);
       } catch (Exception e) {
-        wsUuid =
-            com.assistant.kernel.context.WorkspaceContextHolder.get()
-                .map(WorkspaceId::value)
-                .orElseGet(UUID::randomUUID);
+        wsUuid = WorkspaceContextHolder.get().map(WorkspaceId::value).orElseGet(UUID::randomUUID);
       }
       WorkspaceId workspaceId = new WorkspaceId(wsUuid);
 
       List<String> results = new ArrayList<>();
       for (JsonNode taskItem : tasksNode) {
-        String title = taskItem.has("title") ? taskItem.get("title").asText() : "Task mới";
+        String title = extractField(taskItem, "title", "name", "task_title", "task");
+        if (title == null || title.isBlank()) {
+          title = "Task mới";
+        }
         String description =
-            taskItem.has("description") ? taskItem.get("description").asText() : "";
-        Priority priority = Priority.Medium;
-        if (taskItem.has("priority")) {
-          try {
-            priority = Priority.valueOf(taskItem.get("priority").asText());
-          } catch (Exception ignored) {
-            // keep default
-          }
+            extractField(taskItem, "description", "details", "desc", "content", "notes");
+        if (description == null) {
+          description = "";
         }
-        Instant dueDate = null;
-        if (taskItem.has("dueDate") && !taskItem.get("dueDate").asText().isBlank()) {
-          try {
-            dueDate = Instant.parse(taskItem.get("dueDate").asText());
-          } catch (Exception ignored) {
-            // keep null
-          }
-        }
+
+        String priorityRaw = extractField(taskItem, "priority", "level", "priority_level");
+        Priority priority = parsePriority(priorityRaw);
+
+        String dueDateRaw =
+            extractField(
+                taskItem,
+                "dueDate",
+                "due_date",
+                "deadline",
+                "due",
+                "dueAt",
+                "due_at",
+                "date",
+                "endTime");
+        Instant dueDate = parseDateTime(dueDateRaw);
 
         Task task =
             todoPort.createTask(
                 workspaceId, title, description, priority, dueDate, null, null, null, null);
-        results.add(task.getTitle() + " (ID: " + task.getId().value() + ")");
+        String dueInfo = dueDate != null ? " (Hạn: " + dueDate.toString() + ")" : "";
+        results.add(task.getTitle() + dueInfo + " [ID: " + task.getId().value() + "]");
       }
 
       return ToolExecutionResult.ok(
@@ -120,5 +123,72 @@ public class TaskToolAdapter implements AgentToolContract {
     } catch (Exception e) {
       return ToolExecutionResult.error("Failed to execute upsert_tasks tool: " + e.getMessage());
     }
+  }
+
+  private String extractField(JsonNode node, String... fieldNames) {
+    for (String fn : fieldNames) {
+      if (node.has(fn) && !node.get(fn).isNull()) {
+        String val = node.get(fn).asText();
+        if (val != null && !val.isBlank()) {
+          return val.trim();
+        }
+      }
+    }
+    return null;
+  }
+
+  private Priority parsePriority(String text) {
+    if (text == null || text.isBlank()) {
+      return Priority.Medium;
+    }
+    String lower = text.trim().toLowerCase(java.util.Locale.ROOT);
+    if (lower.contains("crit")
+        || lower.contains("khẩn")
+        || lower.contains("urgent")
+        || lower.contains("high")
+        || lower.contains("cao")) {
+      return Priority.High;
+    }
+    if (lower.contains("low") || lower.contains("thấp")) {
+      return Priority.Low;
+    }
+    return Priority.Medium;
+  }
+
+  private Instant parseDateTime(String text) {
+    if (text == null || text.isBlank()) {
+      return null;
+    }
+    String trimmed = text.trim();
+    try {
+      return Instant.parse(trimmed);
+    } catch (Exception ignored) {
+    }
+    try {
+      return java.time.OffsetDateTime.parse(trimmed).toInstant();
+    } catch (Exception ignored) {
+    }
+    try {
+      return java.time.ZonedDateTime.parse(trimmed).toInstant();
+    } catch (Exception ignored) {
+    }
+    try {
+      java.time.LocalDateTime ldt = java.time.LocalDateTime.parse(trimmed);
+      return ldt.atZone(java.time.ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
+    } catch (Exception ignored) {
+    }
+    try {
+      java.time.LocalDate ld = java.time.LocalDate.parse(trimmed);
+      return ld.atTime(18, 0).atZone(java.time.ZoneId.of("Asia/Ho_Chi_Minh")).toInstant();
+    } catch (Exception ignored) {
+    }
+    try {
+      var nlp = com.assistant.agent.domain.nlp.NaturalDateTimeParser.parse(trimmed);
+      if (nlp.hasExplicitDate() || nlp.hasExplicitTime()) {
+        return nlp.startTime().toInstant();
+      }
+    } catch (Exception ignored) {
+    }
+    return null;
   }
 }
