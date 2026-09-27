@@ -1,7 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
-  "trailingSlash": false,
   "buildCommand": "npm run build",
   "outputDirectory": "dist/frontend-angular/browser",
   "rewrites": [
@@ -16,7 +14,7 @@
   ],
   "headers": [
     {
-      "source": "/(.*).(js|css|svg|png|jpg|jpeg|gif|ico|woff|woff2)",
+      "source": "/(.*)\\.(js|css|svg|png|jpg|jpeg|gif|ico|woff|woff2)",
       "headers": [
         {
           "key": "Cache-Control",
