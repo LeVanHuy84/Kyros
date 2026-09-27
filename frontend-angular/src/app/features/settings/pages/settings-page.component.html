@@ -49,13 +49,13 @@
         <div class="setting-section">
           <div class="section-header">
             <app-icon name="settings" [size]="16" class="section-icon"></app-icon>
-            <h4 class="section-title">Ngôn ngữ hiển thị (Display Language)</h4>
+            <h4 class="section-title">{{ languageService.t().settings.language.title }}</h4>
           </div>
 
           <div class="setting-row">
             <div class="setting-info">
-              <span class="setting-label">Ngôn ngữ giao diện</span>
-              <span class="setting-desc">Chọn ngôn ngữ cho toàn bộ giao diện điều hành và hội thoại Kyros.</span>
+              <span class="setting-label">{{ languageService.t().settings.language.label }}</span>
+              <span class="setting-desc">{{ languageService.t().settings.language.desc }}</span>
             </div>
             <div class="setting-control">
               <div class="lang-switch-buttons">
@@ -84,31 +84,31 @@
         <div class="setting-section">
           <div class="section-header">
             <app-icon name="lock" [size]="18" class="section-icon"></app-icon>
-            <h4 class="section-title">{{ languageService.t().settings.tabs.vault }}</h4>
+            <h4 class="section-title">{{ languageService.t().settings.vault.title }}</h4>
           </div>
 
           <div class="setting-row">
             <div class="setting-info">
-              <span class="setting-label">Chuẩn mã hóa Vault</span>
-              <span class="setting-desc">Mọi khóa API và bí mật cấu hình được mã hóa tự động ở tầng cơ sở dữ liệu.</span>
+              <span class="setting-label">{{ languageService.t().settings.vault.standardLabel }}</span>
+              <span class="setting-desc">{{ languageService.t().settings.vault.standardDesc }}</span>
             </div>
             <div class="setting-control">
               <div class="vault-info-badge">
                 <app-icon name="shield-check" [size]="15" class="success-icon"></app-icon>
-                <span>Mã hóa AES-256-GCM (Chế độ Zero-Knowledge Key Vault)</span>
+                <span>{{ languageService.t().settings.vault.standardBadge }}</span>
               </div>
             </div>
           </div>
 
           <div class="setting-row">
             <div class="setting-info">
-              <span class="setting-label">Phạm vi phân lập (Isolation)</span>
-              <span class="setting-desc">Dữ liệu được lưu trữ phân lập bảo mật theo từng Workspace ID của bạn.</span>
+              <span class="setting-label">{{ languageService.t().settings.vault.isolationLabel }}</span>
+              <span class="setting-desc">{{ languageService.t().settings.vault.isolationDesc }}</span>
             </div>
             <div class="setting-control">
               <div class="vault-info-badge">
                 <app-icon name="building" [size]="15" class="primary-icon"></app-icon>
-                <span>Multi-tenant Workspace Isolated Security</span>
+                <span>{{ languageService.t().settings.vault.isolationBadge }}</span>
               </div>
             </div>
           </div>

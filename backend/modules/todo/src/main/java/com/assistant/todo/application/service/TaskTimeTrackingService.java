@@ -35,7 +35,7 @@ public class TaskTimeTrackingService {
   @Transactional
   public TaskTimeLog startTimer(WorkspaceId workspaceId, TaskId taskId, UserId userId) {
     if (taskRepository.findById(taskId, workspaceId).isEmpty()) {
-      throw new EntityNotFoundException("Task not found");
+      throw new EntityNotFoundException("todo.task.not_found", "Task not found");
     }
 
     Optional<TaskTimeLog> existingActive =
@@ -91,7 +91,7 @@ public class TaskTimeTrackingService {
       Instant startTime,
       Instant endTime) {
     if (taskRepository.findById(taskId, workspaceId).isEmpty()) {
-      throw new EntityNotFoundException("Task not found");
+      throw new EntityNotFoundException("todo.task.not_found", "Task not found");
     }
 
     // Close any currently active log for this task and user

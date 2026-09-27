@@ -2,6 +2,7 @@ package com.assistant.memory.application.service;
 
 import com.assistant.kernel.domain.UserId;
 import com.assistant.kernel.domain.WorkspaceId;
+import com.assistant.kernel.exception.EntityNotFoundException;
 import com.assistant.memory.application.dto.NoteDto;
 import com.assistant.memory.domain.model.Note;
 import com.assistant.memory.domain.model.NoteId;
@@ -47,7 +48,12 @@ public class NoteService {
     Note note =
         noteRepository
             .findById(workspaceId, noteId)
-            .orElseThrow(() -> new IllegalArgumentException("Note not found: " + noteId.value()));
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "memory.note.not_found_with_id",
+                        "Note not found with ID: " + noteId.value(),
+                        noteId.value()));
     return toDto(note);
   }
 
@@ -61,7 +67,12 @@ public class NoteService {
     Note note =
         noteRepository
             .findById(workspaceId, noteId)
-            .orElseThrow(() -> new IllegalArgumentException("Note not found: " + noteId.value()));
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "memory.note.not_found_with_id",
+                        "Note not found with ID: " + noteId.value(),
+                        noteId.value()));
 
     note.update(title, content, taskId, eventId);
     noteRepository.save(note);
@@ -72,7 +83,12 @@ public class NoteService {
     Note note =
         noteRepository
             .findById(workspaceId, noteId)
-            .orElseThrow(() -> new IllegalArgumentException("Note not found: " + noteId.value()));
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "memory.note.not_found_with_id",
+                        "Note not found with ID: " + noteId.value(),
+                        noteId.value()));
     noteRepository.delete(note);
   }
 

@@ -45,7 +45,10 @@ public class TodoService implements TodoPort {
   private Task loadTask(TaskId taskId, WorkspaceId workspaceId) {
     return taskRepository
         .findById(taskId, workspaceId)
-        .orElseThrow(() -> new EntityNotFoundException("Task not found with ID: " + taskId));
+        .orElseThrow(
+            () ->
+                new EntityNotFoundException(
+                    "todo.task.not_found_with_id", "Task not found with ID: " + taskId, taskId));
   }
 
   @Override

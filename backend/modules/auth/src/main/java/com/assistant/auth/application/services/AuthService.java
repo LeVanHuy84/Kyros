@@ -69,7 +69,7 @@ public class AuthService
   public UserIdentity register(String email, String rawPassword) {
     String normalizedEmail = email.trim().toLowerCase(java.util.Locale.ROOT);
     if (userRepository.findByEmail(normalizedEmail).isPresent()) {
-      throw new DomainException("Email is already registered");
+      throw new DomainException("auth.email.already_registered", "Email is already registered");
     }
 
     String hashedPassword = passwordHasher.hash(rawPassword);
@@ -99,22 +99,22 @@ public class AuthService
     UserIdentity user =
         userRepository
             .findByEmail(normalizedEmail)
-            .orElseThrow(() -> new DomainException("Invalid email or password"));
+            .orElseThrow(() -> new DomainException("auth.credentials.invalid", "Invalid email or password"));
 
     if (user.getStatus() == AccountStatus.PendingVerification) {
-      throw new DomainException("Email is not verified. Please verify your email.");
+      throw new DomainException("auth.email.not_verified", "Email is not verified. Please verify your email.");
     }
     if (user.getStatus() == AccountStatus.Locked) {
-      throw new DomainException("Account is locked due to too many failed login attempts");
+      throw new DomainException("auth.account.locked", "Account is locked due to too many failed login attempts");
     }
     if (user.getStatus() == AccountStatus.Suspended) {
-      throw new DomainException("Account is suspended");
+      throw new DomainException("auth.account.suspended", "Account is suspended");
     }
 
     if (!passwordHasher.matches(rawPassword, user.getPasswordHash())) {
       user.recordLoginFailure();
       userRepository.save(user);
-      throw new DomainException("Invalid email or password");
+      throw new DomainException("auth.credentials.invalid", "Invalid email or password");
     }
 
     user.recordLoginSuccess();
@@ -133,10 +133,10 @@ public class AuthService
     UserId userId =
         refreshTokenPort
             .findUserIdByToken(refreshToken)
-            .orElseThrow(() -> new DomainException("Invalid or expired refresh token"));
+            .orElseThrow(() -> new DomainException("auth.token.invalid_or_expired", "Invalid or expired refresh token"));
 
     UserIdentity user =
-        userRepository.findById(userId).orElseThrow(() -> new DomainException("User not found"));
+        userRepository.findById(userId).orElseThrow(() -> new DomainException("auth.token.user_not_found", "User associated with token not found"));
 
     // Revoke old refresh token (rotation policy)
     refreshTokenPort.revoke(refreshToken);
@@ -168,16 +168,16 @@ public class AuthService
     EmailVerificationToken token =
         tokenRepository
             .findByToken(tokenValue)
-            .orElseThrow(() -> new DomainException("Invalid or expired verification token"));
+            .orElseThrow(() -> new DomainException("auth.token.invalid_or_expired", "Invalid or expired verification token"));
 
     if (token.isExpired()) {
-      throw new DomainException("Verification token has expired. Please request a new one.");
+      throw new DomainException("auth.token.expired", "Verification token has expired. Please request a new one.");
     }
 
     UserIdentity user =
         userRepository
             .findById(token.getUserId())
-            .orElseThrow(() -> new DomainException("User associated with token not found"));
+            .orElseThrow(() -> new DomainException("auth.token.user_not_found", "User associated with token not found"));
 
     user.verifyEmail();
     userRepository.save(user);
@@ -193,10 +193,10 @@ public class AuthService
     UserIdentity user =
         userRepository
             .findByEmail(normalizedEmail)
-            .orElseThrow(() -> new DomainException("No user found with the given email address"));
+            .orElseThrow(() -> new DomainException("auth.user.not_found", "No user found with the given email address"));
 
     if (user.getStatus() != AccountStatus.PendingVerification) {
-      throw new DomainException("Account is already verified or cannot be verified");
+      throw new DomainException("auth.account.already_verified", "Account is already verified or cannot be verified");
     }
 
     // Delete any existing token for this user to avoid duplication

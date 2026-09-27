@@ -76,7 +76,7 @@
         <label for="notif-email" class="setting-label">
           {{ languageService.t().settings.notifications.emailLabel }}
         </label>
-        <span class="setting-desc">Địa chỉ email để nhận thông báo quan trọng và bản tin tổng hợp.</span>
+        <span class="setting-desc">{{ languageService.t().settings.notifications.emailDesc }}</span>
       </div>
       <div class="setting-control">
         <input
@@ -96,7 +96,7 @@
         <label for="slack-webhook" class="setting-label">
           {{ languageService.t().settings.notifications.slackLabel }}
         </label>
-        <span class="setting-desc">Đường dẫn Incoming Webhook tích hợp trực tiếp vào kênh Slack của đội ngũ.</span>
+        <span class="setting-desc">{{ languageService.t().settings.notifications.slackDesc }}</span>
       </div>
       <div class="setting-control">
         <input
@@ -121,7 +121,7 @@
     <div class="setting-row">
       <div class="setting-info">
         <label class="setting-label">{{ languageService.t().settings.notifications.digestToggle }}</label>
-        <span class="setting-desc">Tự động gửi email tổng hợp các cập nhật, lịch trình và công việc chưa đọc.</span>
+        <span class="setting-desc">{{ languageService.t().settings.notifications.digestDesc }}</span>
       </div>
       <div class="setting-control">
         <label class="switch-control">
@@ -141,7 +141,7 @@
           <label for="digest-freq-select" class="setting-label">
             {{ languageService.t().settings.notifications.digestFrequency }}
           </label>
-          <span class="setting-desc">Khoảng thời gian định kỳ hệ thống xuất và gửi bản tin qua email.</span>
+          <span class="setting-desc">{{ languageService.t().settings.notifications.digestFrequencyDesc }}</span>
         </div>
         <div class="setting-control">
           <select
