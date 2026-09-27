@@ -26,11 +26,7 @@ public class TaskTimeTrackingController {
   public record StopTimerRequest(String notes, UUID userId) {}
 
   public record LogCompletedSessionRequest(
-      long durationMinutes,
-      String notes,
-      UUID userId,
-      Instant startTime,
-      Instant endTime) {}
+      long durationMinutes, String notes, UUID userId, Instant startTime, Instant endTime) {}
 
   public record TimeLogResponse(
       UUID id,
@@ -98,7 +94,8 @@ public class TaskTimeTrackingController {
     WorkspaceId wsId = new WorkspaceId(workspaceId);
     TaskId tId = new TaskId(taskId);
     UserId uId = new UserId(resolveUserId(request != null ? request.userId() : null));
-    long duration = request != null && request.durationMinutes() > 0 ? request.durationMinutes() : 25;
+    long duration =
+        request != null && request.durationMinutes() > 0 ? request.durationMinutes() : 25;
     String notes = request != null ? request.notes() : null;
     Instant start = request != null ? request.startTime() : null;
     Instant end = request != null ? request.endTime() : null;

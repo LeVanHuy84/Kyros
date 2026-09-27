@@ -97,8 +97,7 @@ public class GlobalExceptionHandler {
     IllegalArgumentException.class,
     org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class
   })
-  public ResponseEntity<ProblemDetail> handleIllegalArgument(
-      Exception ex, WebRequest request) {
+  public ResponseEntity<ProblemDetail> handleIllegalArgument(Exception ex, WebRequest request) {
     Locale locale = LocaleContextHolder.getLocale();
     log.warn("Bad request at {}: {}", request.getDescription(false), ex.getMessage());
     String title = messageSource.getMessage("error.title.bad_request", null, "Bad Request", locale);
@@ -185,8 +184,42 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
   }
 
+  @ExceptionHandler({
+    org.springframework.web.context.request.async.AsyncRequestNotUsableException.class,
+    org.apache.catalina.connector.ClientAbortException.class
+  })
+  public void handleClientAbort(Exception ex) {
+    log.debug("Client aborted/closed connection: {}", ex.getMessage());
+  }
+
+  @ExceptionHandler(java.io.IOException.class)
+  public ResponseEntity<ProblemDetail> handleIOException(
+      java.io.IOException ex, WebRequest request) {
+    String msg = ex.getMessage();
+    if (msg != null
+        && (msg.contains("aborted")
+            || msg.contains("Broken pipe")
+            || msg.contains("Connection reset")
+            || msg.contains("connection was aborted"))) {
+      log.debug("Client network connection closed or aborted: {}", msg);
+      return null;
+    }
+    return handleGenericException(ex, request);
+  }
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ProblemDetail> handleGenericException(Exception ex, WebRequest request) {
+    String acceptHeader = request.getHeader("Accept");
+    boolean isSse = acceptHeader != null && acceptHeader.contains("text/event-stream");
+
+    if (isSse) {
+      log.warn(
+          "Exception during SSE streaming request at {}: {}",
+          request.getDescription(false),
+          ex.getMessage());
+      return null;
+    }
+
     Locale locale = LocaleContextHolder.getLocale();
     log.error("Unhandled exception at {}: {}", request.getDescription(false), ex.getMessage(), ex);
     String title =

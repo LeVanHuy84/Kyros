@@ -35,7 +35,12 @@ public class SecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers(
+                auth.dispatcherTypeMatchers(
+                        jakarta.servlet.DispatcherType.ASYNC,
+                        jakarta.servlet.DispatcherType.FORWARD,
+                        jakarta.servlet.DispatcherType.ERROR)
+                    .permitAll()
+                    .requestMatchers(
                         "/api/auth/register",
                         "/api/auth/login",
                         "/api/auth/verify",

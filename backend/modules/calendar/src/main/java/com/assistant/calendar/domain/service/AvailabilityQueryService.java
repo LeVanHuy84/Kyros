@@ -50,8 +50,7 @@ public class AvailabilityQueryService {
         queryAvailability(workspaceId, query.rangeStart(), query.rangeEnd());
     List<TimeSlot> slots = new ArrayList<>();
 
-    Instant earliestStart =
-        roundUpToInterval(query.rangeStart().plus(query.minimumNotice()), 15);
+    Instant earliestStart = roundUpToInterval(query.rangeStart().plus(query.minimumNotice()), 15);
     Duration desired = query.desiredDuration();
 
     for (AvailabilityWindow window : windows) {
