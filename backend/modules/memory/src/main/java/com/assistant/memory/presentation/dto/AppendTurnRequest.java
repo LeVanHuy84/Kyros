@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Pattern;
 
 public record AppendTurnRequest(
     @NotBlank(message = "Sender role cannot be blank")
-        @Pattern(regexp = "^(User|Agent)$", message = "Sender role must be 'User' or 'Agent'")
+        @Pattern(
+            regexp = "^(?i)(User|Agent|Assistant)$",
+            message = "Sender role must be 'User', 'Agent', or 'Assistant'")
         String senderRole,
     @NotBlank(message = "Message content cannot be blank") String messageContent) {}

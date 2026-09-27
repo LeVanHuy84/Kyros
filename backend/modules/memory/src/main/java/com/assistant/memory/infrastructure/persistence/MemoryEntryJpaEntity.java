@@ -24,11 +24,32 @@ public class MemoryEntryJpaEntity {
   @Column(name = "user_id", nullable = false)
   private UUID userId;
 
+  @Column(name = "topic_cluster")
+  private String topicCluster;
+
   @Column(name = "content", nullable = false)
   private String content;
 
   @Column(name = "confidence_score", nullable = false)
   private float confidenceScore;
+
+  @Column(name = "status", nullable = false)
+  private String status;
+
+  @Column(name = "superseded_by_id")
+  private UUID supersededById;
+
+  @Column(name = "valid_from", nullable = false)
+  private Instant validFrom;
+
+  @Column(name = "valid_to")
+  private Instant validTo;
+
+  @Column(name = "last_accessed_at", nullable = false)
+  private Instant lastAccessedAt;
+
+  @Column(name = "access_count", nullable = false)
+  private int accessCount;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
@@ -66,6 +87,14 @@ public class MemoryEntryJpaEntity {
     this.userId = userId;
   }
 
+  public String getTopicCluster() {
+    return topicCluster;
+  }
+
+  public void setTopicCluster(String topicCluster) {
+    this.topicCluster = topicCluster;
+  }
+
   public String getContent() {
     return content;
   }
@@ -80,6 +109,54 @@ public class MemoryEntryJpaEntity {
 
   public void setConfidenceScore(float confidenceScore) {
     this.confidenceScore = confidenceScore;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public UUID getSupersededById() {
+    return supersededById;
+  }
+
+  public void setSupersededById(UUID supersededById) {
+    this.supersededById = supersededById;
+  }
+
+  public Instant getValidFrom() {
+    return validFrom;
+  }
+
+  public void setValidFrom(Instant validFrom) {
+    this.validFrom = validFrom;
+  }
+
+  public Instant getValidTo() {
+    return validTo;
+  }
+
+  public void setValidTo(Instant validTo) {
+    this.validTo = validTo;
+  }
+
+  public Instant getLastAccessedAt() {
+    return lastAccessedAt;
+  }
+
+  public void setLastAccessedAt(Instant lastAccessedAt) {
+    this.lastAccessedAt = lastAccessedAt;
+  }
+
+  public int getAccessCount() {
+    return accessCount;
+  }
+
+  public void setAccessCount(int accessCount) {
+    this.accessCount = accessCount;
   }
 
   public Instant getCreatedAt() {

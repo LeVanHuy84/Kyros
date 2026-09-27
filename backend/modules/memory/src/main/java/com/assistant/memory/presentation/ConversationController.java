@@ -131,16 +131,11 @@ public class ConversationController {
       @Valid @RequestBody AppendTurnRequest request) {
     validateWorkspace(workspaceId);
 
-    SenderRole role;
-    try {
-      role = SenderRole.valueOf(request.senderRole());
-    } catch (IllegalArgumentException e) {
-      if ("USER".equalsIgnoreCase(request.senderRole())) {
-        role = SenderRole.User;
-      } else {
-        role = SenderRole.Agent;
-      }
-    }
+    SenderRole role =
+        "USER".equalsIgnoreCase(request.senderRole())
+                || "User".equalsIgnoreCase(request.senderRole())
+            ? SenderRole.User
+            : SenderRole.Agent;
 
     AppendTurnCommand command =
         new AppendTurnCommand(

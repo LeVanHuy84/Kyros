@@ -99,6 +99,27 @@ public final class MemoryEvents {
     }
   }
 
+  public record MemoryEntrySuperseded(
+      UUID workspaceId,
+      UUID userId,
+      UUID oldMemoryId,
+      UUID newMemoryId,
+      String topicCluster,
+      Instant occurredAt)
+      implements DomainEvent {
+    public MemoryEntrySuperseded(
+        UUID workspaceId, UUID userId, UUID oldMemoryId, UUID newMemoryId, String topicCluster) {
+      this(workspaceId, userId, oldMemoryId, newMemoryId, topicCluster, Instant.now());
+    }
+  }
+
+  public record CoreProfileSynthesized(UUID workspaceId, UUID userId, Instant occurredAt)
+      implements DomainEvent {
+    public CoreProfileSynthesized(UUID workspaceId, UUID userId) {
+      this(workspaceId, userId, Instant.now());
+    }
+  }
+
   public record MemoryUpdated(
       WorkspaceId workspaceId, UserId userId, String updateType, Instant occurredAt)
       implements DomainEvent {
