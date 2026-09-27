@@ -15,26 +15,16 @@ public final class KyrosEmailTemplate {
   private static final String BORDER_COLOR = "#d8e2dc"; // Subtle Soft Mint Border
 
   private static final String KYROS_LOGO_SVG =
-      "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='52' height='52'"
-          + " style='display: block; margin: 0 auto;'>  <defs>    <linearGradient"
-          + " id='kyros-bg-grad' x1='0%' y1='0%' x2='100%' y2='100%'>      <stop offset='0%'"
-          + " stop-color='#1b4332' />      <stop offset='50%' stop-color='#2d6a4f' />      <stop"
-          + " offset='100%' stop-color='#40916c' />    </linearGradient>    <linearGradient"
-          + " id='kyros-warm-grad' x1='0%' y1='100%' x2='100%' y2='0%'>      <stop offset='0%'"
-          + " stop-color='#d4a373' />      <stop offset='100%' stop-color='#faedcd' />   "
-          + " </linearGradient>    <linearGradient id='kyros-light-grad' x1='0%' y1='0%' x2='0%'"
-          + " y2='100%'>      <stop offset='0%' stop-color='#ffffff' />      <stop offset='100%'"
-          + " stop-color='#e8f5e9' />    </linearGradient>  </defs>  <rect x='32' y='32'"
-          + " width='448' height='448' rx='112' fill='url(#kyros-bg-grad)' />  <rect x='34' y='34'"
-          + " width='444' height='444' rx='110' fill='none' stroke='rgba(255, 255, 255, 0.15)'"
-          + " stroke-width='3' />  <g transform='translate(4, 0)'>    <rect x='150' y='120'"
-          + " width='44' height='272' rx='22' fill='url(#kyros-light-grad)' />    <path d='M 172"
-          + " 256 C 210 256 315 190 348 152 C 368 128 344 102 318 118 C 265 150 205 218 172 256 Z'"
-          + " fill='url(#kyros-warm-grad)' />    <path d='M 172 256 C 210 256 315 322 348 360 C 368"
-          + " 384 344 410 318 394 C 265 362 205 294 172 256 Z' fill='#d8f3dc' opacity='0.92' />   "
-          + " <circle cx='172' cy='256' r='26' fill='#ffffff' />    <circle cx='172' cy='256'"
-          + " r='15' fill='#2d6a4f' />    <circle cx='172' cy='256' r='6' fill='#d4a373' />  </g>"
-          + "</svg>";
+      "<table cellpadding='0' cellspacing='0' border='0' style='margin: 0 auto; display:"
+          + " inline-table;'><tr><td align='center' valign='middle' style='width: 48px; height:"
+          + " 48px; background-color: "
+          + BRAND_COLOR_DARK
+          + "; border-radius: 12px; border: 2px solid "
+          + BRAND_COLOR_LIGHT
+          + "; text-align: center;'><span style='font-family: -apple-system, BlinkMacSystemFont,"
+          + " \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; font-size: 26px; font-weight:"
+          + " 800; color: #ffffff; line-height: 48px; display: block;'>K<span style='color:"
+          + " #d4a373;'>.</span></span></td></tr></table>";
 
   public static String buildVerificationEmail(String verificationLink) {
     return buildEmailLayout(
@@ -64,6 +54,36 @@ public final class KyrosEmailTemplate {
             + "; font-size: 13px; line-height: 18px; margin: 0;'>⏱️ Liên kết xác thực này có hiệu"
             + " lực trong vòng <strong>1 giờ</strong>. Nếu bạn không tạo tài khoản này, vui lòng bỏ"
             + " qua email.</p></div>");
+  }
+
+  public static String buildPasswordResetEmail(String resetLink) {
+    return buildEmailLayout(
+        "Reset Your Kyros Password",
+        "<h3 style='margin: 0 0 16px; color: "
+            + TEXT_MAIN
+            + "; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;'>Đặt Lại Mật Khẩu /"
+            + " Reset Password</h3><p style='margin: 0 0 24px; color: "
+            + TEXT_MAIN
+            + "; font-size: 15px; line-height: 24px;'>Chúng tôi nhận được yêu cầu đặt lại mật khẩu"
+            + " cho tài khoản <strong>Kyros AI</strong> của bạn. Vui lòng nhấn vào nút bên dưới để"
+            + " thiết lập mật khẩu mới.</p><div style='text-align: center; margin: 32px 0;'>  <a"
+            + " href='"
+            + resetLink
+            + "' style='background: linear-gradient(135deg, "
+            + BRAND_COLOR_DARK
+            + " 0%, "
+            + BRAND_COLOR_PRIMARY
+            + " 50%, "
+            + BRAND_COLOR_LIGHT
+            + " 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; font-weight: 600;"
+            + " font-size: 15px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 12px"
+            + " rgba(45, 106, 79, 0.25);'>Đặt Lại Mật Khẩu (Reset Password)</a></div><div"
+            + " style='background-color: #fefce8; border: 1px solid #fef08a; border-radius: 8px;"
+            + " padding: 12px 16px; margin-top: 24px;'>  <p style='color: "
+            + TEXT_MUTED
+            + "; font-size: 13px; line-height: 18px; margin: 0;'>⏱️ Liên kết này có hiệu lực trong"
+            + " vòng <strong>1 giờ</strong>. Nếu bạn không yêu cầu đặt lại mật khẩu, bạn có thể yên"
+            + " tâm bỏ qua email này và tài khoản của bạn vẫn được bảo vệ an toàn.</p></div>");
   }
 
   public static String buildNotificationEmail(

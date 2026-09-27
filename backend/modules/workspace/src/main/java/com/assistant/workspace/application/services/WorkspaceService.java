@@ -3,6 +3,7 @@ package com.assistant.workspace.application.services;
 import com.assistant.kernel.domain.UserId;
 import com.assistant.kernel.domain.WorkspaceId;
 import com.assistant.kernel.event.UserRegistered;
+import com.assistant.kernel.exception.DomainException;
 import com.assistant.workspace.application.ports.in.TenantValidationPort;
 import com.assistant.workspace.application.ports.in.WorkspacePort;
 import com.assistant.workspace.domain.Membership;
@@ -72,7 +73,8 @@ public class WorkspaceService implements WorkspacePort, TenantValidationPort {
   public void setPrimaryWorkspace(WorkspaceId workspaceId, UserId userId) {
     // Check if user is a member of the target workspace
     if (!workspaceRepository.existsMembership(workspaceId, userId)) {
-      throw new IllegalStateException("User is not a member of the target workspace");
+      throw new DomainException(
+          "workspace.not_member", "User is not a member of the target workspace");
     }
 
     // Load user's workspaces

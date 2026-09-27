@@ -4,6 +4,7 @@ import com.assistant.kernel.domain.UserId;
 import com.assistant.kernel.domain.WorkspaceId;
 import com.assistant.kernel.event.NotificationEvents;
 import com.assistant.kernel.event.WorkspaceProvisioned;
+import com.assistant.kernel.exception.DomainException;
 import com.assistant.kernel.exception.EntityNotFoundException;
 import com.assistant.notification.application.dto.DismissNotificationCommand;
 import com.assistant.notification.application.dto.DispatchNotificationCommand;
@@ -149,10 +150,13 @@ public class NotificationApplicationService
     InAppNotification notification =
         inAppRepository
             .findById(command.notificationId(), command.workspaceId())
-            .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "notification.not_found", "Notification not found"));
 
     if (!notification.getUserId().equals(command.userId())) {
-      throw new IllegalArgumentException("User does not own this notification");
+      throw new DomainException("notification.not_owner", "User does not own this notification");
     }
 
     notification.markRead();
@@ -169,10 +173,13 @@ public class NotificationApplicationService
     InAppNotification notification =
         inAppRepository
             .findById(command.notificationId(), command.workspaceId())
-            .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "notification.not_found", "Notification not found"));
 
     if (!notification.getUserId().equals(command.userId())) {
-      throw new IllegalArgumentException("User does not own this notification");
+      throw new DomainException("notification.not_owner", "User does not own this notification");
     }
 
     notification.dismiss();

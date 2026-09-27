@@ -85,7 +85,7 @@
               <button
                 type="button"
                 class="delete-btn"
-                (click)="deleteConversation($event, conv)"
+                (click)="openDeleteModal($event, conv)"
                 [title]="languageService.t().memory.audit.deleteConvBtn"
                 aria-label="Delete conversation"
               >
@@ -115,4 +115,18 @@
       (closed)="closeTurnsModal()"
     ></app-turns-modal>
   }
+
+  <!-- Delete Conversation Confirmation Modal -->
+  <app-confirm-modal
+    [isOpen]="isDeleteModalOpen()"
+    [title]="languageService.t().memory.audit.deleteConvBtn"
+    [message]="languageService.t().memory.audit.deleteConvConfirm"
+    [confirmText]="languageService.t().memory.audit.deleteConvBtn"
+    [cancelText]="languageService.t().common.cancel"
+    [loading]="isDeleting()"
+    variant="danger"
+    iconName="trash"
+    (confirm)="onConfirmDelete()"
+    (cancel)="closeDeleteModal()"
+  />
 </div>

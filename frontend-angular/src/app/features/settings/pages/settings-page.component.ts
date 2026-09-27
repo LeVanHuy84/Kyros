@@ -13,6 +13,7 @@ import { AiConfigPanelComponent } from '../components/ai-config-panel/ai-config-
 import { CalendarSettingsPanelComponent } from '../components/calendar-settings-panel/calendar-settings-panel.component';
 import { NotificationSettingsPanelComponent } from '../components/notification-settings-panel/notification-settings-panel.component';
 import { PreferencesPanelComponent } from '../components/preferences-panel/preferences-panel.component';
+import { ChangePasswordPanelComponent } from '../components/change-password-panel/change-password-panel.component';
 import { LanguageService } from '@core/services/language.service';
 
 export type SettingsSubTab = 'ai' | 'calendar' | 'notif' | 'vault' | 'pref';
@@ -33,6 +34,7 @@ export interface SettingsTabItem {
     CalendarSettingsPanelComponent,
     NotificationSettingsPanelComponent,
     PreferencesPanelComponent,
+    ChangePasswordPanelComponent,
   ],
   templateUrl: './settings-page.component.html',
   styleUrl: './settings-page.component.scss',

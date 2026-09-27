@@ -63,7 +63,10 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
     Conversation conversation =
         conversationRepository
             .findById(command.conversationId(), command.workspaceId())
-            .orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "memory.conversation.not_found", "Conversation not found"));
 
     Instant now = Instant.now();
     ConversationTurn turn =
@@ -113,7 +116,10 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
     Conversation conversation =
         conversationRepository
             .findById(conversationId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "memory.conversation.not_found", "Conversation not found"));
 
     conversation.clear();
     conversationRepository.save(conversation);
@@ -130,7 +136,10 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
     Conversation conversation =
         conversationRepository
             .findById(conversationId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "memory.conversation.not_found", "Conversation not found"));
 
     conversationRepository.deleteTurns(conversationId);
     conversationRepository.delete(conversationId, workspaceId);
@@ -144,7 +153,7 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
   public List<TurnDTO> getRecentTurns(
       WorkspaceId workspaceId, ConversationId conversationId, int limit) {
     if (conversationRepository.findById(conversationId, workspaceId).isEmpty()) {
-      throw new EntityNotFoundException("Conversation not found");
+      throw new EntityNotFoundException("memory.conversation.not_found", "Conversation not found");
     }
 
     return conversationRepository.findRecentTurns(conversationId, limit).stream()
@@ -252,7 +261,10 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
       WorkspaceId workspaceId, UserId userId, String content, float confidenceScore) {
     SensitiveDataScreeningResult screeningResult = screeningService.screen(content);
     if (!screeningResult.isAllowed()) {
-      throw new DomainException("Sensitive data rejected: " + screeningResult.reason());
+      throw new DomainException(
+          "memory.sensitive_data_rejected",
+          "Sensitive data rejected: " + screeningResult.reason(),
+          screeningResult.reason());
     }
 
     MemoryId id = MemoryId.random();
@@ -270,13 +282,19 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
       MemoryId memoryId, WorkspaceId workspaceId, String content, float confidenceScore) {
     SensitiveDataScreeningResult screeningResult = screeningService.screen(content);
     if (!screeningResult.isAllowed()) {
-      throw new DomainException("Sensitive data rejected: " + screeningResult.reason());
+      throw new DomainException(
+          "memory.sensitive_data_rejected",
+          "Sensitive data rejected: " + screeningResult.reason(),
+          screeningResult.reason());
     }
 
     MemoryEntry entry =
         memoryEntryRepository
             .findById(memoryId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("Memory entry not found"));
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "memory.entry.not_found", "Memory entry not found"));
 
     boolean contentUpdated = !entry.getContent().equals(content);
     entry.revise(content, confidenceScore);
@@ -295,7 +313,10 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
     MemoryEntry entry =
         memoryEntryRepository
             .findById(memoryId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("Memory entry not found"));
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "memory.entry.not_found", "Memory entry not found"));
 
     memoryEntryRepository.delete(memoryId, workspaceId);
 
@@ -325,7 +346,10 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
     UserPreferences preferences =
         userPreferencesRepository
             .find(workspaceId, userId)
-            .orElseThrow(() -> new EntityNotFoundException("User preferences not found"));
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "memory.preferences.not_found", "User preferences not found"));
 
     preferences.resetToDefaults();
     userPreferencesRepository.save(preferences);

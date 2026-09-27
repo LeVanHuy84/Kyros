@@ -74,4 +74,18 @@
       </button>
     </div>
   </div>
+
+  <!-- Clear History Confirmation Modal -->
+  <app-confirm-modal
+    [isOpen]="isClearConfirmOpen()"
+    [title]="languageService.t().memory.audit.clearHistoryBtn"
+    [message]="languageService.t().memory.audit.clearHistoryConfirm"
+    [confirmText]="languageService.t().memory.audit.clearHistoryBtn"
+    [cancelText]="languageService.t().common.cancel"
+    [loading]="isClearing()"
+    variant="danger"
+    iconName="trash"
+    (confirm)="onConfirmClearHistory()"
+    (cancel)="closeClearConfirm()"
+  />
 </div>

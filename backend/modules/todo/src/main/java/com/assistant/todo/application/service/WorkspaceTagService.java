@@ -45,7 +45,11 @@ public class WorkspaceTagService implements WorkspaceTagPort {
         tagRepository
             .findById(tagId, workspaceId)
             .orElseThrow(
-                () -> new EntityNotFoundException("Workspace tag not found with ID: " + tagId));
+                () ->
+                    new EntityNotFoundException(
+                        "todo.tag.not_found_with_id",
+                        "Workspace tag not found with ID: " + tagId,
+                        tagId));
     if (name != null && !name.isBlank()) {
       String trimmedName = name.trim();
       if (!trimmedName.equalsIgnoreCase(tag.getName())
@@ -63,7 +67,8 @@ public class WorkspaceTagService implements WorkspaceTagPort {
   @Override
   public void deleteTag(UUID tagId, WorkspaceId workspaceId) {
     if (tagRepository.findById(tagId, workspaceId).isEmpty()) {
-      throw new EntityNotFoundException("Workspace tag not found with ID: " + tagId);
+      throw new EntityNotFoundException(
+          "todo.tag.not_found_with_id", "Workspace tag not found with ID: " + tagId, tagId);
     }
     tagRepository.delete(tagId, workspaceId);
   }

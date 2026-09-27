@@ -78,7 +78,14 @@ public class UserRepositoryAdapter implements UserRepository {
     jpa.setJti(domain.getJti());
     jpa.setEventType(domain.getEventType());
     jpa.setOccurredAt(domain.getOccurredAt());
-    jpa.setMetadata(domain.getMetadata());
+    String meta = domain.getMetadata();
+    if (meta != null && !meta.isBlank()) {
+      String trimmed = meta.trim();
+      if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+        meta = "{\"message\":\"" + trimmed.replace("\"", "\\\"") + "\"}";
+      }
+    }
+    jpa.setMetadata(meta);
     return jpa;
   }
 }

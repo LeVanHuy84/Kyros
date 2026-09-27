@@ -10,6 +10,10 @@ import {
   User,
   VerifyTokenRequest,
   ResendVerificationRequest,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
+  ChangePasswordRequest,
+  MessageResponse,
 } from '../models/auth.models';
 import { WorkspaceContextService } from '@core/services/workspace-context.service';
 
@@ -103,6 +107,29 @@ export class AuthService {
   resendVerification(email: string): Observable<unknown> {
     const payload: ResendVerificationRequest = { email };
     return this.http.post('/api/auth/resend-verification', payload);
+  }
+
+  /**
+   * Requests password reset email link for given email.
+   */
+  forgotPassword(email: string): Observable<MessageResponse> {
+    const payload: ForgotPasswordRequest = { email };
+    return this.http.post<MessageResponse>('/api/auth/forgot-password', payload);
+  }
+
+  /**
+   * Resets user password using the provided reset token.
+   */
+  resetPassword(token: string, newPassword: string): Observable<MessageResponse> {
+    const payload: ResetPasswordRequest = { token, newPassword };
+    return this.http.post<MessageResponse>('/api/auth/reset-password', payload);
+  }
+
+  /**
+   * Changes current user's password.
+   */
+  changePassword(request: ChangePasswordRequest): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>('/api/auth/change-password', request);
   }
 
   /**

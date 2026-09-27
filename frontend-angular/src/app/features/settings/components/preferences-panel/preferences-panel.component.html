@@ -167,10 +167,9 @@
           [ngModel]="defaultPriority()"
           (ngModelChange)="defaultPriority.set($event)"
         >
-          <option value="Low">Low (Thấp)</option>
-          <option value="Medium">Medium (Trung bình)</option>
-          <option value="High">High (Cao)</option>
-          <option value="Urgent">Urgent (Khẩn cấp)</option>
+          <option value="Low">{{ languageService.t().tasks.low }}</option>
+          <option value="Medium">{{ languageService.t().tasks.medium }}</option>
+          <option value="High">{{ languageService.t().tasks.high }}</option>
         </select>
       </div>
     </div>

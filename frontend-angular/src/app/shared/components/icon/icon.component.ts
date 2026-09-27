@@ -55,6 +55,7 @@ export type AppIconName =
   | 'users'
   | 'alert-circle'
   | 'arrow-right'
+  | 'arrow-left'
   | 'edit';
 
 @Component({

@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppIconComponent } from '@shared/components/icon/icon.component';
+import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { MarkdownViewerComponent } from '@shared/components/markdown/markdown-viewer.component';
 import { Note } from '../../models/note.models';
 import { NotesService } from '../../services/notes.service';
@@ -17,7 +18,7 @@ import { LanguageService } from '@core/services/language.service';
 @Component({
   selector: 'app-note-detail-view',
   standalone: true,
-  imports: [CommonModule, AppIconComponent, MarkdownViewerComponent],
+  imports: [CommonModule, AppIconComponent, MarkdownViewerComponent, ConfirmModalComponent],
   templateUrl: './note-detail-view.component.html',
   styleUrl: './note-detail-view.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +32,8 @@ export class NoteDetailViewComponent {
   readonly languageService = inject(LanguageService);
 
   readonly isCopied = signal<boolean>(false);
+  readonly isDeleteModalOpen = signal<boolean>(false);
+  readonly isDeleting = signal<boolean>(false);
 
   readonly isPinned = computed<boolean>(() => {
     const current = this.note();
@@ -65,10 +68,27 @@ export class NoteDetailViewComponent {
   onDelete(): void {
     const current = this.note();
     if (!current) return;
-    const confirmMsg = this.languageService.t().notes.actions.deleteConfirm;
-    if (confirm(confirmMsg)) {
-      this.notesService.deleteNote(current.id).subscribe();
-    }
+    this.isDeleteModalOpen.set(true);
+  }
+
+  closeDeleteModal(): void {
+    this.isDeleteModalOpen.set(false);
+  }
+
+  onConfirmDelete(): void {
+    const current = this.note();
+    if (!current) return;
+
+    this.isDeleting.set(true);
+    this.notesService.deleteNote(current.id).subscribe({
+      next: () => {
+        this.isDeleting.set(false);
+        this.isDeleteModalOpen.set(false);
+      },
+      error: () => {
+        this.isDeleting.set(false);
+      },
+    });
   }
 
   formatDate(dateStr?: string): string {

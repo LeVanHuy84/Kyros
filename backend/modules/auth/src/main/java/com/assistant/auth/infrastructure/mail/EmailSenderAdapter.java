@@ -46,4 +46,27 @@ public class EmailSenderAdapter implements EmailSenderPort {
       throw new RuntimeException("Email delivery failed", e);
     }
   }
+
+  @Override
+  public void sendPasswordResetEmail(String email, String token) {
+    String resetLink = frontendUrl + "/auth/reset-password?token=" + token;
+    try {
+      MimeMessage mimeMessage = mailSender.createMimeMessage();
+      MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+
+      String htmlMsg =
+          com.assistant.kernel.util.KyrosEmailTemplate.buildPasswordResetEmail(resetLink);
+
+      helper.setText(htmlMsg, true);
+      helper.setTo(email);
+      helper.setSubject("Kyros - Reset Your Password");
+      helper.setFrom("no-reply@kyros.ai");
+
+      mailSender.send(mimeMessage);
+      log.info("Successfully sent password reset link to {}", email);
+    } catch (Exception e) {
+      log.error("Failed to send password reset link to {}", email, e);
+      throw new RuntimeException("Email delivery failed", e);
+    }
+  }
 }

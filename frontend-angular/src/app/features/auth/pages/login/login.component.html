@@ -100,9 +100,9 @@
             {{ languageService.t().auth.passwordLabel }}
           </label>
           @if (!isRegister()) {
-            <span class="forgot-pwd-hint">
+            <a routerLink="/auth/forgot-password" class="forgot-pwd-hint">
               {{ languageService.t().auth.forgotPassword }}
-            </span>
+            </a>
           }
         </div>
         <div class="input-wrapper">

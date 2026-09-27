@@ -36,6 +36,36 @@ export const routes: Routes = [
         (m) => m.VerifyComponent
       ),
   },
+  {
+    path: 'auth/forgot-password',
+    loadComponent: () =>
+      import(
+        '@features/auth/pages/forgot-password/forgot-password.component'
+      ).then((m) => m.ForgotPasswordComponent),
+    canActivate: [guestGuard],
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import(
+        '@features/auth/pages/forgot-password/forgot-password.component'
+      ).then((m) => m.ForgotPasswordComponent),
+    canActivate: [guestGuard],
+  },
+  {
+    path: 'auth/reset-password',
+    loadComponent: () =>
+      import(
+        '@features/auth/pages/reset-password/reset-password.component'
+      ).then((m) => m.ResetPasswordComponent),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import(
+        '@features/auth/pages/reset-password/reset-password.component'
+      ).then((m) => m.ResetPasswordComponent),
+  },
 
   // Protected App Shell Routes
   {

@@ -4,14 +4,14 @@
     <section class="setting-section">
       <div class="section-header">
         <app-icon name="brain" [size]="16" class="section-icon"></app-icon>
-        <h3 class="section-title">Nhà cung cấp & Xác thực (Provider & Vault)</h3>
+        <h3 class="section-title">{{ languageService.t().settings.aiProvider.providerSectionTitle }}</h3>
       </div>
 
       <!-- Row 1: AI Provider Selection -->
       <div class="setting-row">
         <div class="setting-info">
           <label for="provider-select" class="setting-label">{{ languageService.t().settings.aiProvider.providerLabel }}</label>
-          <span class="setting-desc">Chọn dịch vụ LLM đám mây hoặc máy chủ AI cục bộ (Ollama, LM Studio).</span>
+          <span class="setting-desc">{{ languageService.t().settings.aiProvider.providerDesc }}</span>
         </div>
         <div class="setting-control">
           <select
@@ -29,13 +29,6 @@
               </optgroup>
             }
           </select>
-
-          @if (currentPreset().description) {
-            <div class="provider-info-note">
-              <app-icon name="info" [size]="13" class="info-icon"></app-icon>
-              <span>{{ currentPreset().description }}</span>
-            </div>
-          }
         </div>
       </div>
 
@@ -46,7 +39,7 @@
             <label for="api-key" class="setting-label">{{ languageService.t().settings.aiProvider.apiKeyLabel }}</label>
             <span class="vault-status-badge">
               <app-icon name="shield-check" [size]="11"></app-icon>
-              <span>AES-256 Vault</span>
+              <span>Vault</span>
             </span>
           </div>
           <span class="setting-desc">{{ languageService.t().settings.aiProvider.apiKeyHelp }}</span>
@@ -92,7 +85,7 @@
       <div class="setting-row">
         <div class="setting-info">
           <label for="base-url" class="setting-label">{{ languageService.t().settings.aiProvider.baseUrlLabel }}</label>
-          <span class="setting-desc">Đường dẫn Base Endpoint của nhà cung cấp hoặc gateway proxy riêng.</span>
+          <span class="setting-desc">{{ languageService.t().settings.aiProvider.baseUrlDesc }}</span>
         </div>
         <div class="setting-control">
           <input
@@ -113,19 +106,19 @@
     <section class="setting-section">
       <div class="section-header">
         <app-icon name="sparkles" [size]="16" class="section-icon"></app-icon>
-        <h3 class="section-title">Mô hình & Tham số Sinh ngôn ngữ (Generation)</h3>
+        <h3 class="section-title">{{ languageService.t().settings.aiProvider.generationSectionTitle }}</h3>
       </div>
 
       <!-- Row 4: Target Model -->
       <div class="setting-row">
         <div class="setting-info">
           <label for="target-model" class="setting-label">{{ languageService.t().settings.aiProvider.modelLabel }}</label>
-          <span class="setting-desc">Mô hình mặc định được sử dụng cho tác vụ phân tích, xếp lịch và chat.</span>
+          <span class="setting-desc">{{ languageService.t().settings.aiProvider.modelDesc }}</span>
         </div>
         <div class="setting-control">
           @if (currentPreset().popularModels && currentPreset().popularModels!.length > 0) {
             <div class="model-chips-wrapper">
-              <span class="chips-label">Gợi ý nhanh:</span>
+              <span class="chips-label">{{ languageService.t().settings.aiProvider.quickSuggestions }}</span>
               <div class="model-chips-list">
                 @for (m of currentPreset().popularModels; track m) {
                   <button
@@ -160,7 +153,7 @@
             <label for="temp-slider" class="setting-label">{{ languageService.t().settings.aiProvider.temperatureLabel }}</label>
             <span class="temp-badge">{{ temperature() }}</span>
           </div>
-          <span class="setting-desc">Mức nhiệt độ càng thấp câu trả lời càng chính xác và chuẩn mực; mức cao sẽ sáng tạo hơn.</span>
+          <span class="setting-desc">{{ languageService.t().settings.aiProvider.tempDesc }}</span>
         </div>
         <div class="setting-control">
           <div class="slider-wrapper">
@@ -176,9 +169,9 @@
               class="form-range"
             />
             <div class="range-labels">
-              <span>0.0 (Logic)</span>
-              <span>0.7 (Cân bằng)</span>
-              <span>1.0 (Sáng tạo)</span>
+              <span>0.0 ({{ languageService.t().settings.aiProvider.tempPrecise }})</span>
+              <span>0.7 ({{ languageService.t().settings.aiProvider.tempBalanced }})</span>
+              <span>1.0 ({{ languageService.t().settings.aiProvider.tempCreative }})</span>
             </div>
           </div>
         </div>
@@ -189,7 +182,7 @@
     <div class="form-actions-bar">
       <div class="actions-left-hint">
         <app-icon name="shield-check" [size]="14"></app-icon>
-        <span>Cấu hình được lưu an toàn vào cơ sở dữ liệu riêng của bạn</span>
+        <span>{{ languageService.t().settings.aiProvider.vaultEncrypted }}</span>
       </div>
 
       <button
