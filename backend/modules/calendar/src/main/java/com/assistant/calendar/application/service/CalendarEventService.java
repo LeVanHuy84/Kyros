@@ -101,7 +101,8 @@ public class CalendarEventService implements CalendarPort {
     CalendarEvent event =
         calendarEventRepository
             .findById(eventId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
+            .orElseThrow(
+                () -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
     EventTimeRange newTimeRange = new EventTimeRange(startTime, endTime);
     event.reschedule(newTimeRange, Instant.now());
     calendarEventRepository.save(event);
@@ -112,7 +113,8 @@ public class CalendarEventService implements CalendarPort {
     CalendarEvent event =
         calendarEventRepository
             .findById(eventId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
+            .orElseThrow(
+                () -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
     event.delete();
     calendarEventRepository.save(event);
     eventPublisher.publishEvent(
@@ -126,7 +128,8 @@ public class CalendarEventService implements CalendarPort {
     CalendarEvent event =
         calendarEventRepository
             .findById(eventId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
+            .orElseThrow(
+                () -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
     event.updateMetadata(
         new EventTitle(title),
         (description != null && !description.isBlank()) ? new EventDescription(description) : null);
@@ -139,7 +142,8 @@ public class CalendarEventService implements CalendarPort {
     CalendarEvent event =
         calendarEventRepository
             .findById(eventId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
+            .orElseThrow(
+                () -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
     event.snoozeReminder(
         new com.assistant.calendar.domain.model.ReminderId(UUID.fromString(reminderId)),
         new com.assistant.calendar.domain.model.SnoozeOffset(Duration.ofMinutes(snoozeMinutes)),
@@ -152,7 +156,8 @@ public class CalendarEventService implements CalendarPort {
     CalendarEvent event =
         calendarEventRepository
             .findById(eventId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
+            .orElseThrow(
+                () -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
     event.dismissReminder(
         new com.assistant.calendar.domain.model.ReminderId(UUID.fromString(reminderId)));
     calendarEventRepository.save(event);
@@ -163,7 +168,8 @@ public class CalendarEventService implements CalendarPort {
     CalendarEvent event =
         calendarEventRepository
             .findById(eventId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
+            .orElseThrow(
+                () -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
     event.addReminder(new LeadTime(Duration.ofMinutes(leadTimeMinutes)), Instant.now());
     calendarEventRepository.save(event);
   }
@@ -173,7 +179,8 @@ public class CalendarEventService implements CalendarPort {
     CalendarEvent event =
         calendarEventRepository
             .findById(eventId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
+            .orElseThrow(
+                () -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
     event.removeReminder(
         new com.assistant.calendar.domain.model.ReminderId(UUID.fromString(reminderId)));
     calendarEventRepository.save(event);
@@ -185,7 +192,8 @@ public class CalendarEventService implements CalendarPort {
     CalendarEvent event =
         calendarEventRepository
             .findById(eventId, workspaceId)
-            .orElseThrow(() -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
+            .orElseThrow(
+                () -> new EntityNotFoundException("calendar.event.not_found", "Event not found"));
     return toDto(event);
   }
 

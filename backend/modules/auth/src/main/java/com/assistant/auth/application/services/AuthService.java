@@ -110,13 +110,16 @@ public class AuthService
     UserIdentity user =
         userRepository
             .findByEmail(normalizedEmail)
-            .orElseThrow(() -> new DomainException("auth.credentials.invalid", "Invalid email or password"));
+            .orElseThrow(
+                () -> new DomainException("auth.credentials.invalid", "Invalid email or password"));
 
     if (user.getStatus() == AccountStatus.PendingVerification) {
-      throw new DomainException("auth.email.not_verified", "Email is not verified. Please verify your email.");
+      throw new DomainException(
+          "auth.email.not_verified", "Email is not verified. Please verify your email.");
     }
     if (user.getStatus() == AccountStatus.Locked) {
-      throw new DomainException("auth.account.locked", "Account is locked due to too many failed login attempts");
+      throw new DomainException(
+          "auth.account.locked", "Account is locked due to too many failed login attempts");
     }
     if (user.getStatus() == AccountStatus.Suspended) {
       throw new DomainException("auth.account.suspended", "Account is suspended");
@@ -144,10 +147,18 @@ public class AuthService
     UserId userId =
         refreshTokenPort
             .findUserIdByToken(refreshToken)
-            .orElseThrow(() -> new DomainException("auth.token.invalid_or_expired", "Invalid or expired refresh token"));
+            .orElseThrow(
+                () ->
+                    new DomainException(
+                        "auth.token.invalid_or_expired", "Invalid or expired refresh token"));
 
     UserIdentity user =
-        userRepository.findById(userId).orElseThrow(() -> new DomainException("auth.token.user_not_found", "User associated with token not found"));
+        userRepository
+            .findById(userId)
+            .orElseThrow(
+                () ->
+                    new DomainException(
+                        "auth.token.user_not_found", "User associated with token not found"));
 
     // Revoke old refresh token (rotation policy)
     refreshTokenPort.revoke(refreshToken);
@@ -168,7 +179,8 @@ public class AuthService
       tokenRevocationCache.revoke(jti, remainingValidity);
 
       // 2. Append postgres audit log
-      SessionEvent event = new SessionEvent(userId, jti, "Logout", "{\"message\":\"User logged out\"}");
+      SessionEvent event =
+          new SessionEvent(userId, jti, "Logout", "{\"message\":\"User logged out\"}");
       userRepository.saveSessionEvent(event);
     }
   }
@@ -179,16 +191,23 @@ public class AuthService
     EmailVerificationToken token =
         tokenRepository
             .findByToken(tokenValue)
-            .orElseThrow(() -> new DomainException("auth.token.invalid_or_expired", "Invalid or expired verification token"));
+            .orElseThrow(
+                () ->
+                    new DomainException(
+                        "auth.token.invalid_or_expired", "Invalid or expired verification token"));
 
     if (token.isExpired()) {
-      throw new DomainException("auth.token.expired", "Verification token has expired. Please request a new one.");
+      throw new DomainException(
+          "auth.token.expired", "Verification token has expired. Please request a new one.");
     }
 
     UserIdentity user =
         userRepository
             .findById(token.getUserId())
-            .orElseThrow(() -> new DomainException("auth.token.user_not_found", "User associated with token not found"));
+            .orElseThrow(
+                () ->
+                    new DomainException(
+                        "auth.token.user_not_found", "User associated with token not found"));
 
     user.verifyEmail();
     userRepository.save(user);
@@ -204,10 +223,14 @@ public class AuthService
     UserIdentity user =
         userRepository
             .findByEmail(normalizedEmail)
-            .orElseThrow(() -> new DomainException("auth.user.not_found", "No user found with the given email address"));
+            .orElseThrow(
+                () ->
+                    new DomainException(
+                        "auth.user.not_found", "No user found with the given email address"));
 
     if (user.getStatus() != AccountStatus.PendingVerification) {
-      throw new DomainException("auth.account.already_verified", "Account is already verified or cannot be verified");
+      throw new DomainException(
+          "auth.account.already_verified", "Account is already verified or cannot be verified");
     }
 
     // Delete any existing token for this user to avoid duplication
@@ -231,7 +254,10 @@ public class AuthService
     UserIdentity user =
         userRepository
             .findByEmail(normalizedEmail)
-            .orElseThrow(() -> new DomainException("auth.user.not_found", "No user found with the given email address"));
+            .orElseThrow(
+                () ->
+                    new DomainException(
+                        "auth.user.not_found", "No user found with the given email address"));
 
     // Delete any existing reset token for this user
     passwordResetTokenRepository.deleteByUserId(user.getId());
@@ -239,8 +265,7 @@ public class AuthService
     // Generate new reset token (expires in 1 hour)
     String tokenValue = java.util.UUID.randomUUID().toString();
     PasswordResetToken token =
-        new PasswordResetToken(
-            user.getId(), tokenValue, Instant.now().plus(Duration.ofHours(1)));
+        new PasswordResetToken(user.getId(), tokenValue, Instant.now().plus(Duration.ofHours(1)));
     passwordResetTokenRepository.save(token);
 
     // Send password reset email
@@ -253,19 +278,28 @@ public class AuthService
     PasswordResetToken token =
         passwordResetTokenRepository
             .findByToken(tokenValue)
-            .orElseThrow(() -> new DomainException("auth.token.invalid_or_expired", "Invalid or expired password reset token"));
+            .orElseThrow(
+                () ->
+                    new DomainException(
+                        "auth.token.invalid_or_expired",
+                        "Invalid or expired password reset token"));
 
     if (token.isExpired()) {
-      throw new DomainException("auth.token.expired", "Password reset token has expired. Please request a new one.");
+      throw new DomainException(
+          "auth.token.expired", "Password reset token has expired. Please request a new one.");
     }
 
     UserIdentity user =
         userRepository
             .findById(token.getUserId())
-            .orElseThrow(() -> new DomainException("auth.token.user_not_found", "User associated with token not found"));
+            .orElseThrow(
+                () ->
+                    new DomainException(
+                        "auth.token.user_not_found", "User associated with token not found"));
 
     if (newPassword == null || newPassword.trim().length() < 8) {
-      throw new DomainException("auth.password.min_length", "Password must be at least 8 characters long");
+      throw new DomainException(
+          "auth.password.min_length", "Password must be at least 8 characters long");
     }
 
     String hashedPassword = passwordHasher.hash(newPassword);
@@ -281,7 +315,12 @@ public class AuthService
     passwordResetTokenRepository.delete(token);
 
     // Record session audit event
-    SessionEvent event = new SessionEvent(user.getId(), null, "PasswordChanged", "{\"message\":\"User password reset via token\"}");
+    SessionEvent event =
+        new SessionEvent(
+            user.getId(),
+            null,
+            "PasswordChanged",
+            "{\"message\":\"User password reset via token\"}");
     userRepository.saveSessionEvent(event);
   }
 
@@ -298,18 +337,25 @@ public class AuthService
     }
 
     if (newPassword == null || newPassword.trim().length() < 8) {
-      throw new DomainException("auth.password.min_length", "Password must be at least 8 characters long");
+      throw new DomainException(
+          "auth.password.min_length", "Password must be at least 8 characters long");
     }
 
     if (currentPassword.equals(newPassword)) {
-      throw new DomainException("auth.password.same_as_old", "New password must be different from current password");
+      throw new DomainException(
+          "auth.password.same_as_old", "New password must be different from current password");
     }
 
     String hashedPassword = passwordHasher.hash(newPassword);
     user.setPasswordHash(hashedPassword);
     userRepository.save(user);
 
-    SessionEvent event = new SessionEvent(userId, null, "PasswordChanged", "{\"message\":\"User changed password via settings\"}");
+    SessionEvent event =
+        new SessionEvent(
+            userId,
+            null,
+            "PasswordChanged",
+            "{\"message\":\"User changed password via settings\"}");
     userRepository.saveSessionEvent(event);
   }
 }

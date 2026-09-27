@@ -153,8 +153,7 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
   public List<TurnDTO> getRecentTurns(
       WorkspaceId workspaceId, ConversationId conversationId, int limit) {
     if (conversationRepository.findById(conversationId, workspaceId).isEmpty()) {
-      throw new EntityNotFoundException(
-          "memory.conversation.not_found", "Conversation not found");
+      throw new EntityNotFoundException("memory.conversation.not_found", "Conversation not found");
     }
 
     return conversationRepository.findRecentTurns(conversationId, limit).stream()

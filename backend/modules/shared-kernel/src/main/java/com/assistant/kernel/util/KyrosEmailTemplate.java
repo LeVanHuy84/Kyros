@@ -15,18 +15,16 @@ public final class KyrosEmailTemplate {
   private static final String BORDER_COLOR = "#d8e2dc"; // Subtle Soft Mint Border
 
   private static final String KYROS_LOGO_SVG =
-      "<table cellpadding='0' cellspacing='0' border='0' style='margin: 0 auto; display: inline-table;'>"
-          + "<tr>"
-          + "<td align='center' valign='middle' style='width: 48px; height: 48px; background-color: "
+      "<table cellpadding='0' cellspacing='0' border='0' style='margin: 0 auto; display:"
+          + " inline-table;'><tr><td align='center' valign='middle' style='width: 48px; height:"
+          + " 48px; background-color: "
           + BRAND_COLOR_DARK
           + "; border-radius: 12px; border: 2px solid "
           + BRAND_COLOR_LIGHT
-          + "; text-align: center;'>"
-          + "<span style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; font-size: 26px; font-weight: 800; color: #ffffff; line-height: 48px; display: block;'>K<span style='color: #d4a373;'>.</span></span>"
-          + "</td>"
-          + "</tr>"
-          + "</table>";
-
+          + "; text-align: center;'><span style='font-family: -apple-system, BlinkMacSystemFont,"
+          + " \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; font-size: 26px; font-weight:"
+          + " 800; color: #ffffff; line-height: 48px; display: block;'>K<span style='color:"
+          + " #d4a373;'>.</span></span></td></tr></table>";
 
   public static String buildVerificationEmail(String verificationLink) {
     return buildEmailLayout(
@@ -66,9 +64,10 @@ public final class KyrosEmailTemplate {
             + "; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;'>Đặt Lại Mật Khẩu /"
             + " Reset Password</h3><p style='margin: 0 0 24px; color: "
             + TEXT_MAIN
-            + "; font-size: 15px; line-height: 24px;'>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản"
-            + " <strong>Kyros AI</strong> của bạn. Vui lòng nhấn vào nút bên dưới để thiết lập mật khẩu mới.</p><div"
-            + " style='text-align: center; margin: 32px 0;'>  <a href='"
+            + "; font-size: 15px; line-height: 24px;'>Chúng tôi nhận được yêu cầu đặt lại mật khẩu"
+            + " cho tài khoản <strong>Kyros AI</strong> của bạn. Vui lòng nhấn vào nút bên dưới để"
+            + " thiết lập mật khẩu mới.</p><div style='text-align: center; margin: 32px 0;'>  <a"
+            + " href='"
             + resetLink
             + "' style='background: linear-gradient(135deg, "
             + BRAND_COLOR_DARK
@@ -82,9 +81,9 @@ public final class KyrosEmailTemplate {
             + " style='background-color: #fefce8; border: 1px solid #fef08a; border-radius: 8px;"
             + " padding: 12px 16px; margin-top: 24px;'>  <p style='color: "
             + TEXT_MUTED
-            + "; font-size: 13px; line-height: 18px; margin: 0;'>⏱️ Liên kết này có hiệu lực trong vòng"
-            + " <strong>1 giờ</strong>. Nếu bạn không yêu cầu đặt lại mật khẩu, bạn có thể yên tâm bỏ qua email này"
-            + " và tài khoản của bạn vẫn được bảo vệ an toàn.</p></div>");
+            + "; font-size: 13px; line-height: 18px; margin: 0;'>⏱️ Liên kết này có hiệu lực trong"
+            + " vòng <strong>1 giờ</strong>. Nếu bạn không yêu cầu đặt lại mật khẩu, bạn có thể yên"
+            + " tâm bỏ qua email này và tài khoản của bạn vẫn được bảo vệ an toàn.</p></div>");
   }
 
   public static String buildNotificationEmail(

@@ -299,8 +299,7 @@ class AuthServiceTest {
     }
   }
 
-  private static class FakePasswordResetTokenRepository
-      implements PasswordResetTokenRepository {
+  private static class FakePasswordResetTokenRepository implements PasswordResetTokenRepository {
     private final Map<UUID, PasswordResetToken> tokens = new HashMap<>();
 
     @Override
@@ -413,7 +412,8 @@ class AuthServiceTest {
 
   @Test
   void shouldFailForgotPasswordWhenUserNotFound() {
-    assertThrows(DomainException.class, () -> authService.forgotPassword("nonexistent@example.com"));
+    assertThrows(
+        DomainException.class, () -> authService.forgotPassword("nonexistent@example.com"));
   }
 
   @Test
