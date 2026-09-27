@@ -15,6 +15,8 @@ import com.assistant.auth.application.ports.out.TokenRevocationCachePort;
 import com.assistant.auth.domain.AccountStatus;
 import com.assistant.auth.domain.EmailVerificationToken;
 import com.assistant.auth.domain.EmailVerificationTokenRepository;
+import com.assistant.auth.domain.PasswordResetToken;
+import com.assistant.auth.domain.PasswordResetTokenRepository;
 import com.assistant.auth.domain.SessionEvent;
 import com.assistant.auth.domain.UserIdentity;
 import com.assistant.auth.domain.UserRepository;
@@ -38,6 +40,7 @@ class AuthServiceTest {
 
   private FakeUserRepository userRepository;
   private FakeEmailVerificationTokenRepository tokenRepository;
+  private FakePasswordResetTokenRepository passwordResetTokenRepository;
   private FakePasswordHasher passwordHasher;
   private FakeTokenGenerator tokenGenerator;
   private FakeTokenRevocationCache tokenRevocationCache;
@@ -50,6 +53,7 @@ class AuthServiceTest {
   void setUp() {
     userRepository = new FakeUserRepository();
     tokenRepository = new FakeEmailVerificationTokenRepository();
+    passwordResetTokenRepository = new FakePasswordResetTokenRepository();
     passwordHasher = new FakePasswordHasher();
     tokenGenerator = new FakeTokenGenerator();
     tokenRevocationCache = new FakeTokenRevocationCache();
@@ -60,6 +64,7 @@ class AuthServiceTest {
         new AuthService(
             userRepository,
             tokenRepository,
+            passwordResetTokenRepository,
             passwordHasher,
             tokenGenerator,
             tokenRevocationCache,
@@ -294,14 +299,53 @@ class AuthServiceTest {
     }
   }
 
+  private static class FakePasswordResetTokenRepository
+      implements PasswordResetTokenRepository {
+    private final Map<UUID, PasswordResetToken> tokens = new HashMap<>();
+
+    @Override
+    public PasswordResetToken save(PasswordResetToken token) {
+      tokens.put(token.getId(), token);
+      return token;
+    }
+
+    @Override
+    public Optional<PasswordResetToken> findByToken(String token) {
+      return tokens.values().stream().filter(t -> t.getToken().equals(token)).findFirst();
+    }
+
+    @Override
+    public Optional<PasswordResetToken> findByUserId(UserId userId) {
+      return tokens.values().stream().filter(t -> t.getUserId().equals(userId)).findFirst();
+    }
+
+    @Override
+    public void delete(PasswordResetToken token) {
+      tokens.remove(token.getId());
+    }
+
+    @Override
+    public void deleteByUserId(UserId userId) {
+      tokens.values().removeIf(t -> t.getUserId().equals(userId));
+    }
+  }
+
   private static class FakeEmailSender implements EmailSenderPort {
     private String lastEmail;
     private String lastToken;
+    private String lastResetEmail;
+    private String lastResetToken;
 
     @Override
     public void sendVerificationEmail(String email, String token) {
       this.lastEmail = email;
       this.lastToken = token;
+    }
+
+    @Override
+    public void sendPasswordResetEmail(String email, String token) {
+      this.lastResetEmail = email;
+      this.lastResetToken = token;
     }
   }
 
@@ -353,5 +397,113 @@ class AuthServiceTest {
 
     // Old token should be revoked
     assertThrows(DomainException.class, () -> authService.refresh(refreshToken));
+  }
+
+  @Test
+  void shouldSendPasswordResetEmailSuccessfully() {
+    String email = "forgot@example.com";
+    authService.register(email, "password123");
+
+    authService.forgotPassword(email);
+
+    assertNotNull(emailSender.lastResetToken);
+    assertEquals(email, emailSender.lastResetEmail);
+    assertTrue(passwordResetTokenRepository.findByToken(emailSender.lastResetToken).isPresent());
+  }
+
+  @Test
+  void shouldFailForgotPasswordWhenUserNotFound() {
+    assertThrows(DomainException.class, () -> authService.forgotPassword("nonexistent@example.com"));
+  }
+
+  @Test
+  void shouldResetPasswordSuccessfullyAndUnlockAccount() {
+    String email = "reset_user@example.com";
+    String oldPassword = "oldPassword123";
+    String newPassword = "newPassword456";
+
+    authService.register(email, oldPassword);
+    authService.verify(emailSender.lastToken);
+
+    // Fail 5 times to lock account
+    for (int i = 0; i < 5; i++) {
+      assertThrows(DomainException.class, () -> authService.authenticate(email, "wrongPassword"));
+    }
+    UserIdentity user = userRepository.findByEmail(email).orElseThrow();
+    assertEquals(AccountStatus.Locked, user.getStatus());
+
+    // Request reset
+    authService.forgotPassword(email);
+    String resetToken = emailSender.lastResetToken;
+    assertNotNull(resetToken);
+
+    // Reset password
+    authService.resetPassword(resetToken, newPassword);
+
+    // User should now be Active and have new password
+    UserIdentity updatedUser = userRepository.findByEmail(email).orElseThrow();
+    assertEquals(AccountStatus.Active, updatedUser.getStatus());
+    assertEquals("hashed_" + newPassword, updatedUser.getPasswordHash());
+
+    // Token should be consumed/deleted
+    assertFalse(passwordResetTokenRepository.findByToken(resetToken).isPresent());
+
+    // Can login with new password
+    var authResult = authService.authenticate(email, newPassword);
+    assertNotNull(authResult);
+  }
+
+  @Test
+  void shouldFailResetPasswordWithInvalidToken() {
+    assertThrows(
+        DomainException.class, () -> authService.resetPassword("invalid-token", "newPassword123"));
+  }
+
+  @Test
+  void shouldChangePasswordSuccessfully() {
+    String email = "changepwd@example.com";
+    String oldPassword = "oldPassword123";
+    String newPassword = "newPassword456";
+
+    UserIdentity registered = authService.register(email, oldPassword);
+    authService.verify(emailSender.lastToken);
+
+    authService.changePassword(registered.getId(), oldPassword, newPassword);
+
+    UserIdentity updatedUser = userRepository.findById(registered.getId()).orElseThrow();
+    assertEquals("hashed_" + newPassword, updatedUser.getPasswordHash());
+
+    // Login with new password
+    var loginResult = authService.authenticate(email, newPassword);
+    assertNotNull(loginResult);
+
+    // Old password should fail
+    assertThrows(DomainException.class, () -> authService.authenticate(email, oldPassword));
+  }
+
+  @Test
+  void shouldFailChangePasswordWhenCurrentPasswordIsIncorrect() {
+    String email = "wrongold@example.com";
+    String oldPassword = "oldPassword123";
+
+    UserIdentity registered = authService.register(email, oldPassword);
+    authService.verify(emailSender.lastToken);
+
+    assertThrows(
+        DomainException.class,
+        () -> authService.changePassword(registered.getId(), "incorrectOld", "newPassword456"));
+  }
+
+  @Test
+  void shouldFailChangePasswordWhenNewPasswordIsSameAsOld() {
+    String email = "samepwd@example.com";
+    String password = "samePassword123";
+
+    UserIdentity registered = authService.register(email, password);
+    authService.verify(emailSender.lastToken);
+
+    assertThrows(
+        DomainException.class,
+        () -> authService.changePassword(registered.getId(), password, password));
   }
 }

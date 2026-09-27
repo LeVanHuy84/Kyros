@@ -1,10 +1,13 @@
 package com.assistant.auth.application.services;
 
 import com.assistant.auth.application.ports.in.AuthenticateUserUseCase;
+import com.assistant.auth.application.ports.in.ChangePasswordUseCase;
+import com.assistant.auth.application.ports.in.ForgotPasswordUseCase;
 import com.assistant.auth.application.ports.in.LogoutUseCase;
 import com.assistant.auth.application.ports.in.RefreshTokenUseCase;
 import com.assistant.auth.application.ports.in.RegisterUserUseCase;
 import com.assistant.auth.application.ports.in.ResendVerificationUseCase;
+import com.assistant.auth.application.ports.in.ResetPasswordUseCase;
 import com.assistant.auth.application.ports.in.VerifyEmailUseCase;
 import com.assistant.auth.application.ports.out.EmailSenderPort;
 import com.assistant.auth.application.ports.out.PasswordHasherPort;
@@ -14,6 +17,8 @@ import com.assistant.auth.application.ports.out.TokenRevocationCachePort;
 import com.assistant.auth.domain.AccountStatus;
 import com.assistant.auth.domain.EmailVerificationToken;
 import com.assistant.auth.domain.EmailVerificationTokenRepository;
+import com.assistant.auth.domain.PasswordResetToken;
+import com.assistant.auth.domain.PasswordResetTokenRepository;
 import com.assistant.auth.domain.SessionEvent;
 import com.assistant.auth.domain.UserIdentity;
 import com.assistant.auth.domain.UserRepository;
@@ -34,10 +39,14 @@ public class AuthService
         LogoutUseCase,
         VerifyEmailUseCase,
         ResendVerificationUseCase,
-        RefreshTokenUseCase {
+        RefreshTokenUseCase,
+        ForgotPasswordUseCase,
+        ResetPasswordUseCase,
+        ChangePasswordUseCase {
 
   private final UserRepository userRepository;
   private final EmailVerificationTokenRepository tokenRepository;
+  private final PasswordResetTokenRepository passwordResetTokenRepository;
   private final PasswordHasherPort passwordHasher;
   private final TokenGeneratorPort tokenGenerator;
   private final TokenRevocationCachePort tokenRevocationCache;
@@ -48,6 +57,7 @@ public class AuthService
   public AuthService(
       UserRepository userRepository,
       EmailVerificationTokenRepository tokenRepository,
+      PasswordResetTokenRepository passwordResetTokenRepository,
       PasswordHasherPort passwordHasher,
       TokenGeneratorPort tokenGenerator,
       TokenRevocationCachePort tokenRevocationCache,
@@ -56,6 +66,7 @@ public class AuthService
       ApplicationEventPublisher eventPublisher) {
     this.userRepository = userRepository;
     this.tokenRepository = tokenRepository;
+    this.passwordResetTokenRepository = passwordResetTokenRepository;
     this.passwordHasher = passwordHasher;
     this.tokenGenerator = tokenGenerator;
     this.tokenRevocationCache = tokenRevocationCache;
@@ -157,7 +168,7 @@ public class AuthService
       tokenRevocationCache.revoke(jti, remainingValidity);
 
       // 2. Append postgres audit log
-      SessionEvent event = new SessionEvent(userId, jti, "Logout", "User logged out");
+      SessionEvent event = new SessionEvent(userId, jti, "Logout", "{\"message\":\"User logged out\"}");
       userRepository.saveSessionEvent(event);
     }
   }
@@ -211,5 +222,94 @@ public class AuthService
 
     // Resend mail
     emailSender.sendVerificationEmail(normalizedEmail, tokenValue);
+  }
+
+  @Override
+  @Transactional
+  public void forgotPassword(String email) {
+    String normalizedEmail = email.trim().toLowerCase(java.util.Locale.ROOT);
+    UserIdentity user =
+        userRepository
+            .findByEmail(normalizedEmail)
+            .orElseThrow(() -> new DomainException("auth.user.not_found", "No user found with the given email address"));
+
+    // Delete any existing reset token for this user
+    passwordResetTokenRepository.deleteByUserId(user.getId());
+
+    // Generate new reset token (expires in 1 hour)
+    String tokenValue = java.util.UUID.randomUUID().toString();
+    PasswordResetToken token =
+        new PasswordResetToken(
+            user.getId(), tokenValue, Instant.now().plus(Duration.ofHours(1)));
+    passwordResetTokenRepository.save(token);
+
+    // Send password reset email
+    emailSender.sendPasswordResetEmail(normalizedEmail, tokenValue);
+  }
+
+  @Override
+  @Transactional
+  public void resetPassword(String tokenValue, String newPassword) {
+    PasswordResetToken token =
+        passwordResetTokenRepository
+            .findByToken(tokenValue)
+            .orElseThrow(() -> new DomainException("auth.token.invalid_or_expired", "Invalid or expired password reset token"));
+
+    if (token.isExpired()) {
+      throw new DomainException("auth.token.expired", "Password reset token has expired. Please request a new one.");
+    }
+
+    UserIdentity user =
+        userRepository
+            .findById(token.getUserId())
+            .orElseThrow(() -> new DomainException("auth.token.user_not_found", "User associated with token not found"));
+
+    if (newPassword == null || newPassword.trim().length() < 8) {
+      throw new DomainException("auth.password.min_length", "Password must be at least 8 characters long");
+    }
+
+    String hashedPassword = passwordHasher.hash(newPassword);
+    user.setPasswordHash(hashedPassword);
+
+    // If account was locked due to failed login attempts, unlock it upon password reset
+    if (user.getStatus() == AccountStatus.Locked) {
+      user.unlockAccount();
+    }
+    userRepository.save(user);
+
+    // Delete used token
+    passwordResetTokenRepository.delete(token);
+
+    // Record session audit event
+    SessionEvent event = new SessionEvent(user.getId(), null, "PasswordChanged", "{\"message\":\"User password reset via token\"}");
+    userRepository.saveSessionEvent(event);
+  }
+
+  @Override
+  @Transactional
+  public void changePassword(UserId userId, String currentPassword, String newPassword) {
+    UserIdentity user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new DomainException("auth.user.not_found", "User not found"));
+
+    if (!passwordHasher.matches(currentPassword, user.getPasswordHash())) {
+      throw new DomainException("auth.password.current_invalid", "Current password is incorrect");
+    }
+
+    if (newPassword == null || newPassword.trim().length() < 8) {
+      throw new DomainException("auth.password.min_length", "Password must be at least 8 characters long");
+    }
+
+    if (currentPassword.equals(newPassword)) {
+      throw new DomainException("auth.password.same_as_old", "New password must be different from current password");
+    }
+
+    String hashedPassword = passwordHasher.hash(newPassword);
+    user.setPasswordHash(hashedPassword);
+    userRepository.save(user);
+
+    SessionEvent event = new SessionEvent(userId, null, "PasswordChanged", "{\"message\":\"User changed password via settings\"}");
+    userRepository.saveSessionEvent(event);
   }
 }
