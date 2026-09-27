@@ -92,8 +92,25 @@ export class NotificationService {
       .pipe(catchError(() => of(null)))
       .subscribe((event) => {
         if (event?.data) {
-          const payload = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-          if (payload?.notificationId || payload?.title) {
+          // Ignore heartbeat / ping messages sent by the backend SseNotificationRegistry
+          if (
+            event.event === 'ping' ||
+            event.data === 'connected' ||
+            event.data === 'keep-alive'
+          ) {
+            return;
+          }
+
+          let payload: any = event.data;
+          if (typeof event.data === 'string') {
+            try {
+              payload = JSON.parse(event.data);
+            } catch {
+              payload = null;
+            }
+          }
+
+          if (payload && typeof payload === 'object' && (payload.notificationId || payload.title)) {
             const newNotif = this.mapFromBackend({
               notificationId: payload.notificationId || payload.id || `notif-${Date.now()}`,
               workspaceId: payload.workspaceId || workspaceId,

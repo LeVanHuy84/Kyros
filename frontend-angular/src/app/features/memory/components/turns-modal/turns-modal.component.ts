@@ -4,9 +4,11 @@ import {
   inject,
   input,
   output,
+  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppIconComponent } from '@shared/components/icon/icon.component';
+import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { MarkdownViewerComponent } from '@shared/components/markdown/markdown-viewer.component';
 import { ConversationSummary, ConversationTurn } from '../../models/memory.models';
 import { MemoryService } from '../../services/memory.service';
@@ -15,7 +17,7 @@ import { LanguageService } from '@core/services/language.service';
 @Component({
   selector: 'app-turns-modal',
   standalone: true,
-  imports: [CommonModule, AppIconComponent, MarkdownViewerComponent],
+  imports: [CommonModule, AppIconComponent, MarkdownViewerComponent, ConfirmModalComponent],
   templateUrl: './turns-modal.component.html',
   styleUrl: './turns-modal.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,6 +30,9 @@ export class TurnsModalComponent {
   readonly memoryService = inject(MemoryService);
   readonly languageService = inject(LanguageService);
 
+  readonly isClearConfirmOpen = signal<boolean>(false);
+  readonly isClearing = signal<boolean>(false);
+
   onClose(): void {
     this.closed.emit();
   }
@@ -39,10 +44,30 @@ export class TurnsModalComponent {
     const convId = conv.id || conv.conversationId || '';
     if (!convId) return;
 
-    const confirmMsg = this.languageService.t().memory.audit.clearHistoryConfirm;
-    if (confirm(confirmMsg)) {
-      this.memoryService.clearConversationHistory(convId).subscribe();
-    }
+    this.isClearConfirmOpen.set(true);
+  }
+
+  closeClearConfirm(): void {
+    this.isClearConfirmOpen.set(false);
+  }
+
+  onConfirmClearHistory(): void {
+    const conv = this.conversation();
+    if (!conv) return;
+
+    const convId = conv.id || conv.conversationId || '';
+    if (!convId) return;
+
+    this.isClearing.set(true);
+    this.memoryService.clearConversationHistory(convId).subscribe({
+      next: () => {
+        this.isClearing.set(false);
+        this.closeClearConfirm();
+      },
+      error: () => {
+        this.isClearing.set(false);
+      },
+    });
   }
 
   formatDate(dateStr?: string): string {

@@ -9,6 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppIconComponent } from '@shared/components/icon/icon.component';
+import { ConfirmModalComponent } from '@shared/components/confirm-modal/confirm-modal.component';
 import { MemoryService } from '../../services/memory.service';
 import { MemoryEntry } from '../../models/memory.models';
 import { LanguageService } from '@core/services/language.service';
@@ -19,7 +20,7 @@ export type MemoryCategoryFilter = 'all' | 'USER_PREFERENCE' | 'WORK_RULE' | 'PR
 @Component({
   selector: 'app-memory-vault-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppIconComponent],
+  imports: [CommonModule, FormsModule, AppIconComponent, ConfirmModalComponent],
   templateUrl: './memory-vault-panel.component.html',
   styleUrl: './memory-vault-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,6 +35,10 @@ export class MemoryVaultPanelComponent implements OnInit {
   readonly formContent = signal<string>('');
   readonly formCategory = signal<string>('USER_PREFERENCE');
   readonly formConfidence = signal<number>(1.0);
+
+  readonly isDeleteModalOpen = signal<boolean>(false);
+  readonly entryToDelete = signal<MemoryEntry | null>(null);
+  readonly isDeleting = signal<boolean>(false);
 
   private readonly search$ = new Subject<string>();
 
@@ -118,12 +123,31 @@ export class MemoryVaultPanelComponent implements OnInit {
     }
   }
 
-  deleteEntry(event: MouseEvent, entry: MemoryEntry): void {
+  openDeleteModal(event: MouseEvent, entry: MemoryEntry): void {
     event.stopPropagation();
-    const confirmMsg = this.languageService.t().memory.vault.deleteConfirm;
-    if (confirm(confirmMsg)) {
-      this.memoryService.deleteMemoryEntry(entry.id).subscribe();
-    }
+    this.entryToDelete.set(entry);
+    this.isDeleteModalOpen.set(true);
+  }
+
+  closeDeleteModal(): void {
+    this.isDeleteModalOpen.set(false);
+    this.entryToDelete.set(null);
+  }
+
+  onConfirmDelete(): void {
+    const entry = this.entryToDelete();
+    if (!entry) return;
+
+    this.isDeleting.set(true);
+    this.memoryService.deleteMemoryEntry(entry.id).subscribe({
+      next: () => {
+        this.isDeleting.set(false);
+        this.closeDeleteModal();
+      },
+      error: () => {
+        this.isDeleting.set(false);
+      },
+    });
   }
 
   extractCategory(content: string): string {

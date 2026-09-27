@@ -98,4 +98,18 @@
       <p>{{ languageService.t().notes.emptySelectionSubtitle }}</p>
     </div>
   }
+
+  <!-- Delete Confirmation Modal -->
+  <app-confirm-modal
+    [isOpen]="isDeleteModalOpen()"
+    [title]="languageService.t().notes.actions.delete"
+    [message]="languageService.t().notes.actions.deleteConfirm"
+    [confirmText]="languageService.t().notes.actions.delete"
+    [cancelText]="languageService.t().common.cancel"
+    [loading]="isDeleting()"
+    variant="danger"
+    iconName="trash"
+    (confirm)="onConfirmDelete()"
+    (cancel)="closeDeleteModal()"
+  />
 </div>

@@ -631,14 +631,14 @@
     }
   },
   "memory": {
-    "title": "Ký ức AI",
+    "title": "Bộ Nhớ AI",
     "subtitle": "Bộ nhớ dài hạn và lịch sử kiểm toán",
     "tabs": {
-      "vault": "Kho Ký Ức (Memory Vault)",
-      "audit": "Kiểm Toán Hội Thoại (Turns Audit)"
+      "vault": "Bộ Nhớ",
+      "audit": "Lịch Sử Hội Thoại"
     },
     "vault": {
-      "searchPlaceholder": "Tìm kiếm ký ức theo ngữ nghĩa (Semantic search)...",
+      "searchPlaceholder": "Tìm kiếm theo ngữ nghĩa...",
       "addMemoryBtn": "Thêm ký ức mới",
       "totalEntries": "Tổng số ký ức đã lưu: {count}",
       "confidenceLabel": "Độ tin cậy",
