@@ -53,6 +53,32 @@
       "needNewLink": "Cần một liên kết xác thực mới?",
       "resendBtn": "Gửi lại liên kết xác thực",
       "resendSuccess": "Liên kết xác thực mới đã được gửi tới email của bạn. Vui lòng kiểm tra hộp thư."
+    },
+    "forgot": {
+      "title": "Quên mật khẩu",
+      "subtitle": "Nhập địa chỉ email đã đăng ký của bạn để nhận liên kết đặt lại mật khẩu.",
+      "sendResetLinkBtn": "Gửi liên kết đặt lại",
+      "backToLogin": "Quay lại Đăng nhập",
+      "checkEmailTitle": "Kiểm tra hòm thư của bạn",
+      "checkEmailSubtitle": "Chúng tôi đã gửi hướng dẫn đặt lại mật khẩu tới",
+      "notReceived": "Chưa nhận được email?",
+      "resendBtn": "Gửi lại liên kết",
+      "resendSuccess": "Liên kết đặt lại mật khẩu mới đã được gửi thành công."
+    },
+    "reset": {
+      "title": "Đặt lại mật khẩu",
+      "subtitle": "Thiết lập mật khẩu mới cho tài khoản Kyros của bạn.",
+      "newPasswordLabel": "Mật khẩu mới",
+      "newPasswordPlaceholder": "Tối thiểu 8 ký tự",
+      "confirmPasswordLabel": "Xác nhận mật khẩu mới",
+      "confirmPasswordPlaceholder": "Nhập lại mật khẩu mới",
+      "resetBtn": "Cập nhật mật khẩu",
+      "successTitle": "Đổi Mật Khẩu Thành Công!",
+      "successSubtitle": "Mật khẩu của bạn đã được cập nhật thành công. Bây giờ bạn có thể đăng nhập bằng mật khẩu mới.",
+      "loginNowBtn": "Đăng nhập ngay",
+      "invalidTokenTitle": "Liên kết không hợp lệ",
+      "invalidTokenSubtitle": "Liên kết đặt lại mật khẩu này đã hết hạn hoặc không hợp lệ.",
+      "requestNewLinkBtn": "Yêu cầu liên kết mới"
     }
   },
   "workspace": {
@@ -171,13 +197,23 @@
       "desc": "Chọn ngôn ngữ hiển thị cho giao diện điều hành."
     },
     "vault": {
-      "title": "Bảo mật Key Vault",
+      "title": "Bảo mật & Mật khẩu",
       "standardLabel": "Chuẩn mã hóa Vault",
       "standardDesc": "Khóa API và bí mật cấu hình được tự động mã hóa.",
       "standardBadge": "Mã hóa AES-256-GCM (Zero-Knowledge)",
       "isolationLabel": "Phân lập dữ liệu",
       "isolationDesc": "Dữ liệu được lưu trữ phân lập theo từng Workspace.",
-      "isolationBadge": "Lưu trữ phân lập theo Workspace"
+      "isolationBadge": "Lưu trữ phân lập theo Workspace",
+      "changePasswordTitle": "Đổi Mật Khẩu Tài Khoản",
+      "changePasswordDesc": "Cập nhật mật khẩu định kỳ để tăng cường bảo mật cho tài khoản của bạn.",
+      "currentPasswordLabel": "Mật khẩu hiện tại",
+      "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại của bạn",
+      "newPasswordLabel": "Mật khẩu mới",
+      "newPasswordPlaceholder": "Tối thiểu 8 ký tự",
+      "confirmPasswordLabel": "Xác nhận mật khẩu mới",
+      "confirmPasswordPlaceholder": "Nhập lại mật khẩu mới",
+      "updatePasswordBtn": "Cập nhật mật khẩu",
+      "passwordChangedSuccess": "Đổi mật khẩu thành công!"
     },
     "aiProvider": {
       "title": "Cấu hình AI Provider",

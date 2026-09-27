@@ -53,6 +53,32 @@
       "needNewLink": "Need a new verification link?",
       "resendBtn": "Resend Verification Link",
       "resendSuccess": "A new verification link has been sent to your email."
+    },
+    "forgot": {
+      "title": "Forgot Password",
+      "subtitle": "Enter your registered email address and we'll send you a password reset link.",
+      "sendResetLinkBtn": "Send Reset Link",
+      "backToLogin": "Back to Sign In",
+      "checkEmailTitle": "Check your email",
+      "checkEmailSubtitle": "We have sent password reset instructions to",
+      "notReceived": "Didn't receive the email?",
+      "resendBtn": "Resend Link",
+      "resendSuccess": "A new password reset link has been sent successfully."
+    },
+    "reset": {
+      "title": "Reset Password",
+      "subtitle": "Create a new, strong password for your Kyros account.",
+      "newPasswordLabel": "New Password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "confirmPasswordLabel": "Confirm New Password",
+      "confirmPasswordPlaceholder": "Re-enter new password",
+      "resetBtn": "Update Password",
+      "successTitle": "Password Reset Successfully!",
+      "successSubtitle": "Your password has been changed. You can now log in with your new credentials.",
+      "loginNowBtn": "Sign In Now",
+      "invalidTokenTitle": "Invalid or Expired Link",
+      "invalidTokenSubtitle": "This password reset link is invalid or has expired.",
+      "requestNewLinkBtn": "Request a New Link"
     }
   },
   "workspace": {
@@ -171,13 +197,23 @@
       "desc": "Select language for the workspace interface."
     },
     "vault": {
-      "title": "Key Vault Security",
+      "title": "Security & Password",
       "standardLabel": "Encryption Standard",
       "standardDesc": "API keys and secrets are automatically encrypted in the database.",
       "standardBadge": "AES-256-GCM Zero-Knowledge Vault",
       "isolationLabel": "Workspace Isolation",
       "isolationDesc": "Data is securely isolated per workspace.",
-      "isolationBadge": "Multi-tenant Isolated Storage"
+      "isolationBadge": "Multi-tenant Isolated Storage",
+      "changePasswordTitle": "Change Account Password",
+      "changePasswordDesc": "Update your password regularly to keep your executive workspace secure.",
+      "currentPasswordLabel": "Current Password",
+      "currentPasswordPlaceholder": "Enter your current password",
+      "newPasswordLabel": "New Password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "confirmPasswordLabel": "Confirm New Password",
+      "confirmPasswordPlaceholder": "Re-enter new password",
+      "updatePasswordBtn": "Update Password",
+      "passwordChangedSuccess": "Password updated successfully!"
     },
     "aiProvider": {
       "title": "AI Provider Configuration",
