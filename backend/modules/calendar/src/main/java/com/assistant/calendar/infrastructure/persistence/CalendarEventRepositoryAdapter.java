@@ -25,7 +25,7 @@ public class CalendarEventRepositoryAdapter implements CalendarEventRepository {
   @Override
   public CalendarEvent save(CalendarEvent event) {
     CalendarEventJpaEntity jpa = toJpa(event);
-    CalendarEventJpaEntity saved = repository.save(jpa);
+    CalendarEventJpaEntity saved = repository.saveAndFlush(jpa);
     return toDomain(saved);
   }
 

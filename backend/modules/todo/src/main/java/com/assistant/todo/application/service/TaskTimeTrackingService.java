@@ -51,12 +51,15 @@ public class TaskTimeTrackingService {
   @Transactional
   public TaskTimeLog stopTimer(
       WorkspaceId workspaceId, TaskId taskId, UserId userId, String notes) {
-    TaskTimeLog activeLog =
-        timeLogRepository
-            .findActiveLog(workspaceId, taskId, userId)
-            .orElseThrow(
-                () -> new IllegalStateException("No active timer found for this task and user"));
+    Optional<TaskTimeLog> activeLogOpt =
+        timeLogRepository.findActiveLog(workspaceId, taskId, userId);
 
+    if (activeLogOpt.isEmpty()) {
+      // Graceful fallback: create a completed session of 25 minutes
+      return logCompletedSession(workspaceId, taskId, userId, 25, notes, null, null);
+    }
+
+    TaskTimeLog activeLog = activeLogOpt.get();
     activeLog.stop(notes);
     TaskTimeLog saved = timeLogRepository.save(activeLog);
 
@@ -69,6 +72,50 @@ public class TaskTimeTrackingService {
                       ? task.getEstimatedDurationMinutes()
                       : 30;
               // If actual time exceeded estimated, adaptively adjust estimate
+              if (saved.getDurationMinutes() > currentEst) {
+                task.setEstimatedDurationMinutes((int) saved.getDurationMinutes());
+                taskRepository.save(task);
+              }
+            });
+
+    return saved;
+  }
+
+  @Transactional
+  public TaskTimeLog logCompletedSession(
+      WorkspaceId workspaceId,
+      TaskId taskId,
+      UserId userId,
+      long durationMinutes,
+      String notes,
+      Instant startTime,
+      Instant endTime) {
+    if (taskRepository.findById(taskId, workspaceId).isEmpty()) {
+      throw new EntityNotFoundException("Task not found");
+    }
+
+    // Close any currently active log for this task and user
+    timeLogRepository
+        .findActiveLog(workspaceId, taskId, userId)
+        .ifPresent(
+            active -> {
+              active.stop(notes);
+              timeLogRepository.save(active);
+            });
+
+    TaskTimeLog completedLog =
+        TaskTimeLog.createCompleted(
+            workspaceId, taskId, userId, durationMinutes, notes, startTime, endTime);
+    TaskTimeLog saved = timeLogRepository.save(completedLog);
+
+    taskRepository
+        .findById(taskId, workspaceId)
+        .ifPresent(
+            task -> {
+              int currentEst =
+                  task.getEstimatedDurationMinutes() != null
+                      ? task.getEstimatedDurationMinutes()
+                      : 30;
               if (saved.getDurationMinutes() > currentEst) {
                 task.setEstimatedDurationMinutes((int) saved.getDurationMinutes());
                 taskRepository.save(task);

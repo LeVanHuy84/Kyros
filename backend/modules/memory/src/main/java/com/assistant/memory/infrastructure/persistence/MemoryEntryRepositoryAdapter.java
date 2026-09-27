@@ -4,6 +4,7 @@ import com.assistant.kernel.domain.UserId;
 import com.assistant.kernel.domain.WorkspaceId;
 import com.assistant.memory.domain.model.MemoryEntry;
 import com.assistant.memory.domain.model.MemoryId;
+import com.assistant.memory.domain.model.MemoryStatus;
 import com.assistant.memory.domain.repository.MemoryEntryRepository;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +47,40 @@ public class MemoryEntryRepositoryAdapter implements MemoryEntryRepository {
   }
 
   @Override
+  public List<MemoryEntry> findActiveByUser(WorkspaceId workspaceId, UserId userId) {
+    List<MemoryEntryJpaEntity> list =
+        userId != null
+            ? repository.findByWorkspaceIdAndUserIdAndStatus(
+                workspaceId.value(), userId.value(), MemoryStatus.ACTIVE.name())
+            : repository.findByWorkspaceIdAndStatus(
+                workspaceId.value(), MemoryStatus.ACTIVE.name());
+
+    if (list.isEmpty() && userId != null) {
+      list = repository.findByWorkspaceIdAndStatus(workspaceId.value(), MemoryStatus.ACTIVE.name());
+    }
+
+    return list.stream().map(this::toDomain).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<MemoryEntry> findByTopicCluster(
+      WorkspaceId workspaceId, UserId userId, String topicCluster) {
+    List<MemoryEntryJpaEntity> list =
+        repository.findByWorkspaceIdAndUserIdAndTopicClusterAndStatus(
+            workspaceId.value(), userId.value(), topicCluster, MemoryStatus.ACTIVE.name());
+    return list.stream().map(this::toDomain).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<MemoryEntry> findAllActive(WorkspaceId workspaceId) {
+    return repository
+        .findByWorkspaceIdAndStatus(workspaceId.value(), MemoryStatus.ACTIVE.name())
+        .stream()
+        .map(this::toDomain)
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public long countByUser(WorkspaceId workspaceId, UserId userId) {
     long count =
         userId != null
@@ -82,12 +117,27 @@ public class MemoryEntryRepositoryAdapter implements MemoryEntryRepository {
   }
 
   private MemoryEntry toDomain(MemoryEntryJpaEntity jpa) {
+    MemoryStatus status;
+    try {
+      status =
+          jpa.getStatus() != null ? MemoryStatus.valueOf(jpa.getStatus()) : MemoryStatus.ACTIVE;
+    } catch (Exception e) {
+      status = MemoryStatus.ACTIVE;
+    }
+
     return new MemoryEntry(
         new MemoryId(jpa.getId()),
         new WorkspaceId(jpa.getWorkspaceId()),
         new UserId(jpa.getUserId()),
+        jpa.getTopicCluster(),
         jpa.getContent(),
         jpa.getConfidenceScore(),
+        status,
+        jpa.getSupersededById() != null ? new MemoryId(jpa.getSupersededById()) : null,
+        jpa.getValidFrom(),
+        jpa.getValidTo(),
+        jpa.getLastAccessedAt(),
+        jpa.getAccessCount(),
         jpa.getCreatedAt(),
         jpa.getUpdatedAt(),
         jpa.getVersion());
@@ -98,8 +148,17 @@ public class MemoryEntryRepositoryAdapter implements MemoryEntryRepository {
     jpa.setId(domain.getId().value());
     jpa.setWorkspaceId(domain.getWorkspaceId().value());
     jpa.setUserId(domain.getUserId().value());
+    jpa.setTopicCluster(domain.getTopicCluster());
     jpa.setContent(domain.getContent());
     jpa.setConfidenceScore(domain.getConfidenceScore());
+    jpa.setStatus(
+        domain.getStatus() != null ? domain.getStatus().name() : MemoryStatus.ACTIVE.name());
+    jpa.setSupersededById(
+        domain.getSupersededById() != null ? domain.getSupersededById().value() : null);
+    jpa.setValidFrom(domain.getValidFrom());
+    jpa.setValidTo(domain.getValidTo());
+    jpa.setLastAccessedAt(domain.getLastAccessedAt());
+    jpa.setAccessCount(domain.getAccessCount());
     jpa.setCreatedAt(domain.getCreatedAt());
     jpa.setUpdatedAt(domain.getUpdatedAt());
     jpa.setVersion(domain.getVersion());

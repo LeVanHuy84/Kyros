@@ -95,7 +95,7 @@ export const AiConfigPanel: React.FC<AiConfigPanelProps> = ({
               color: 'var(--text-main)',
             }}
           >
-            Cấu hình AI Provider & Backend Vault (BYOK)
+            Cấu hình AI Provider & Backend Vault
           </h3>
         </div>
         <p
@@ -106,8 +106,7 @@ export const AiConfigPanel: React.FC<AiConfigPanelProps> = ({
             lineHeight: '1.6',
           }}
         >
-          Cấu hình API Key của cá nhân bạn (Bring Your Own Key). Toàn bộ API Key
-          được mã hóa chuẩn{' '}
+          Cấu hình API Key của cá nhân bạn. Toàn bộ API Key được mã hóa chuẩn{' '}
           <strong style={{ color: 'var(--color-success)' }}>AES-256-GCM</strong>{' '}
           trong Backend Vault và không bao giờ lưu dưới dạng plain-text.
         </p>
@@ -229,7 +228,7 @@ export const AiConfigPanel: React.FC<AiConfigPanelProps> = ({
                     fontWeight: '600',
                   }}
                 >
-                  {config.apiKey || '🔒 ••••••••••••••••'}
+                  {config.apiKey || '••••••••••••••••'}
                 </span>
               </div>
               <button

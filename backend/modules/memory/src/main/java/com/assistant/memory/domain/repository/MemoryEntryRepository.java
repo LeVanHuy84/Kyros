@@ -12,6 +12,12 @@ public interface MemoryEntryRepository {
 
   List<MemoryEntry> findByUser(WorkspaceId workspaceId, UserId userId, int offset, int limit);
 
+  List<MemoryEntry> findActiveByUser(WorkspaceId workspaceId, UserId userId);
+
+  List<MemoryEntry> findByTopicCluster(WorkspaceId workspaceId, UserId userId, String topicCluster);
+
+  List<MemoryEntry> findAllActive(WorkspaceId workspaceId);
+
   long countByUser(WorkspaceId workspaceId, UserId userId);
 
   List<MemoryEntry> findBySemanticQuery(

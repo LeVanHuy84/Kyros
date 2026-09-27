@@ -2,6 +2,7 @@ package com.assistant.bootstrap.tool;
 
 import com.assistant.agent.domain.model.ToolExecutionResult;
 import com.assistant.agent.domain.tool.AgentToolContract;
+import com.assistant.kernel.context.WorkspaceContextHolder;
 import com.assistant.kernel.domain.WorkspaceId;
 import com.assistant.todo.application.port.in.TodoPort;
 import com.assistant.todo.domain.model.TaskId;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
+/** Tool adapter for deleting tasks (Human-in-the-loop protected). */
 @Component
 public class DeleteTasksToolAdapter implements AgentToolContract {
 
@@ -39,14 +41,13 @@ public class DeleteTasksToolAdapter implements AgentToolContract {
     {
       "type": "object",
       "properties": {
-        "workspaceId": { "type": "string" },
         "taskIds": {
           "type": "array",
           "items": { "type": "string" },
           "description": "Danh sách các ID của task cần xóa"
-        }
-      },
-      "required": ["taskIds"]
+        },
+        "id": { "type": "string", "description": "ID nếu xóa 1 task duy nhất" }
+      }
     }
     """;
   }
@@ -61,10 +62,7 @@ public class DeleteTasksToolAdapter implements AgentToolContract {
       try {
         wsUuid = UUID.fromString(workspaceIdStr);
       } catch (Exception e) {
-        wsUuid =
-            com.assistant.kernel.context.WorkspaceContextHolder.get()
-                .map(WorkspaceId::value)
-                .orElseGet(UUID::randomUUID);
+        wsUuid = WorkspaceContextHolder.get().map(WorkspaceId::value).orElseGet(UUID::randomUUID);
       }
       WorkspaceId workspaceId = new WorkspaceId(wsUuid);
 
@@ -87,7 +85,6 @@ public class DeleteTasksToolAdapter implements AgentToolContract {
           todoPort.softDeleteTask(taskId, workspaceId);
           deletedCount++;
         } catch (Exception ignored) {
-          // skip not found
         }
       }
 

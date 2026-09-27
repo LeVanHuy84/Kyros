@@ -31,8 +31,10 @@ public interface SpringDataCalendarEventRepository
       value =
           "SELECT e FROM CalendarEventJpaEntity e "
               + "WHERE e.workspaceId = :workspaceId "
-              + "AND e.startTime >= :startTime "
-              + "AND e.endTime <= :endTime")
+              + "AND e.status = 'Scheduled' "
+              + "AND e.deletedAt IS NULL "
+              + "AND e.startTime < :endTime "
+              + "AND e.endTime > :startTime")
   List<CalendarEventJpaEntity> findInWindow(
       @Param("workspaceId") UUID workspaceId,
       @Param("startTime") Instant startTime,

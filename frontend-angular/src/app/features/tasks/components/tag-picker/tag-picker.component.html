@@ -1,0 +1,74 @@
+<div class="tag-picker-container">
+  <div class="tag-picker-trigger" (click)="toggleDropdown()">
+    <div class="selected-tags-list">
+      @for (tag of selectedTags(); track tag) {
+        <span
+          class="tag-chip"
+          [style.backgroundColor]="getTagColor(tag) + '18'"
+          [style.borderColor]="getTagColor(tag) + '40'"
+          [style.color]="getTagColor(tag)"
+        >
+          <span class="tag-dot" [style.backgroundColor]="getTagColor(tag)"></span>
+          <span>{{ tag }}</span>
+          <button
+            type="button"
+            class="remove-tag-btn"
+            (click)="removeTag(tag, $event)"
+            title="Xóa nhãn"
+          >
+            <app-icon name="x" [size]="10"></app-icon>
+          </button>
+        </span>
+      }
+
+      @if (selectedTags().length === 0) {
+        <span class="placeholder-text">Chọn hoặc gõ tạo nhãn...</span>
+      }
+    </div>
+
+    <app-icon name="chevron-down" [size]="14" class="chevron-icon" [class.open]="isOpen()"></app-icon>
+  </div>
+
+  @if (isOpen()) {
+    <div class="tag-dropdown animate-fade-in-scale">
+      <div class="search-create-row" (click)="$event.stopPropagation()">
+        <input
+          type="text"
+          [ngModel]="newTagName()"
+          (ngModelChange)="newTagName.set($event)"
+          (keydown.enter)="createNewTag()"
+          placeholder="Tìm hoặc gõ nhãn mới..."
+          class="tag-input"
+          autofocus
+        />
+        @if (newTagName().trim()) {
+          <button type="button" class="add-tag-btn" (click)="createNewTag()">
+            <app-icon name="plus" [size]="13"></app-icon>
+            <span>Thêm</span>
+          </button>
+        }
+      </div>
+
+      <div class="available-tags-list">
+        @for (t of tasksService.tags(); track t.tagId) {
+          <button
+            type="button"
+            class="tag-option"
+            [class.selected]="selectedTags().includes(t.name)"
+            (click)="toggleTag(t.name)"
+          >
+            <span class="tag-dot" [style.backgroundColor]="t.color"></span>
+            <span class="tag-name">{{ t.name }}</span>
+            @if (selectedTags().includes(t.name)) {
+              <app-icon name="check" [size]="13" class="check-icon"></app-icon>
+            }
+          </button>
+        } @empty {
+          <div class="empty-tags">
+            <span>Chưa có nhãn nào. Gõ tên ở trên và bấm Enter để tạo.</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

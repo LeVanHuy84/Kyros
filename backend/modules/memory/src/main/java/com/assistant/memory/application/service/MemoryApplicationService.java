@@ -75,6 +75,15 @@ public class MemoryApplicationService implements ConversationHistoryPort, Memory
           || currentTitle.equalsIgnoreCase("New Conversation")
           || currentTitle.equalsIgnoreCase("Cuộc trò chuyện mới")) {
         String cleanText = command.messageContent().replaceAll("\\s+", " ").trim();
+        cleanText =
+            cleanText
+                .replaceFirst(
+                    "(?i)^/(event|task|todo|note|notes|memory|rule|rules|vault|recall|find|search|list|help)\\s*",
+                    "")
+                .trim();
+        if (cleanText.isEmpty()) {
+          cleanText = command.messageContent().trim();
+        }
         String generatedTitle =
             cleanText.length() > 30 ? cleanText.substring(0, 30) + "..." : cleanText;
         if (!generatedTitle.isEmpty()) {

@@ -1,0 +1,30 @@
+@if (pendingApproval(); as approval) {
+  <div class="approval-banner animate-fade-in-slide-up" role="alertdialog" aria-labelledby="approval-title">
+    <div class="banner-left">
+      <div class="shield-icon-box">
+        <app-icon name="shield-check" [size]="20"></app-icon>
+      </div>
+      <div class="content">
+        <h4 id="approval-title" class="approval-title">
+          <span>{{ languageService.t().agent.approval.title }}:</span>
+          <code class="tool-tag">{{ approval.toolName }}</code>
+        </h4>
+        <p class="approval-reason">{{ approval.reason }}</p>
+        @if (approval.argumentsJson) {
+          <pre class="arguments-preview">{{ approval.argumentsJson }}</pre>
+        }
+      </div>
+    </div>
+
+    <div class="banner-actions">
+      <button type="button" class="btn-action reject" (click)="reject.emit()">
+        <app-icon name="x" [size]="14"></app-icon>
+        <span>{{ languageService.t().agent.approval.rejectBtn }}</span>
+      </button>
+      <button type="button" class="btn-action approve" (click)="approve.emit()">
+        <app-icon name="check" [size]="14"></app-icon>
+        <span>{{ languageService.t().agent.approval.approveBtn }}</span>
+      </button>
+    </div>
+  </div>
+}

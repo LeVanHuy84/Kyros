@@ -1,0 +1,120 @@
+<div class="task-board-container" cdkDropListGroup>
+  <!-- Column 1: Ưu tiên cao (High Priority) -->
+  <div class="board-column urgent-col">
+    <div class="column-header">
+      <div class="col-title-group">
+        <span class="status-indicator urgent"></span>
+        <span class="col-name">{{ languageService.t().tasks.board.highPriority }}</span>
+        <span class="count-badge">{{ highPriorityTasks().length }}</span>
+      </div>
+      <button
+        type="button"
+        class="col-add-btn"
+        (click)="createTaskInColumn.emit('HIGH')"
+      >
+        <app-icon name="plus" [size]="14"></app-icon>
+      </button>
+    </div>
+
+    <div
+      cdkDropList
+      [cdkDropListData]="highPriorityTasks()"
+      (cdkDropListDropped)="onDrop($event, 'HIGH')"
+      class="column-drop-zone"
+    >
+      @for (task of highPriorityTasks(); track task.id) {
+        <div cdkDrag [cdkDragData]="task" class="drag-item">
+          <app-task-card
+            [task]="task"
+            [isCompact]="true"
+            (editTask)="editTask.emit($event)"
+            (openTimer)="openTimer.emit($event)"
+            (openRecurrence)="openRecurrence.emit($event)"
+            (tagClicked)="tagClicked.emit($event)"
+          ></app-task-card>
+        </div>
+      } @empty {
+        <div class="empty-col-placeholder">
+          <span>{{ languageService.t().tasks.emptyTasks }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Column 2: Cần làm (Standard Tasks) -->
+  <div class="board-column todo-col">
+    <div class="column-header">
+      <div class="col-title-group">
+        <span class="status-indicator todo"></span>
+        <span class="col-name">{{ languageService.t().tasks.board.todo }}</span>
+        <span class="count-badge">{{ standardTasks().length }}</span>
+      </div>
+      <button
+        type="button"
+        class="col-add-btn"
+        (click)="createTaskInColumn.emit('MEDIUM')"
+      >
+        <app-icon name="plus" [size]="14"></app-icon>
+      </button>
+    </div>
+
+    <div
+      cdkDropList
+      [cdkDropListData]="standardTasks()"
+      (cdkDropListDropped)="onDrop($event, 'TODO')"
+      class="column-drop-zone"
+    >
+      @for (task of standardTasks(); track task.id) {
+        <div cdkDrag [cdkDragData]="task" class="drag-item">
+          <app-task-card
+            [task]="task"
+            [isCompact]="true"
+            (editTask)="editTask.emit($event)"
+            (openTimer)="openTimer.emit($event)"
+            (openRecurrence)="openRecurrence.emit($event)"
+            (tagClicked)="tagClicked.emit($event)"
+          ></app-task-card>
+        </div>
+      } @empty {
+        <div class="empty-col-placeholder">
+          <span>{{ languageService.t().tasks.emptyTasks }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Column 3: Đã hoàn thành (Completed) -->
+  <div class="board-column completed-col">
+    <div class="column-header">
+      <div class="col-title-group">
+        <span class="status-indicator completed"></span>
+        <span class="col-name">{{ languageService.t().tasks.board.completed }}</span>
+        <span class="count-badge">{{ completedTasks().length }}</span>
+      </div>
+    </div>
+
+    <div
+      cdkDropList
+      [cdkDropListData]="completedTasks()"
+      (cdkDropListDropped)="onDrop($event, 'COMPLETED')"
+      class="column-drop-zone"
+    >
+      @for (task of completedTasks(); track task.id) {
+        <div cdkDrag [cdkDragData]="task" class="drag-item">
+          <app-task-card
+            [task]="task"
+            [isCompact]="true"
+            (editTask)="editTask.emit($event)"
+            (openTimer)="openTimer.emit($event)"
+            (openRecurrence)="openRecurrence.emit($event)"
+            (tagClicked)="tagClicked.emit($event)"
+          ></app-task-card>
+        </div>
+      } @empty {
+        <div class="empty-col-placeholder">
+          <span>{{ languageService.t().tasks.emptyTasks }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</div>

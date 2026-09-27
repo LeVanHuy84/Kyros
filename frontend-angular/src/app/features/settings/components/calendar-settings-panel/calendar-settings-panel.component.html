@@ -1,0 +1,134 @@
+<div class="calendar-settings-panel">
+  <!-- Feedback Alert Toast -->
+  @if (feedbackMessage()) {
+    <div class="feedback-toast" [class.is-success]="feedbackMessage()?.type === 'success'" [class.is-error]="feedbackMessage()?.type === 'error'">
+      <app-icon [name]="feedbackMessage()?.type === 'success' ? 'check-circle' : 'alert-circle'" [size]="15"></app-icon>
+      <span>{{ feedbackMessage()?.text }}</span>
+    </div>
+  }
+
+  <section class="setting-section">
+    <div class="section-header">
+      <app-icon name="calendar" [size]="16" class="section-icon"></app-icon>
+      <h3 class="section-title">{{ languageService.t().settings.calendar.title }}</h3>
+    </div>
+
+    <!-- 1. Preferred Timezone -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <label for="timezone-select" class="setting-label">
+          {{ languageService.t().settings.calendar.timezone }}
+        </label>
+        <span class="setting-desc">{{ languageService.t().settings.calendar.timezoneHelp }}</span>
+      </div>
+      <div class="setting-control">
+        <select
+          id="timezone-select"
+          class="form-select"
+          [ngModel]="timezone()"
+          (ngModelChange)="timezone.set($event)"
+        >
+          @for (tz of timezones; track tz) {
+            <option [value]="tz">{{ tz }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- 2. Prevent Calendar Overlaps -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <label class="setting-label">{{ languageService.t().settings.calendar.preventOverlap }}</label>
+        <span class="setting-desc">{{ languageService.t().settings.calendar.preventOverlapDesc }}</span>
+      </div>
+      <div class="setting-control">
+        <label class="switch-control">
+          <input
+            type="checkbox"
+            [checked]="preventCalendarOverlap()"
+            (change)="preventCalendarOverlap.set($any($event.target).checked)"
+          />
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 3. Default Reminder Lead Time -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <label for="lead-time-select" class="setting-label">
+          {{ languageService.t().settings.calendar.leadTime }}
+        </label>
+        <span class="setting-desc">Thời gian gửi thông báo nhắc nhở trước khi sự kiện hoặc cuộc họp diễn ra.</span>
+      </div>
+      <div class="setting-control">
+        <select
+          id="lead-time-select"
+          class="form-select"
+          [ngModel]="leadTimeMinutes()"
+          (ngModelChange)="leadTimeMinutes.set(+$event)"
+        >
+          @for (mins of leadTimeOptions; track mins) {
+            <option [value]="mins">
+              {{ mins }} {{ languageService.t().settings.calendar.leadTimeMinutes }}
+            </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- 4. Default Task Priority -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <label class="setting-label">{{ languageService.t().settings.calendar.defaultPriority }}</label>
+        <span class="setting-desc">Mức ưu tiên mặc định được gán cho các sự kiện và nhiệm vụ mới tạo.</span>
+      </div>
+      <div class="setting-control">
+        <div class="priority-chips">
+          @for (pri of ['Low', 'Medium', 'High']; track pri) {
+            <button
+              type="button"
+              class="priority-chip-btn"
+              [class.active]="defaultPriority() === pri"
+              [class.pri-low]="pri === 'Low'"
+              [class.pri-medium]="pri === 'Medium'"
+              [class.pri-high]="pri === 'High'"
+              (click)="defaultPriority.set($any(pri))"
+            >
+              <span class="pri-dot"></span>
+              <span>{{ getPriorityLabel(pri) }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Action Buttons -->
+  <div class="form-actions-bar">
+    <button
+      type="button"
+      class="reset-btn"
+      [disabled]="preferencesService.isSaving() || preferencesService.isLoading()"
+      (click)="handleReset()"
+    >
+      <app-icon name="rotate-ccw" [size]="14"></app-icon>
+      <span>{{ languageService.t().settings.calendar.resetBtn }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="save-btn"
+      [disabled]="preferencesService.isSaving() || preferencesService.isLoading()"
+      (click)="handleSave()"
+    >
+      @if (preferencesService.isSaving()) {
+        <app-icon name="loader" [size]="14" class="spin-icon"></app-icon>
+        <span>{{ languageService.t().settings.calendar.saving }}</span>
+      } @else {
+        <app-icon name="check" [size]="14"></app-icon>
+        <span>{{ languageService.t().settings.calendar.saveBtn }}</span>
+      }
+    </button>
+  </div>
+</div>

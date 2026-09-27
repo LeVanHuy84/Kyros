@@ -1,0 +1,113 @@
+<div class="verify-page-container">
+  <!-- Top Right Actions: Language & Theme Switcher -->
+  <div class="auth-top-actions">
+    <button
+      type="button"
+      class="lang-switch-btn"
+      (click)="languageService.toggleLanguage()"
+      [title]="languageService.t().topNav.switchLangTooltip"
+    >
+      <span class="lang-flag">{{ languageService.currentLanguage() === 'vi' ? '🇻🇳' : '🇬🇧' }}</span>
+      <span class="lang-code">{{ languageService.currentLanguage().toUpperCase() }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="theme-toggle-btn"
+      (click)="themeService.toggleTheme()"
+      [title]="themeService.isDark() ? languageService.t().topNav.lightModeTooltip : languageService.t().topNav.darkModeTooltip"
+    >
+      @if (themeService.isDark()) {
+        <app-icon name="sun" [size]="17"></app-icon>
+      } @else {
+        <app-icon name="moon" [size]="17"></app-icon>
+      }
+    </button>
+  </div>
+
+  <div class="verify-card animate-fade-in-slide-up">
+    <!-- State 1: Loading -->
+    @if (status() === 'loading') {
+      <div class="state-content loading">
+        <div class="spinner-icon">
+          <app-icon name="loader" [size]="48" class="animate-spin"></app-icon>
+        </div>
+        <h2 class="verify-title">{{ languageService.t().auth.verify.title }}</h2>
+        <p class="verify-subtitle">{{ languageService.t().auth.verify.verifying }}</p>
+      </div>
+    }
+
+    <!-- State 2: Success -->
+    @if (status() === 'success') {
+      <div class="state-content success animate-fade-in">
+        <div class="status-icon-badge success">
+          <app-icon name="mail-check" [size]="36"></app-icon>
+        </div>
+        <h2 class="verify-title">{{ languageService.t().auth.verify.successTitle }}</h2>
+        <p class="verify-subtitle">{{ languageService.t().auth.verify.successSubtitle }}</p>
+
+        <app-button
+          variant="primary"
+          size="lg"
+          customClass="verify-action-btn"
+          (clicked)="navigateToLogin()"
+        >
+          <span>{{ languageService.t().auth.verify.goHome }}</span>
+        </app-button>
+      </div>
+    }
+
+    <!-- State 3: Error / Expired with Resend Fallback -->
+    @if (status() === 'error') {
+      <div class="state-content error animate-fade-in">
+        <div class="status-icon-badge error">
+          <app-icon name="x-circle" [size]="36"></app-icon>
+        </div>
+        <h2 class="verify-title">{{ languageService.t().auth.verify.failedTitle }}</h2>
+        <p class="verify-error-msg">{{ errorMessage() }}</p>
+
+        <!-- Fallback Form to Resend Verification Link -->
+        <div class="resend-section">
+          <h3 class="resend-title">{{ languageService.t().auth.verify.needNewLink }}</h3>
+          <form [formGroup]="resendForm" (ngSubmit)="handleResend()" class="resend-form" novalidate>
+            <div class="input-wrapper">
+              <app-icon name="mail" [size]="15" class="input-icon"></app-icon>
+              <input
+                type="email"
+                formControlName="email"
+                class="form-input with-icon"
+                [placeholder]="languageService.t().auth.emailPlaceholder"
+                [class.has-error]="resendForm.controls.email.invalid && resendForm.controls.email.touched"
+                required
+              />
+            </div>
+
+            <app-button
+              variant="secondary"
+              type="submit"
+              customClass="resend-submit-btn"
+              [loading]="resendLoading()"
+              [disabled]="resendForm.invalid || resendLoading()"
+            >
+              <app-icon name="refresh-cw" [size]="14"></app-icon>
+              <span>{{ languageService.t().auth.verify.resendBtn }}</span>
+            </app-button>
+          </form>
+
+          @if (resendSuccess()) {
+            <div class="resend-success-msg animate-fade-in" role="status">
+              <app-icon name="check-circle" [size]="15"></app-icon>
+              <span>{{ languageService.t().auth.verify.resendSuccess }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="back-to-login">
+          <a routerLink="/auth/login" class="back-link">
+            {{ languageService.t().auth.haveAccount }}
+          </a>
+        </div>
+      </div>
+    }
+  </div>
+</div>

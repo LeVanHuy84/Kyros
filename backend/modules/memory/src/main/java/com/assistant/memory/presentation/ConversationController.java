@@ -57,10 +57,14 @@ public class ConversationController {
     validateWorkspace(workspaceId);
     UserId userId = SecurityUtils.getCurrentUserId();
     UUID sessionId = request != null ? request.sessionId() : null;
+    String initialTitle =
+        (request != null && request.title() != null && !request.title().trim().isEmpty())
+            ? request.title().trim()
+            : "New Conversation";
 
     Conversation conversation =
         memoryService.startConversation(
-            new WorkspaceId(workspaceId), userId, sessionId, "New Conversation");
+            new WorkspaceId(workspaceId), userId, sessionId, initialTitle);
 
     ConversationSummaryResponse response = toSummaryResponse(conversation);
     return ResponseEntity.created(
@@ -127,16 +131,11 @@ public class ConversationController {
       @Valid @RequestBody AppendTurnRequest request) {
     validateWorkspace(workspaceId);
 
-    SenderRole role;
-    try {
-      role = SenderRole.valueOf(request.senderRole());
-    } catch (IllegalArgumentException e) {
-      if ("USER".equalsIgnoreCase(request.senderRole())) {
-        role = SenderRole.User;
-      } else {
-        role = SenderRole.Agent;
-      }
-    }
+    SenderRole role =
+        "USER".equalsIgnoreCase(request.senderRole())
+                || "User".equalsIgnoreCase(request.senderRole())
+            ? SenderRole.User
+            : SenderRole.Agent;
 
     AppendTurnCommand command =
         new AppendTurnCommand(

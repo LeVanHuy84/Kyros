@@ -1,0 +1,64 @@
+@if (activeReminders().length > 0) {
+  <div class="reminder-toasts-overlay" aria-live="polite">
+    @for (item of activeReminders(); track item.event.id + '-' + item.reminder.id) {
+      <div class="reminder-toast-card">
+        <div class="toast-left">
+          <div class="bell-ring-icon">
+            <app-icon name="bell" [size]="20"></app-icon>
+          </div>
+        </div>
+
+        <div class="toast-content">
+          <div class="toast-top-row">
+            <span class="toast-badge">{{ languageService.t().calendar.reminderToast.title }}</span>
+            <span class="event-start-time">
+              @if (getMinutesUntilStart(item.event) > 0) {
+                {{
+                  languageService
+                    .t()
+                    .calendar.reminderToast.startsIn.replace(
+                      '{mins}',
+                      getMinutesUntilStart(item.event).toString()
+                    )
+                }}
+              } @else {
+                {{ languageService.t().calendar.reminderToast.startsNow }}
+              }
+            </span>
+          </div>
+
+          <h4 class="event-title">{{ item.event.title }}</h4>
+
+          <div class="toast-actions">
+            <button
+              type="button"
+              class="toast-action-btn snooze"
+              (click)="onSnooze(item.event, item.reminder, 5)"
+            >
+              <app-icon name="clock" [size]="12"></app-icon>
+              <span>{{ languageService.t().calendar.reminderToast.snooze5 }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="toast-action-btn snooze"
+              (click)="onSnooze(item.event, item.reminder, 15)"
+            >
+              <app-icon name="clock" [size]="12"></app-icon>
+              <span>{{ languageService.t().calendar.reminderToast.snooze15 }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="toast-action-btn dismiss"
+              (click)="onDismiss(item.event, item.reminder)"
+            >
+              <app-icon name="check" [size]="12"></app-icon>
+              <span>{{ languageService.t().calendar.reminderToast.dismiss }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}

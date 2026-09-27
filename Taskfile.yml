@@ -28,6 +28,8 @@ tasks:
     cmds:
       - task: check-backend
       - task: check-frontend
+      - task: check-angular
+
 
   dev-backend:
     desc: 'Launch backend application locally in development mode'
@@ -82,6 +84,31 @@ tasks:
     dir: frontend
     cmds:
       - 'npm run build'
+
+  dev-angular:
+    desc: 'Launch Angular frontend application locally in development mode'
+    dir: frontend-angular
+    cmds:
+      - 'npm start'
+
+  build-angular:
+    desc: 'Build Angular frontend application for production'
+    dir: frontend-angular
+    cmds:
+      - 'npm run build'
+
+  check-angular:
+    desc: 'Run Angular type-checking and build verification'
+    dir: frontend-angular
+    cmds:
+      - 'npm run build'
+
+  test-angular:
+    desc: 'Run Angular automated unit tests (Karma / Jasmine Headless)'
+    dir: frontend-angular
+    cmds:
+      - 'npm test -- --watch=false --browsers=ChromeHeadless'
+
 
   infra-up:
     desc: 'Start Postgres and Redis database infrastructure containers'

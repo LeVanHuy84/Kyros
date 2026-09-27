@@ -1,0 +1,107 @@
+<div class="day-view-container">
+  <!-- Day Banner Header -->
+  <div class="day-header-banner">
+    <div class="day-date-box" [class.today-box]="dayInfo().isToday">
+      <span class="day-num">{{ dayInfo().dayNumber }}</span>
+      <div class="day-meta">
+        <span class="day-name">{{ dayInfo().dayName }}</span>
+        <span class="day-sub">{{ dayInfo().monthNumber }}/{{ dayInfo().year }}</span>
+      </div>
+    </div>
+
+    <div class="events-summary-count">
+      <span>{{ dayEvents().length }} {{ languageService.t().calendar.agenda }}</span>
+    </div>
+  </div>
+
+  <!-- Scrollable Day Timeline Grid -->
+  <div class="day-scroll-area" #dayScroll>
+    <div class="day-body">
+      <!-- Time Gutter -->
+      <div class="time-gutter">
+        @for (h of hours; track h) {
+          <div class="hour-label-cell">
+            <span>{{ formatHour(h) }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Timeline Main Column -->
+      <div class="day-timeline-content">
+        <!-- Horizontal hour dividers -->
+        @for (h of hours; track h) {
+          <div class="hour-grid-line" [style.top.px]="h * 64"></div>
+          <div class="half-hour-grid-line" [style.top.px]="h * 64 + 32"></div>
+        }
+
+        <!-- Interactive hourly slot cells -->
+        @for (h of hours; track h) {
+          <div
+            class="day-slot-cell"
+            [style.top.px]="h * 64"
+            (click)="onSlotClick(h)"
+            [title]="'Tạo sự kiện lúc ' + formatHour(h)"
+          ></div>
+        }
+
+        <!-- Current time indicator if today -->
+        @if (currentTimeTopPx() !== null) {
+          <div class="current-time-line" [style.top.px]="currentTimeTopPx()!">
+            <div class="current-time-circle"></div>
+          </div>
+        }
+
+        <!-- Event Cards in Day View -->
+        @for (item of dayEvents(); track item.event.id) {
+          <div
+            class="day-event-card"
+            [class.is-short-event]="item.isShort"
+            [class.has-conflict]="item.isConflict"
+            [style.top.px]="item.topPx"
+            [style.height.px]="item.heightPx"
+            [style.border-left-color]="item.event.color || 'var(--color-primary)'"
+            (click)="onEventCardClick($event, item.event)"
+            [title]="item.event.title + ' (' + item.formattedTime + ')'"
+          >
+            @if (item.isShort) {
+              <div class="compact-event-row">
+                @if (item.isConflict) {
+                  <app-icon name="alert-triangle" [size]="13" class="conflict-icon-compact"></app-icon>
+                }
+                <span class="event-time-compact">{{ item.formattedTime }}</span>
+                <span class="event-title-compact">{{ item.event.title }}</span>
+              </div>
+            } @else {
+              <div class="card-inner">
+                <div class="card-header-line">
+                  <div class="time-conflict-wrap">
+                    @if (item.isConflict) {
+                      <span class="conflict-chip">
+                        <app-icon name="alert-triangle" [size]="12"></app-icon>
+                        {{ languageService.t().calendar.agendaView.hasConflict }}
+                      </span>
+                    }
+                    <span class="event-time-badge">{{ item.formattedTime }}</span>
+                  </div>
+                </div>
+
+                <div class="event-title-line">{{ item.event.title }}</div>
+
+                @if (item.heightPx > 60 && item.event.description) {
+                  <div class="event-desc-snippet">{{ item.event.description }}</div>
+                }
+
+                @if (item.heightPx > 80 && item.event.reminders.length > 0) {
+                  <div class="reminders-pill-row">
+                    <app-icon name="bell" [size]="12"></app-icon>
+                    <span>{{ item.event.reminders.length }} {{ languageService.t().calendar.drawer.remindersTitle | lowercase }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

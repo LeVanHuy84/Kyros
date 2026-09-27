@@ -1,0 +1,51 @@
+<aside class="conv-sidebar">
+  <!-- Sidebar Header / Title + New Chat -->
+  <div class="sidebar-header">
+    <div class="top-title-row">
+      <div class="title-group" [title]="languageService.t().agent.history">
+        <div class="title-icon-wrap">
+          <app-icon name="message-square" [size]="15" class="title-icon"></app-icon>
+        </div>
+        <h3 class="panel-heading">{{ languageService.t().agent.history }}</h3>
+      </div>
+      <button
+        type="button"
+        class="circle-add-btn"
+        (click)="newConversation.emit()"
+        [title]="languageService.t().agent.newChat"
+        aria-label="Tạo cuộc trò chuyện mới"
+      >
+        <app-icon name="plus" [size]="14"></app-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Conversations List -->
+  <div class="conv-list" role="listbox" [attr.aria-label]="languageService.t().agent.history">
+    @for (conv of conversations(); track conv.id) {
+      <div
+        class="conv-item"
+        [class.active]="conv.id === activeConversationId()"
+        (click)="selectConversation.emit(conv.id)"
+        role="option"
+        [attr.aria-selected]="conv.id === activeConversationId()"
+      >
+        <app-icon name="sparkles" [size]="12" class="conv-icon"></app-icon>
+        <span class="conv-title" [title]="getDisplayTitle(conv.title)">{{ getDisplayTitle(conv.title) }}</span>
+        <button
+          type="button"
+          class="delete-btn"
+          (click)="onDelete($event, conv.id)"
+          aria-label="Delete"
+        >
+          <app-icon name="trash" [size]="11"></app-icon>
+        </button>
+      </div>
+    } @empty {
+      <div class="empty-conv">
+        <app-icon name="sparkles" [size]="18" class="empty-icon"></app-icon>
+        <span>{{ languageService.t().agent.noHistory }}</span>
+      </div>
+    }
+  </div>
+</aside>

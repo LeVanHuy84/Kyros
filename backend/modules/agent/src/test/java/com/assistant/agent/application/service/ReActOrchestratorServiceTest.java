@@ -25,7 +25,7 @@ class ReActOrchestratorServiceTest {
         new AgentToolContract() {
           @Override
           public String getName() {
-            return "create_note";
+            return "upsert_notes";
           }
 
           @Override
@@ -82,6 +82,35 @@ class ReActOrchestratorServiceTest {
     assertNotNull(result);
     assertTrue(result.pendingApproval());
     assertEquals("delete_events", result.pendingToolName());
+    assertNotNull(result.approvalReason());
+  }
+
+  @Test
+  void shouldInterceptDeleteNotesForHumanApproval() {
+    UUID workspaceId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    AgentExecutionResult result =
+        orchestratorService.processUserPrompt(workspaceId, userId, "Xóa ghi chú dự án cũ");
+
+    assertNotNull(result);
+    assertTrue(result.pendingApproval());
+    assertEquals("delete_notes", result.pendingToolName());
+    assertNotNull(result.approvalReason());
+  }
+
+  @Test
+  void shouldInterceptDeleteMemoryForHumanApproval() {
+    UUID workspaceId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+
+    AgentExecutionResult result =
+        orchestratorService.processUserPrompt(
+            workspaceId, userId, "Xóa thói quen trong trí nhớ vault");
+
+    assertNotNull(result);
+    assertTrue(result.pendingApproval());
+    assertEquals("delete_memory", result.pendingToolName());
     assertNotNull(result.approvalReason());
   }
 }

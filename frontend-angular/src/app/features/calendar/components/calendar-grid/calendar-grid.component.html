@@ -1,0 +1,137 @@
+<div class="calendar-grid-wrapper">
+  <!-- Calendar Sub-Header Navigation Toolbar -->
+  <div class="calendar-toolbar">
+    <!-- Left: Today + Prev/Next Navigation + Date Title -->
+    <div class="nav-cluster">
+      <app-button variant="outline" size="sm" (buttonClick)="onToday()">
+        {{ languageService.t().calendar.today }}
+      </app-button>
+
+      <div class="arrow-buttons">
+        <button
+          type="button"
+          class="icon-nav-btn"
+          [title]="languageService.t().calendar.prev"
+          (click)="onPrev()"
+        >
+          <app-icon name="chevron-left" [size]="16"></app-icon>
+        </button>
+        <button
+          type="button"
+          class="icon-nav-btn"
+          [title]="languageService.t().calendar.next"
+          (click)="onNext()"
+        >
+          <app-icon name="chevron-right" [size]="16"></app-icon>
+        </button>
+      </div>
+
+      <h2 class="period-title-text">{{ periodTitle() }}</h2>
+    </div>
+
+    <!-- Center: Conflict Alert Banner if any -->
+    @if (calendarService.hasConflicts()) {
+      <div
+        class="conflicts-alert-chip"
+        (click)="openConflictResolver.emit()"
+        [title]="'Nhấp để xem và giải quyết xung đột bằng AI'"
+      >
+        <app-icon name="alert-triangle" [size]="14"></app-icon>
+        <span>
+          {{
+            languageService
+              .t()
+              .calendar.conflictsAlert.replace(
+                '{count}',
+                calendarService.conflicts().length.toString()
+              )
+          }}
+        </span>
+      </div>
+    }
+
+    <!-- Right: View Mode Segmented Switcher -->
+    <div class="view-mode-switcher">
+      <button
+        type="button"
+        class="switcher-btn"
+        [class.active]="calendarService.viewMode() === 'month'"
+        (click)="setViewMode('month')"
+      >
+        {{ languageService.t().calendar.month }}
+      </button>
+      <button
+        type="button"
+        class="switcher-btn"
+        [class.active]="calendarService.viewMode() === 'week'"
+        (click)="setViewMode('week')"
+      >
+        {{ languageService.t().calendar.week }}
+      </button>
+      <button
+        type="button"
+        class="switcher-btn"
+        [class.active]="calendarService.viewMode() === 'day'"
+        (click)="setViewMode('day')"
+      >
+        {{ languageService.t().calendar.day }}
+      </button>
+      <button
+        type="button"
+        class="switcher-btn"
+        [class.active]="calendarService.viewMode() === 'agenda'"
+        (click)="setViewMode('agenda')"
+      >
+        {{ languageService.t().calendar.agenda }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Main View Area -->
+  <div class="calendar-view-body">
+    @if (calendarService.isLoading()) {
+      <div class="loading-overlay">
+        <app-icon name="loader" [size]="32" class="spin-icon"></app-icon>
+        <span>{{ languageService.t().common.loading }}</span>
+      </div>
+    }
+
+    @switch (calendarService.viewMode()) {
+      @case ('month') {
+        <app-month-view
+          [selectedDate]="calendarService.selectedDate()"
+          [events]="calendarService.filteredEvents()"
+          [conflictingEventIds]="calendarService.conflictingEventIds()"
+          (dayClicked)="onDayClicked($event)"
+          (eventClicked)="onEventClicked($event)"
+        ></app-month-view>
+      }
+      @case ('week') {
+        <app-week-view
+          [selectedDate]="calendarService.selectedDate()"
+          [events]="calendarService.filteredEvents()"
+          [conflictingEventIds]="calendarService.conflictingEventIds()"
+          (slotClicked)="onSlotClicked($event)"
+          (eventClicked)="onEventClicked($event)"
+        ></app-week-view>
+      }
+      @case ('day') {
+        <app-day-view
+          [selectedDate]="calendarService.selectedDate()"
+          [events]="calendarService.filteredEvents()"
+          [conflictingEventIds]="calendarService.conflictingEventIds()"
+          (slotClicked)="onSlotClicked($event)"
+          (eventClicked)="onEventClicked($event)"
+        ></app-day-view>
+      }
+      @case ('agenda') {
+        <app-agenda-view
+          [events]="calendarService.filteredEvents()"
+          [conflictingEventIds]="calendarService.conflictingEventIds()"
+          (eventClicked)="onEventClicked($event)"
+          (createClicked)="onDayClicked(calendarService.selectedDate())"
+        ></app-agenda-view>
+      }
+    }
+  </div>
+</div>

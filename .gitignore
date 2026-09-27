@@ -9,6 +9,8 @@
 *~
 .DS_Store
 Thumbs.db
+bin/
+**/bin/
 
 # Gradle Build Files (Backend)
 **/build/

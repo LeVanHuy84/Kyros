@@ -1,0 +1,32 @@
+<div class="task-list-wrapper">
+  @if (tasksService.isLoading()) {
+    <div class="tasks-loading">
+      <app-icon name="loader" [size]="20" class="animate-spin"></app-icon>
+      <span>Đang tải danh sách công việc...</span>
+    </div>
+  } @else {
+    <div class="tasks-items-list">
+      @for (task of tasksService.filteredTasks(); track task.id) {
+        <app-task-card
+          [task]="task"
+          (editTask)="editTask.emit($event)"
+          (openTimer)="openTimer.emit($event)"
+          (openRecurrence)="openRecurrence.emit($event)"
+          (tagClicked)="tagClicked.emit($event)"
+        ></app-task-card>
+      } @empty {
+        <div class="empty-tasks-state">
+          <div class="empty-icon-wrap">
+            <app-icon name="check-square" [size]="32"></app-icon>
+          </div>
+          <h4>{{ languageService.t().tasks.emptyTasks }}</h4>
+          <p>{{ languageService.t().tasks.emptyTrashSubtitle }}</p>
+          <button type="button" class="create-quick-btn" (click)="createTask.emit()">
+            <app-icon name="plus" [size]="14"></app-icon>
+            <span>{{ languageService.t().tasks.newTask }}</span>
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

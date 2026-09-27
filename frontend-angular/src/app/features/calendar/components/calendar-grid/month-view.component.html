@@ -1,0 +1,56 @@
+<div class="month-view-container">
+  <!-- Weekday Headers -->
+  <div class="weekday-header-row">
+    @for (day of weekdays(); track day) {
+      <div class="weekday-header-cell">{{ day }}</div>
+    }
+  </div>
+
+  <!-- 42 Days Matrix Grid -->
+  <div class="month-grid">
+    @for (cell of cells(); track cell.date.toISOString()) {
+      <div
+        class="month-cell"
+        [class.outside-month]="!cell.isCurrentMonth"
+        [class.is-today]="cell.isToday"
+        [class.is-selected]="cell.isSelected"
+        (click)="onCellClick(cell)"
+      >
+        <!-- Cell Header / Day Number -->
+        <div class="cell-top">
+          <span class="day-number" [class.today-badge]="cell.isToday">
+            {{ cell.dayNumber }}
+          </span>
+          @if (cell.events.length > 0) {
+            <span class="event-count-badge">{{ cell.events.length }}</span>
+          }
+        </div>
+
+        <!-- Event Pills -->
+        <div class="event-pills-list">
+          @for (ev of cell.events.slice(0, 3); track ev.id) {
+            <div
+              class="event-pill"
+              [class.has-conflict]="isConflict(ev.id)"
+              [style.border-left-color]="ev.color || 'var(--color-primary)'"
+              (click)="onEventClick($event, ev)"
+              [title]="ev.title + (isConflict(ev.id) ? ' (Trùng lịch)' : '')"
+            >
+              @if (isConflict(ev.id)) {
+                <app-icon name="alert-triangle" [size]="12" class="conflict-icon"></app-icon>
+              }
+              <span class="event-time">{{ formatEventTime(ev.startTime) }}</span>
+              <span class="event-title">{{ ev.title }}</span>
+            </div>
+          }
+
+          @if (cell.events.length > 3) {
+            <div class="more-events-pill">
+              {{ formatMoreEvents(cell.events.length - 3) }}
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,16 @@
+<div
+  class="avatar"
+  [style.width.px]="size()"
+  [style.height.px]="size()"
+  [style.font-size.px]="size() * 0.4"
+  [class.avatar-agent]="isAgent()"
+>
+  @if (imageUrl()) {
+    <img [src]="imageUrl()" [alt]="name()" (error)="onImageError()" />
+  } @else {
+    <span class="avatar-initials">{{ initials() }}</span>
+  }
+  @if (online()) {
+    <span class="online-badge"></span>
+  }
+</div>

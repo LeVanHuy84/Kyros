@@ -1,0 +1,55 @@
+<div class="notes-page-container">
+  <!-- Left Column: Collapsible Note List Panel -->
+  @if (isSidebarOpen()) {
+    <app-note-list-panel
+      class="sidebar-panel animate-fade-in"
+      (collapseRequested)="toggleSidebar()"
+    ></app-note-list-panel>
+  } @else {
+    <!-- Collapsed Sidebar Rail: Preserves Section Identity with Icon & Tooltip -->
+    <aside class="collapsed-notes-rail animate-fade-in">
+      <button
+        type="button"
+        class="rail-trigger-btn"
+        (click)="toggleSidebar()"
+        [title]="languageService.t().notes.title"
+        aria-label="Mở rộng danh sách ghi chú"
+      >
+        <app-icon name="file-text" [size]="18" class="rail-icon"></app-icon>
+      </button>
+
+      <button
+        type="button"
+        class="rail-add-btn"
+        (click)="notesService.startCreatingNew()"
+        [title]="languageService.t().notes.newNote"
+        aria-label="Tạo ghi chú mới"
+      >
+        <app-icon name="plus" [size]="14"></app-icon>
+      </button>
+    </aside>
+  }
+
+  <!-- Right Column: Detail View OR Editor Mode -->
+  <main class="notes-content-area">
+    @if (notesService.isCreatingNew()) {
+      <app-note-form-editor
+        [isNew]="true"
+        (saved)="onNoteSaved($event)"
+        (cancelled)="onEditorCancelled()"
+      ></app-note-form-editor>
+    } @else if (isEditing() && notesService.activeNote()) {
+      <app-note-form-editor
+        [initialNote]="notesService.activeNote()"
+        [isNew]="false"
+        (saved)="onNoteSaved($event)"
+        (cancelled)="onEditorCancelled()"
+      ></app-note-form-editor>
+    } @else {
+      <app-note-detail-view
+        [note]="notesService.activeNote()"
+        (editRequested)="onEditRequested($event)"
+      ></app-note-detail-view>
+    }
+  </main>
+</div>

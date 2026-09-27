@@ -1,0 +1,118 @@
+<div class="conversations-directory-container">
+  <!-- Unified Toolbar: Search + Count + Refresh -->
+  <div class="directory-toolbar">
+    <div class="search-wrap">
+      <app-icon name="search" [size]="15" class="search-icon"></app-icon>
+      <input
+        type="text"
+        class="search-input"
+        [placeholder]="languageService.t().memory.audit.searchPlaceholder"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchChange($event)"
+      />
+      @if (searchQuery()) {
+        <button
+          type="button"
+          class="clear-btn"
+          (click)="onSearchChange('')"
+          title="Clear search"
+          aria-label="Clear search"
+        >
+          <app-icon name="x" [size]="14"></app-icon>
+        </button>
+      }
+    </div>
+
+    <div class="toolbar-actions">
+      <span class="session-count-badge">
+        {{ filteredConversations().length }} {{ languageService.currentLanguage() === 'vi' ? 'phiên' : (filteredConversations().length === 1 ? 'session' : 'sessions') }}
+      </span>
+
+      <button
+        type="button"
+        class="refresh-btn"
+        (click)="memoryService.fetchConversations().subscribe()"
+        [title]="languageService.t().agent.briefing.refreshBtn"
+      >
+        <app-icon name="refresh-cw" [size]="14"></app-icon>
+        <span>{{ languageService.t().agent.briefing.refreshBtn }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Conversations List Area -->
+  <div class="directory-content-scroll">
+    @if (memoryService.isLoadingConversations()) {
+      <div class="loading-state">
+        <app-icon name="loader" [size]="24" class="spin-icon"></app-icon>
+        <span>{{ languageService.t().common.loading }}</span>
+      </div>
+    } @else if (filteredConversations().length > 0) {
+      <div class="conversations-grid">
+        @for (conv of filteredConversations(); track conv.id || conv.conversationId) {
+          <article class="conversation-card" (click)="openTurnsModal(conv)">
+            <div class="card-main">
+              <div class="card-header">
+                <div class="conv-title-wrap">
+                  <div class="conv-icon-wrap">
+                    <app-icon name="message-square" [size]="15"></app-icon>
+                  </div>
+                  <h4 class="conv-title" [title]="conv.title || 'New Conversation'">
+                    {{ conv.title || 'New Conversation' }}
+                  </h4>
+                </div>
+                <span class="status-badge" [class.active]="conv.status === 'Active'">
+                  {{ conv.status }}
+                </span>
+              </div>
+
+              <div class="card-meta">
+                <app-icon name="clock" [size]="12"></app-icon>
+                <span>{{ languageService.t().memory.audit.lastActive }}: {{ formatDate(conv.lastTurnTimestamp) || 'Recently' }}</span>
+              </div>
+            </div>
+
+            <div class="card-footer" (click)="$event.stopPropagation()">
+              <button
+                type="button"
+                class="view-detail-btn"
+                (click)="openTurnsModal(conv)"
+              >
+                <app-icon name="eye" [size]="13"></app-icon>
+                <span>{{ languageService.t().memory.audit.viewTurnsBtn }}</span>
+              </button>
+
+              <button
+                type="button"
+                class="delete-btn"
+                (click)="deleteConversation($event, conv)"
+                [title]="languageService.t().memory.audit.deleteConvBtn"
+                aria-label="Delete conversation"
+              >
+                <app-icon name="trash" [size]="13"></app-icon>
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
+      <!-- Empty State -->
+      <div class="empty-state">
+        <div class="empty-icon-wrap">
+          <app-icon name="message-square" [size]="32"></app-icon>
+        </div>
+        <h3 class="empty-title">{{ languageService.t().memory.audit.emptyTitle }}</h3>
+        <p class="empty-desc">{{ languageService.t().memory.audit.emptySubtitle }}</p>
+      </div>
+    }
+  </div>
+
+  <!-- Turns Modal -->
+  @if (isTurnsModalOpen()) {
+    <app-turns-modal
+      [conversation]="selectedConversation()"
+      [turns]="memoryService.activeConversationTurns()"
+      (closed)="closeTurnsModal()"
+    ></app-turns-modal>
+  }
+</div>

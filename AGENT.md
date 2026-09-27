@@ -11,6 +11,7 @@ The AI Executive Assistant is a multi-tenant workspace platform designed to mana
 - Repository Layout: Monorepo
   - /backend: Modular Monolith (Spring Boot 3.4.2 + Java 25 toolchain with Java 21 bytecode targets + Gradle 9.1.0).
   - /frontend: Single Page Application (React + Vite + TypeScript + Vanilla CSS).
+  - /frontend-angular: Single Page Application (Angular + TypeScript + SCSS + Natural UI).
   - /docs: Architecture blueprints, implementation plans, and bootstrap guides.
 
 ---
@@ -63,6 +64,7 @@ Each business module follows Domain-Driven Design layout principles:
 
 - Java formatting: Enforced via Spotless invoking Google Java Format (GJF) version 1.27.0 with reflow long strings enabled.
 - Frontend formatting and linting: Enforced via Prettier (2-space indentation formatting for TSX/TS/CSS/JSON) and Oxlint (lightweight and fast static linting).
+- Angular Frontend Standards: Enforced via `.agent/rules/angular-minimum-standards.md` (Standalone components, OnPush change detection, Signals-first reactivity, and workspace header interceptor).
 - CSS formatting: Vanilla CSS design tokens must be scoped under the :root selector. Ad-hoc utility styling is discouraged; reuse defined tokens.
 
 ---

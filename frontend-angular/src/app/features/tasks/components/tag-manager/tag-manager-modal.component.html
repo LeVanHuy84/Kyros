@@ -1,0 +1,104 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="closeModal.emit()">
+    <div class="modal-card animate-fade-in-scale" (click)="$event.stopPropagation()" role="dialog">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="header-title-group">
+          <app-icon name="tag" [size]="18" class="header-icon"></app-icon>
+          <h3>{{ languageService.t().tasks.tagManager.title }}</h3>
+        </div>
+        <button type="button" class="close-btn" (click)="closeModal.emit()" aria-label="Close">
+          <app-icon name="x" [size]="16"></app-icon>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <!-- Add / Edit Form -->
+        <div class="tag-form-card">
+          <div class="form-title">
+            <span>{{ editingTagId() ? languageService.t().tasks.tagManager.updateTag : languageService.t().tasks.tagManager.addNewLabel }}</span>
+          </div>
+
+          <div class="form-inputs-row">
+            <input
+              type="text"
+              [ngModel]="tagName()"
+              (ngModelChange)="tagName.set($event)"
+              [placeholder]="languageService.t().tasks.tagManager.namePlaceholder"
+              class="tag-name-input"
+              (keydown.enter)="saveTag()"
+            />
+
+            <!-- Color Swatches -->
+            <div class="color-swatches-list">
+              @for (c of colorPalette; track c) {
+                <button
+                  type="button"
+                  class="color-swatch-btn"
+                  [style.backgroundColor]="c"
+                  [class.active]="selectedColor() === c"
+                  (click)="selectedColor.set(c)"
+                  [title]="c"
+                >
+                  @if (selectedColor() === c) {
+                    <app-icon name="check" [size]="12" color="#ffffff"></app-icon>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="form-actions-row">
+            @if (editingTagId()) {
+              <button type="button" class="cancel-btn" (click)="cancelEdit()">
+                {{ languageService.t().common.cancel }}
+              </button>
+            }
+            <app-button variant="primary" (clicked)="saveTag()" [disabled]="!tagName().trim()">
+              <app-icon [name]="editingTagId() ? 'check' : 'plus'" [size]="14"></app-icon>
+              <span>{{ editingTagId() ? languageService.t().tasks.tagManager.updateTag : languageService.t().tasks.tagManager.addTag }}</span>
+            </app-button>
+          </div>
+        </div>
+
+        <!-- Tags List -->
+        <div class="tags-list-section">
+          <div class="section-label">{{ languageService.t().tasks.tagManager.existingTags }} ({{ tasksService.tags().length }})</div>
+
+          <div class="tags-list">
+            @for (t of tasksService.tags(); track t.tagId) {
+              <div class="tag-row-item">
+                <div class="tag-badge" [style.backgroundColor]="t.color + '18'" [style.borderColor]="t.color + '40'" [style.color]="t.color">
+                  <span class="color-dot" [style.backgroundColor]="t.color"></span>
+                  <span class="tag-text">{{ t.name }}</span>
+                </div>
+
+                <div class="tag-actions">
+                  <button type="button" class="action-btn edit" (click)="startEdit(t)" [title]="languageService.t().tasks.card.edit">
+                    <app-icon name="edit" [size]="14"></app-icon>
+                  </button>
+                  <button type="button" class="action-btn delete" (click)="deleteTag(t.tagId)" [title]="languageService.t().tasks.card.delete">
+                    <app-icon name="trash" [size]="14"></app-icon>
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="empty-state">
+                <app-icon name="tag" [size]="24" class="empty-icon"></app-icon>
+                <span>{{ languageService.t().tasks.tagManager.emptyTags }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <app-button variant="secondary" (clicked)="closeModal.emit()">
+          {{ languageService.t().common.cancel }}
+        </app-button>
+      </div>
+    </div>
+  </div>
+}

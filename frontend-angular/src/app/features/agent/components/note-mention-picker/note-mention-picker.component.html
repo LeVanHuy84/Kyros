@@ -1,0 +1,49 @@
+<div class="note-picker-popover animate-fade-in-scale" role="dialog" [attr.aria-label]="languageService.t().agent.attachNotes">
+  <div class="picker-header">
+    <app-icon name="file-text" [size]="15" class="header-icon"></app-icon>
+    <span class="header-title">{{ languageService.t().agent.attachNotes }}</span>
+    <button type="button" class="close-btn" (click)="closePicker.emit()" [attr.aria-label]="languageService.t().common.close">
+      <app-icon name="x" [size]="14"></app-icon>
+    </button>
+  </div>
+
+  <div class="picker-search">
+    <app-icon name="search" [size]="14" class="search-icon"></app-icon>
+    <input
+      type="text"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
+      [placeholder]="languageService.t().agent.searchNotesPlaceholder"
+      class="search-input"
+      autofocus
+    />
+  </div>
+
+  <div class="notes-list" role="listbox">
+    @if (isLoading()) {
+      <div class="picker-loading">
+        <app-icon name="loader" [size]="16" class="animate-spin"></app-icon>
+        <span>{{ languageService.t().common.loading }}</span>
+      </div>
+    } @else {
+      @for (note of filteredNotes(); track note.id) {
+        <button
+          type="button"
+          class="note-item"
+          (click)="selectNote(note)"
+          role="option"
+        >
+          <div class="note-item-left">
+            <app-icon name="file-text" [size]="14" class="note-icon"></app-icon>
+            <span class="note-title">{{ note.title }}</span>
+          </div>
+          <span class="note-date">{{ note.updatedAt | date:'shortDate' }}</span>
+        </button>
+      } @empty {
+        <div class="picker-empty">
+          <span>{{ languageService.t().agent.noNotesFound }}</span>
+        </div>
+      }
+    }
+  </div>
+</div>

@@ -272,8 +272,14 @@ public final class VietnameseDateTimeParser {
     String cleaned =
         input
             .replaceAll(
+                "(?i)^/(event|task|todo|note|notes|memory|rule|rules|vault|recall|find|search|list|help)\\s*",
+                "")
+            .replaceAll(
                 "(?i)^(lên lịch|đặt lịch|tạo lịch|nhắc tôi|tạo task|thêm task|tạo việc|giúp"
-                    + " tôi|hãy)\\s*",
+                    + " tôi|hãy|tôi cần lên sự kiện|tôi cần tạo sự kiện|tôi cần lên lịch|tôi cần"
+                    + " tạo|tôi cần|tôi muốn lên sự kiện|tôi muốn lên lịch|tôi muốn tạo|tôi"
+                    + " muốn|hãy giúp tôi|hãy tạo giúp tôi|lên sự kiện|cần lên|cần tạo|chuẩn"
+                    + " bị)\\s*",
                 "")
             .replaceAll("(?i)(vào lúc|lúc|từ|đến|tới)\\s*\\d{1,2}(?:h|:| giờ)\\d{0,2}", "")
             .replaceAll(
@@ -285,6 +291,12 @@ public final class VietnameseDateTimeParser {
                     + " tuần sau| tuần tới| này)?",
                 "")
             .replaceAll("(?i)(trong \\d+ (?:phút|tiếng|giờ)|\\d+p|\\d+ phút)", "")
+            .replaceAll(
+                "(?i)(,\\s*lên lịch cho tôi|\\s*lên lịch cho tôi|,\\s*lên lịch giúp tôi|\\s*lên"
+                    + " lịch giúp tôi|,\\s*tạo giúp tôi|\\s*tạo giúp tôi|,\\s*giúp tôi|\\s*giúp"
+                    + " tôi|,\\s*cho tôi|\\s*cho"
+                    + " tôi|,\\s*nhé|\\s*nhé|,\\s*nha|\\s*nha|,\\s*nhá|\\s*nhá)$",
+                "")
             .replaceAll("\\s+", " ")
             .trim();
     return cleaned.isEmpty() ? input : cleaned;

@@ -1,0 +1,37 @@
+name: Angular CI
+
+on:
+  push:
+    branches: [ main, master, dev ]
+    paths:
+      - 'frontend-angular/**'
+      - '.github/workflows/angular-ci.yml'
+  pull_request:
+    branches: [ main, master, dev ]
+    paths:
+      - 'frontend-angular/**'
+      - '.github/workflows/angular-ci.yml'
+
+jobs:
+  angular-ci:
+    name: Angular CI (Build & Type-Check)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend-angular/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: frontend-angular
+
+      - name: Build Production Bundle
+        run: npm run build -- --configuration production
+        working-directory: frontend-angular

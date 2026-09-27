@@ -1,0 +1,76 @@
+<div class="agenda-view-container">
+  @if (groups().length === 0) {
+    <!-- Empty State -->
+    <div class="agenda-empty-state">
+      <div class="empty-icon-circle">
+        <app-icon name="calendar" [size]="36"></app-icon>
+      </div>
+      <h3 class="empty-title">{{ languageService.t().calendar.agendaView.upcoming }}</h3>
+      <p class="empty-desc">{{ languageService.t().calendar.agendaView.empty }}</p>
+      <app-button variant="primary" (buttonClick)="onCreateClick()">
+        <app-icon name="plus" [size]="16"></app-icon>
+        <span>{{ languageService.t().calendar.agendaView.quickAdd }}</span>
+      </app-button>
+    </div>
+  } @else {
+    <!-- Agenda Date Groups -->
+    <div class="agenda-groups-list">
+      @for (group of groups(); track group.dateStr) {
+        <div class="agenda-group-card" [class.is-today-group]="group.isToday">
+          <!-- Date Header -->
+          <div class="group-date-header">
+            <div class="date-badge" [class.today-badge]="group.isToday">
+              <span class="badge-day">{{ group.dayNumber }}</span>
+            </div>
+            <div class="date-info">
+              <span class="day-name">{{ group.dayName }}</span>
+              <span class="month-year">{{ group.monthYear }}</span>
+            </div>
+            @if (group.isToday) {
+              <span class="today-tag">{{ languageService.t().calendar.today }}</span>
+            }
+          </div>
+
+          <!-- Events on this Date -->
+          <div class="group-events-list">
+            @for (item of group.events; track item.event.id) {
+              <div
+                class="agenda-event-row"
+                [class.has-conflict]="item.isConflict"
+                [style.border-left-color]="item.event.color || 'var(--color-primary)'"
+                (click)="onEventClick(item.event)"
+              >
+                <div class="event-left-info">
+                  <div class="time-and-chips">
+                    <span class="event-time-text">{{ item.formattedTime }}</span>
+                    <span class="event-duration-pill">{{ item.durationMinutes }}m</span>
+                    @if (item.isConflict) {
+                      <span class="conflict-badge">
+                        <app-icon name="alert-triangle" [size]="12"></app-icon>
+                        {{ languageService.t().calendar.agendaView.hasConflict }}
+                      </span>
+                    }
+                  </div>
+                  <h4 class="event-title-text">{{ item.event.title }}</h4>
+                  @if (item.event.description) {
+                    <p class="event-desc-text">{{ item.event.description }}</p>
+                  }
+                </div>
+
+                <div class="event-right-meta">
+                  @if (item.event.reminders.length > 0) {
+                    <div class="reminders-count-tag" [title]="'Cài đặt ' + item.event.reminders.length + ' nhắc nhở'">
+                      <app-icon name="bell" [size]="13"></app-icon>
+                      <span>{{ item.event.reminders.length }}</span>
+                    </div>
+                  }
+                  <app-icon name="chevron-right" [size]="16" class="chevron-arrow"></app-icon>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

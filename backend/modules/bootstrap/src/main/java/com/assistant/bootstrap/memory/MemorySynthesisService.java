@@ -2,35 +2,37 @@ package com.assistant.bootstrap.memory;
 
 import com.assistant.kernel.domain.UserId;
 import com.assistant.kernel.domain.WorkspaceId;
-import com.assistant.memory.domain.model.MemoryEntry;
-import com.assistant.memory.domain.model.MemoryId;
-import com.assistant.memory.domain.repository.MemoryEntryRepository;
+import com.assistant.memory.application.service.FactExtractionService;
+import com.assistant.memory.application.service.MemoryConsolidationService;
+import com.assistant.memory.domain.model.ExtractedFact;
+import com.assistant.memory.domain.service.SensitiveDataScreeningResult;
+import com.assistant.memory.domain.service.SensitiveFactScreeningService;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+/**
+ * Orchestrator service for autonomous long-term memory synthesis: Fact Extraction -> Sensitive
+ * Privacy Screening -> PgVector/Semantic Memory Consolidation.
+ */
 @Service
 public class MemorySynthesisService {
 
-  private final MemoryEntryRepository memoryEntryRepository;
+  private static final Logger log = LoggerFactory.getLogger(MemorySynthesisService.class);
 
-  private static final List<Pattern> FACT_PATTERNS =
-      List.of(
-          Pattern.compile("(?i)(?:tôi\\s+thường|thói\\s+quen\\s+của\\s+tôi\\s+là)\\s+([^.,;\\n]+)"),
-          Pattern.compile("(?i)(?:tôi\\s+thích|tôi\\s+muốn\\s+ưu\\s+tiên)\\s+([^.,;\\n]+)"),
-          Pattern.compile(
-              "(?i)(?:tôi\\s+không\\s+thích|tôi\\s+tránh|không\\s+được\\s+xếp\\s+lịch)\\s+([^.,;\\n"
-                  + "]+)"),
-          Pattern.compile(
-              "(?i)(?:tôi\\s+đang\\s+làm\\s+dự\\s+án|dự\\s+án\\s+của\\s+tôi\\s+là)\\s+([^.,;\\n"
-                  + "]+)"),
-          Pattern.compile("(?i)(?:tôi\\s+là|vai\\s+trò\\s+của\\s+tôi\\s+là)\\s+([^.,;\\n]+)"));
+  private final FactExtractionService factExtractionService;
+  private final SensitiveFactScreeningService sensitiveFactScreeningService;
+  private final MemoryConsolidationService memoryConsolidationService;
 
-  public MemorySynthesisService(MemoryEntryRepository memoryEntryRepository) {
-    this.memoryEntryRepository = memoryEntryRepository;
+  public MemorySynthesisService(
+      FactExtractionService factExtractionService,
+      SensitiveFactScreeningService sensitiveFactScreeningService,
+      MemoryConsolidationService memoryConsolidationService) {
+    this.factExtractionService = factExtractionService;
+    this.sensitiveFactScreeningService = sensitiveFactScreeningService;
+    this.memoryConsolidationService = memoryConsolidationService;
   }
 
   public List<String> extractAndStoreFacts(
@@ -39,26 +41,34 @@ public class MemorySynthesisService {
       return List.of();
     }
 
-    List<String> extractedFacts = new ArrayList<>();
-    for (Pattern pattern : FACT_PATTERNS) {
-      Matcher matcher = pattern.matcher(conversationText);
-      while (matcher.find()) {
-        String fact = matcher.group(0).trim();
-        if (fact.length() >= 8 && !extractedFacts.contains(fact)) {
-          extractedFacts.add(fact);
-        }
-      }
+    // 1. Fact Extraction
+    List<ExtractedFact> extractedFacts = factExtractionService.extractFacts(conversationText);
+    if (extractedFacts.isEmpty()) {
+      return List.of();
     }
 
-    for (String fact : extractedFacts) {
+    List<String> processedFactContents = new ArrayList<>();
+    for (ExtractedFact fact : extractedFacts) {
+      // 2. Sensitive Fact Screening (Privacy Guard)
+      SensitiveDataScreeningResult screening = sensitiveFactScreeningService.screen(fact.content());
+      if (!screening.isAllowed()) {
+        log.warn("Memory fact candidate rejected by privacy screening: {}", screening.reason());
+        continue;
+      }
+
+      // 3. Memory Consolidation (Deduplicate / Reinforce / Revise)
       try {
-        MemoryEntry entry =
-            new MemoryEntry(new MemoryId(UUID.randomUUID()), workspaceId, userId, fact, 0.85f);
-        memoryEntryRepository.save(entry);
-      } catch (Exception ignored) {
+        var consolidation = memoryConsolidationService.consolidate(workspaceId, userId, fact);
+        if (consolidation.type() != MemoryConsolidationService.ConsolidationResultType.IGNORED) {
+          log.info(
+              "Autonomous memory consolidated: {} -> {}", consolidation.type(), fact.content());
+          processedFactContents.add(fact.content());
+        }
+      } catch (Exception e) {
+        log.error("Failed to consolidate memory fact: {}", e.getMessage());
       }
     }
 
-    return extractedFacts;
+    return processedFactContents;
   }
 }

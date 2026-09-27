@@ -56,7 +56,11 @@ public class SseNotificationRegistry {
             try {
               emitter.send(SseEmitter.event().name("notification").data(data));
               return false;
-            } catch (IOException e) {
+            } catch (Exception e) {
+              try {
+                emitter.complete();
+              } catch (Exception ignored) {
+              }
               return true;
             }
           });
@@ -79,6 +83,10 @@ public class SseNotificationRegistry {
                       emitter.send(SseEmitter.event().name("ping").data("keep-alive"));
                       return false;
                     } catch (Exception e) {
+                      try {
+                        emitter.complete();
+                      } catch (Exception ignored) {
+                      }
                       return true;
                     }
                   });

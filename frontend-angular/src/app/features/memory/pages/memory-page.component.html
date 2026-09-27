@@ -1,0 +1,42 @@
+<div class="memory-page-container">
+  <!-- Page Header & Tabs -->
+  <header class="memory-header-section">
+    <div class="header-title-block">
+      <div class="header-icon-wrap">
+        <app-icon name="brain" [size]="20"></app-icon>
+      </div>
+      <div class="header-text">
+        <h2>{{ languageService.t().memory.title }}</h2>
+        <p>{{ languageService.t().memory.subtitle }}</p>
+      </div>
+    </div>
+
+    <!-- Clean Navigation Tabs -->
+    <nav class="tabs-nav" role="tablist">
+      @for (tab of tabs(); track tab.id) {
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="activeTab() === tab.id"
+          (click)="selectTab(tab.id)"
+          role="tab"
+          [attr.aria-selected]="activeTab() === tab.id"
+        >
+          <app-icon [name]="tab.icon" [size]="16"></app-icon>
+          <span>{{ tab.label }}</span>
+        </button>
+      }
+    </nav>
+  </header>
+
+  <!-- Page Content View Area -->
+  <main class="memory-main-content" role="tabpanel">
+    @if (activeTab() === 'vault') {
+      <app-memory-vault-panel></app-memory-vault-panel>
+    }
+
+    @if (activeTab() === 'audit') {
+      <app-conversations-directory-panel></app-conversations-directory-panel>
+    }
+  </main>
+</div>
