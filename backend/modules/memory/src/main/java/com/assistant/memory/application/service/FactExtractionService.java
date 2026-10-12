@@ -25,6 +25,7 @@ public class FactExtractionService {
   private static final Logger log = LoggerFactory.getLogger(FactExtractionService.class);
   private final @Nullable LlmFactExtractorPort llmFactExtractorPort;
 
+  @Autowired
   public FactExtractionService(
       @Autowired(required = false) @Nullable LlmFactExtractorPort llmFactExtractorPort) {
     this.llmFactExtractorPort = llmFactExtractorPort;

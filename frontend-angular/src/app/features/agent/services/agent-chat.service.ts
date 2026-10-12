@@ -208,7 +208,7 @@ export class AgentChatService {
         ...prev,
         {
           sender: 'agent',
-          text: '⚠️ Vui lòng chọn một Workspace hoạt động trước khi sử dụng Agent Coordinator.',
+          text: 'Vui lòng chọn một Workspace hoạt động trước khi sử dụng Agent Coordinator.',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -326,7 +326,7 @@ export class AgentChatService {
           if (event === 'thought') {
             this.updateLastMessageThought(textPayload.trim());
           } else if (event === 'observation') {
-            this.updateLastMessageThought(`🔧 ${textPayload.trim()}`);
+            this.updateLastMessageThought(`[Tool] ${textPayload.trim()}`);
           } else if (event === 'approval') {
             try {
               const data = JSON.parse(rawData.trim());
@@ -335,7 +335,7 @@ export class AgentChatService {
                 argumentsJson: data.argumentsJson,
                 reason: data.reason,
               });
-              fullAgentResponse += `\n\n⚠️ **[CẦN PHÊ DUYỆT]**: ${data.reason}\n*Công cụ:* \`${data.toolName}\`\n\n`;
+              fullAgentResponse += `\n\n**[CẦN PHÊ DUYỆT]**: ${data.reason}\n*Công cụ:* \`${data.toolName}\`\n\n`;
             } catch {
               // ignore
             }
@@ -378,7 +378,7 @@ export class AgentChatService {
         this.isThinking.set(false);
       } catch (err: any) {
         this.isThinking.set(false);
-        const errorText = `⚠️ **[Lỗi kết nối Agent]**: ${err?.message || 'Không thể gọi tới Backend/LLM Service'}\n\n*[Agent Fallback]*: Đã tiếp nhận "${userText}". Engine đang xử lý ngoại tuyến.`;
+        const errorText = `**[Lỗi kết nối Agent]**: ${err?.message || 'Không thể gọi tới Backend/LLM Service'}\n\n*[Agent Fallback]*: Đã tiếp nhận "${userText}". Engine đang xử lý ngoại tuyến.`;
         this.finishLastMessageWithError(errorText);
       }
     } else {
@@ -400,7 +400,7 @@ export class AgentChatService {
                 argumentsJson: data.pendingToolArguments || '',
                 reason: data.approvalReason || '',
               });
-              finalAnswerText = `⚠️ **[CẦN PHÊ DUYỆT]**: ${data.approvalReason}\n*Công cụ:* \`${data.pendingToolName}\``;
+              finalAnswerText = `**[CẦN PHÊ DUYỆT]**: ${data.approvalReason}\n*Công cụ:* \`${data.pendingToolName}\``;
             }
 
             this.messages.update((prev) => [...prev, { sender: 'agent', text: finalAnswerText, time }]);
@@ -442,7 +442,7 @@ export class AgentChatService {
             ...prev,
             {
               sender: 'agent',
-              text: res.finalAnswer || '✅ Hành động đã được thực thi thành công.',
+              text: res.finalAnswer || 'Hành động đã được thực thi thành công.',
               time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             },
           ]);
@@ -459,7 +459,7 @@ export class AgentChatService {
       ...prev,
       {
         sender: 'agent',
-        text: '❌ Bạn đã từ chối thực thi hành động này.',
+        text: 'Bạn đã từ chối thực thi hành động này.',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ]);

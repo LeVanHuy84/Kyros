@@ -20,6 +20,7 @@ public class NoteService {
   private final NoteRepository noteRepository;
   private final HybridSearchService hybridSearchService;
 
+  @org.springframework.beans.factory.annotation.Autowired
   public NoteService(
       NoteRepository noteRepository,
       @org.springframework.beans.factory.annotation.Autowired(required = false)
