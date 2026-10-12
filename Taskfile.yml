@@ -27,9 +27,7 @@ tasks:
     desc: 'Run all lint and static analysis checks across the monorepo'
     cmds:
       - task: check-backend
-      - task: check-frontend
       - task: check-angular
-
 
   dev-backend:
     desc: 'Launch backend application locally in development mode'
@@ -38,13 +36,19 @@ tasks:
       - '{{.GRADLE_CMD}} :{{.MAIN_MODULE}}:bootRun --args="--spring.profiles.active=dev"'
 
   format-frontend:
-    desc: 'Automatically format frontend files using Prettier'
-    dir: frontend
+    desc: 'Automatically format frontend files'
+    dir: frontend-angular
     cmds:
-      - 'npm run format'
+      - 'npm run format --if-present'
 
   check-frontend:
-    desc: 'Run frontend static analysis checks (oxlint)'
+    desc: 'Run Angular frontend static analysis checks'
+    dir: frontend-angular
+    cmds:
+      - 'npm run build'
+
+  check-react-legacy:
+    desc: 'Run legacy React frontend static analysis checks (oxlint)'
     dir: frontend
     cmds:
       - 'npm run lint'
@@ -74,13 +78,25 @@ tasks:
       - '{{.GRADLE_CMD}} clean build'
 
   dev-frontend:
-    desc: 'Launch frontend application locally in development mode'
+    desc: 'Launch Angular frontend application locally in development mode'
+    dir: frontend-angular
+    cmds:
+      - 'npm start'
+
+  build-frontend:
+    desc: 'Build Angular frontend application for production'
+    dir: frontend-angular
+    cmds:
+      - 'npm run build'
+
+  dev-react-legacy:
+    desc: 'Launch legacy React frontend locally in development mode'
     dir: frontend
     cmds:
       - 'npm run dev'
 
-  build-frontend:
-    desc: 'Build frontend application for production'
+  build-react-legacy:
+    desc: 'Build legacy React frontend for production'
     dir: frontend
     cmds:
       - 'npm run build'

@@ -33,14 +33,12 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend-angular
       dockerfile: Dockerfile
     image: ai-executive-assistant-frontend:latest
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-3000}:80"
-    environment:
-      VITE_API_URL: http://localhost:${PORT:-8080}
     depends_on:
       - backend
 

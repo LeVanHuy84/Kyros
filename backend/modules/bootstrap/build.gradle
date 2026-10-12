@@ -13,7 +13,6 @@ dependencies {
     implementation project(':modules:calendar')
     implementation project(':modules:memory')
     implementation project(':modules:notification')
-    implementation project(':modules:connector')
     implementation project(':modules:agent')
 
     implementation libs.spring.boot.starter.web

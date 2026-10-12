@@ -104,33 +104,23 @@ We enforce strict compilation and formatting rules on the backend to ensure code
 
 ---
 
-## Implementation Wave Status
+## Implementation & Refactoring Status
 
-We follow the roadmap defined in docs/implementation/ai-coding-plan.md.
+We follow the master plan defined in [`docs/prompts/output/refactor-master-plan.md`](file:///D:/VsCode/Java/ai_executive_assistant/docs/prompts/output/refactor-master-plan.md).
 
-- Wave I: Setup & Quality Gates (COMPLETED)
-- Wave II: Tenancy & JWT Auth (UPCOMING / NEXT)
-- Wave III: Task Bounded Context (TODO)
-- Wave IV: Calendar & Overlaps (TODO)
-- Wave V: Memory & Vector Search (TODO)
-- Wave VI: Agent Integration (TODO)
-
-### Active Session Completed Tasks (Wave I)
-
-- Configure Root Monorepo Orchestration (compose.yaml, Taskfile.yml, .gitignore).
-- Configure modular Gradle build scripts with Java 25 toolchain and target release compatibility.
-- Setup static analysis plugin quality gates (spotless, checkstyle, spotbugs, errorprone, nullaway).
-- Resolve Java 25 runtime ASM ClassReader crash using options.release.set(21) compilation target.
-- Scaffold Frontend React + Vite SPA, clean boilerplate CSS, and integrate custom Vanilla CSS design tokens.
-- Create Axios API Client wrapper supporting multi-tenancy X-Workspace-Id and token refresh rotation.
-- Configure multi-stage production Dockerfiles for both backend and frontend.
-
-### Next Handoff Focus (Wave II)
-
-- Implement user registration, login, and token generation (auth module).
-- Implement JWT Filter context integration to capture authentication state.
-- Implement Workspace tenant creation and validation (workspace module).
-- Implement tenant isolation filters at HTTP interceptor and JPA repository layers.
+- **Phase 1: Repository Purge & Truth Alignment (COMPLETED)**
+  - Dropped empty `connector` module from codebase, build scripts, and architecture tests.
+  - Designated `frontend-angular` (Angular 20) as the primary SPA in `compose.yaml` and `Taskfile.yml`.
+  - Preserved legacy React SPA in `/frontend` as design reference.
+  - Aligned `README.md` to remove vaporware (Connector Hub, Workflow engine).
+- **Phase 2: AI Engineering Modernization (UPCOMING)**
+  - Spring AI ChatClient, PgVectorStore RAG, Structured Output Extraction, Langfuse Tracing.
+- **Phase 3: Core Backend Hardening (TODO)**
+  - PostgreSQL RLS Multi-tenancy, ShedLock Distributed Cron, Transactional Outbox, Bucket4j Rate Limiting.
+- **Phase 4: Domain Depth & Advanced Engines (TODO)**
+  - RFC 5545 Recurrence Engine, Free-Busy Interval Merge Algorithm, Ebbinghaus Decay.
+- **Phase 5: Production Readiness & Live Demo (TODO)**
+  - Testcontainers Suite (PgVector + Redis), Actuator Metrics, Grafana, Live Deployment.
 
 ---
 

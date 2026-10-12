@@ -25,7 +25,6 @@ include(
     ':modules:calendar',
     ':modules:memory',
     ':modules:notification',
-    ':modules:connector',
     ':modules:agent',
     ':modules:bootstrap'
 )
