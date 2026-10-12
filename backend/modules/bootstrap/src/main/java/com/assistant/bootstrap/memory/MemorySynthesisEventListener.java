@@ -3,12 +3,16 @@ package com.assistant.bootstrap.memory;
 import com.assistant.kernel.event.MemoryEvents;
 import com.assistant.memory.domain.model.ConversationId;
 import com.assistant.memory.domain.repository.ConversationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MemorySynthesisEventListener {
+
+  private static final Logger log = LoggerFactory.getLogger(MemorySynthesisEventListener.class);
 
   private final MemorySynthesisService memorySynthesisService;
   private final ConversationRepository conversationRepository;
@@ -37,7 +41,8 @@ public class MemorySynthesisEventListener {
           }
         }
       }
-    } catch (Exception ignored) {
+    } catch (Exception e) {
+      log.debug("Asynchronous memory synthesis failed: {}", e.getMessage());
     }
   }
 }

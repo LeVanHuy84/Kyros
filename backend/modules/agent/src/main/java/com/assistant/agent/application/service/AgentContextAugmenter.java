@@ -19,23 +19,52 @@ public class AgentContextAugmenter {
 
   private final NoteRepository noteRepository;
   private final MemoryEntryRepository memoryEntryRepository;
+  private final com.assistant.memory.application.service.HybridSearchService hybridSearchService;
 
   @Autowired
   public AgentContextAugmenter(
       NoteRepository noteRepository,
-      @Autowired(required = false) MemoryEntryRepository memoryEntryRepository) {
+      @Autowired(required = false) MemoryEntryRepository memoryEntryRepository,
+      @Autowired(required = false)
+          com.assistant.memory.application.service.HybridSearchService hybridSearchService) {
     this.noteRepository = noteRepository;
     this.memoryEntryRepository = memoryEntryRepository;
+    this.hybridSearchService = hybridSearchService;
   }
 
   public AgentContextAugmenter(NoteRepository noteRepository) {
-    this(noteRepository, null);
+    this(noteRepository, null, null);
   }
 
   /** Main entry point to augment prompt with attached notes and dynamic memory recall. */
   public String augmentPrompt(String prompt, List<UUID> noteIds, WorkspaceId workspaceId) {
     String withNotes = augmentWithNotes(prompt, noteIds, workspaceId);
-    return augmentWithDynamicMemory(withNotes, prompt, workspaceId);
+    String withMemory = augmentWithDynamicMemory(withNotes, prompt, workspaceId);
+    // If user explicitly referenced notes via @Note, prioritize those and skip implicit RAG
+    if (noteIds != null && !noteIds.isEmpty()) {
+      return withMemory;
+    }
+    return augmentWithHybridRag(withMemory, prompt, workspaceId);
+  }
+
+  public String augmentWithHybridRag(
+      String currentPrompt, String userQuery, WorkspaceId workspaceId) {
+    if (hybridSearchService == null || userQuery == null || userQuery.isBlank()) {
+      return currentPrompt;
+    }
+    try {
+      var searchResults = hybridSearchService.search(workspaceId.value(), userQuery, 3);
+      if (searchResults == null || searchResults.isEmpty()) {
+        return currentPrompt;
+      }
+      StringBuilder sb = new StringBuilder("\n\n[Retrieved Semantic Knowledge (Hybrid RAG)]:\n");
+      for (var res : searchResults) {
+        sb.append("- ").append(res.content()).append("\n");
+      }
+      return currentPrompt + sb.toString();
+    } catch (Exception ignored) {
+      return currentPrompt;
+    }
   }
 
   public String augmentWithNotes(String prompt, List<UUID> noteIds, WorkspaceId workspaceId) {

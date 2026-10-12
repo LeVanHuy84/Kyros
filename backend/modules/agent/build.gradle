@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     implementation platform(libs.spring.boot.bom)
+    implementation platform(libs.spring.ai.bom)
 
     implementation project(':modules:shared-kernel')
     implementation project(':modules:workspace')
@@ -12,6 +13,10 @@ dependencies {
     implementation libs.spring.boot.starter.web
     implementation libs.spring.boot.starter.data.jpa
     implementation libs.spring.boot.starter.validation
+
+    implementation libs.spring.ai.core
+    implementation libs.spring.ai.openai
+    implementation libs.caffeine
 
     testImplementation libs.spring.boot.starter.test
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

@@ -118,12 +118,12 @@ public class CoreProfileSynthesisService implements CoreProfilePort {
 
   private String formatSectionTitle(String cluster) {
     return switch (cluster) {
-      case "work_schedule" -> "⏰ Work Schedule & Availability";
-      case "meeting_preference" -> "🤝 Meeting & Call Preferences";
-      case "communication_style" -> "📬 Communication & Notification Style";
-      case "task_rule" -> "🎯 Task & Priority Constraints";
-      case "general_preference" -> "💡 General Habits & Preferences";
-      default -> "📌 " + cluster.toUpperCase(java.util.Locale.ROOT);
+      case "work_schedule" -> "Work Schedule & Availability";
+      case "meeting_preference" -> "Meeting & Call Preferences";
+      case "communication_style" -> "Communication & Notification Style";
+      case "task_rule" -> "Task & Priority Constraints";
+      case "general_preference" -> "General Habits & Preferences";
+      default -> cluster.toUpperCase(java.util.Locale.ROOT);
     };
   }
 

@@ -80,10 +80,10 @@ public class ExecutiveBriefingService {
     }
 
     StringBuilder md = new StringBuilder();
-    md.append("## 🌅 Bản Tin Điều Hành Buổi Sáng\n\n");
+    md.append("## Bản Tin Điều Hành Buổi Sáng\n\n");
     md.append("**Thời gian:** ").append(dateStr).append("\n\n");
 
-    md.append("### 📅 Lịch trình & Cuộc họp hôm nay (").append(events.size()).append(")\n");
+    md.append("### Lịch trình & Cuộc họp hôm nay (").append(events.size()).append(")\n");
     if (events.isEmpty()) {
       md.append(
           "*(Hôm nay bạn không có cuộc họp cố định nào. Đây là cơ hội tuyệt vời để tập trung Deep"
@@ -107,16 +107,16 @@ public class ExecutiveBriefingService {
       md.append("\n");
     }
 
-    md.append("### 🎯 Công việc trọng tâm cần xử lý (").append(pendingTasks.size()).append(")\n");
+    md.append("### Công việc trọng tâm cần xử lý (").append(pendingTasks.size()).append(")\n");
     if (pendingTasks.isEmpty()) {
       md.append("*(Tất cả công việc đã hoàn thành!)*\n\n");
     } else {
       for (Task t : pendingTasks) {
-        String priorityIcon =
+        String priorityTag =
             t.getPriority() == Priority.High
-                ? "🔴"
-                : t.getPriority() == Priority.Medium ? "🟠" : "🟡";
-        md.append("- ").append(priorityIcon).append(" **").append(t.getTitle()).append("**");
+                ? "[Cao]"
+                : t.getPriority() == Priority.Medium ? "[Trung bình]" : "[Thấp]";
+        md.append("- ").append(priorityTag).append(" **").append(t.getTitle()).append("**");
         if (t.getDueDate() != null) {
           String dueStr =
               DateTimeFormatter.ofPattern("HH:mm dd/MM").withZone(vnZone).format(t.getDueDate());
@@ -128,7 +128,7 @@ public class ExecutiveBriefingService {
     }
 
     md.append(
-        "💡 **Gợi ý của Trợ lý Kyros:** Ưu tiên xử lý các đầu việc quan trọng trước 11:30 sáng và"
+        "**Gợi ý của Trợ lý Kyros:** Ưu tiên xử lý các đầu việc quan trọng trước 11:30 sáng và"
             + " dành 60-90 phút cho các dự án cốt lõi.");
 
     String briefingTitle = "Bản tin điều hành: " + dateStr;
@@ -187,12 +187,10 @@ public class ExecutiveBriefingService {
     }
 
     StringBuilder md = new StringBuilder();
-    md.append("## 🌆 Tổng Kết Cuối Ngày & Kế Hoạch Ngày Mai\n\n");
+    md.append("## Tổng Kết Cuối Ngày & Kế Hoạch Ngày Mai\n\n");
     md.append("**Thời gian:** ").append(dateStr).append("\n\n");
 
-    md.append("### ✅ Công việc đã hoàn thành hôm nay (")
-        .append(completedTasks.size())
-        .append(")\n");
+    md.append("### Công việc đã hoàn thành hôm nay (").append(completedTasks.size()).append(")\n");
     if (completedTasks.isEmpty()) {
       md.append("*(Hôm nay chưa có task nào được đánh dấu hoàn thành)*\n\n");
     } else {
@@ -202,7 +200,7 @@ public class ExecutiveBriefingService {
       md.append("\n");
     }
 
-    md.append("### ⏳ Công việc tồn đọng chuyển tiếp (").append(pendingTasks.size()).append(")\n");
+    md.append("### Công việc tồn đọng chuyển tiếp (").append(pendingTasks.size()).append(")\n");
     if (pendingTasks.isEmpty()) {
       md.append("*(Xuất sắc! Không còn công việc tồn đọng)*\n\n");
     } else {
@@ -212,7 +210,7 @@ public class ExecutiveBriefingService {
       md.append("\n");
     }
 
-    md.append("### 🔮 Lịch trình ngày mai (").append(tomorrowEvents.size()).append(" sự kiện)\n");
+    md.append("### Lịch trình ngày mai (").append(tomorrowEvents.size()).append(" sự kiện)\n");
     if (tomorrowEvents.isEmpty()) {
       md.append("*(Ngày mai hiện chưa có lịch họp cố định)*\n\n");
     } else {
@@ -229,7 +227,7 @@ public class ExecutiveBriefingService {
       md.append("\n");
     }
 
-    md.append("🎉 **Kyros:** Chúc bạn có một buổi tối thư giãn và nạp lại năng lượng!");
+    md.append("**Kyros:** Chúc bạn có một buổi tối thư giãn và nạp lại năng lượng.");
 
     String wrapupTitle = "Tổng kết ngày: " + dateStr;
     String finalContent = md.toString();

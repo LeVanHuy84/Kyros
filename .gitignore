@@ -1,6 +1,10 @@
 # IDE and System Files
 .idea/
 .vscode/
+*.project
+*.classpath
+.settings/
+**/.settings/
 *.suo
 *.ntvs*
 *.njsproj

@@ -1,19 +1,38 @@
 package com.assistant.memory.application.service;
 
+import com.assistant.memory.application.ports.out.LlmFactExtractorPort;
 import com.assistant.memory.domain.model.ExtractedFact;
 import com.assistant.memory.domain.model.FactCategory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
  * Service responsible for analyzing conversation turns and extracting structured, long-term facts,
  * habits, work rules, project contexts, and user constraints (Multilingual: VI/EN).
+ *
+ * <p>Employs LLM-powered structured extraction with graceful regex-based pattern matching fallback.
  */
 @Service
 public class FactExtractionService {
+
+  private static final Logger log = LoggerFactory.getLogger(FactExtractionService.class);
+  private final @Nullable LlmFactExtractorPort llmFactExtractorPort;
+
+  public FactExtractionService(
+      @Autowired(required = false) @Nullable LlmFactExtractorPort llmFactExtractorPort) {
+    this.llmFactExtractorPort = llmFactExtractorPort;
+  }
+
+  public FactExtractionService() {
+    this(null);
+  }
 
   private static final record PatternRule(
       Pattern pattern, FactCategory category, float baseScore, String topicHint) {}
@@ -162,6 +181,25 @@ public class FactExtractionService {
 
   /** Extracts facts from a user conversation turn. */
   public List<ExtractedFact> extractFacts(String text) {
+    if (text == null || text.isBlank() || isEphemeralChitChat(text)) {
+      return List.of();
+    }
+
+    if (llmFactExtractorPort != null) {
+      try {
+        List<ExtractedFact> llmFacts = llmFactExtractorPort.extractFacts(text);
+        if (llmFacts != null && !llmFacts.isEmpty()) {
+          return llmFacts;
+        }
+      } catch (Exception e) {
+        log.warn("LLM fact extraction failed, falling back to rule patterns: {}", e.getMessage());
+      }
+    }
+
+    return extractViaPatterns(text);
+  }
+
+  public List<ExtractedFact> extractViaPatterns(String text) {
     if (text == null || text.isBlank() || isEphemeralChitChat(text)) {
       return List.of();
     }

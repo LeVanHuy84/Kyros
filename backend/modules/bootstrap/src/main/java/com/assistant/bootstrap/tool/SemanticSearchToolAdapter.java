@@ -13,10 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SemanticSearchToolAdapter implements AgentToolContract {
+
+  private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 
   private final NoteRepository noteRepository;
   private final MemoryEntryRepository memoryEntryRepository;
@@ -76,7 +79,8 @@ public class SemanticSearchToolAdapter implements AgentToolContract {
 
       List<String> searchResults = new ArrayList<>();
       String lowerQuery = query.toLowerCase(Locale.ROOT);
-      String[] keywords = lowerQuery.split("\\s+");
+      @SuppressWarnings("StringSplitter")
+      String[] keywords = WHITESPACE_PATTERN.split(lowerQuery);
 
       // 1. Search notes
       List<Note> allNotes = noteRepository.findByWorkspaceId(workspaceId);
@@ -100,7 +104,7 @@ public class SemanticSearchToolAdapter implements AgentToolContract {
           scoredNotes.add(
               new ScoredItem(
                   score,
-                  "📝 Note: \""
+                  "Note: \""
                       + note.getTitle()
                       + "\" (ID: "
                       + note.getId().value()
@@ -118,7 +122,7 @@ public class SemanticSearchToolAdapter implements AgentToolContract {
       try {
         var memEntries = memoryEntryRepository.findBySemanticQuery(workspaceId, query, limit, 0.5);
         for (var entry : memEntries) {
-          searchResults.add("🧠 Memory Fact: " + entry.getContent());
+          searchResults.add("Memory Fact: " + entry.getContent());
         }
       } catch (Exception ex) {
         // Semantic memory search fallback

@@ -25,6 +25,21 @@ allprojects {
 
 subprojects {
     apply plugin: 'java-library'
+    apply plugin: 'eclipse'
+
+    eclipse {
+        jdt {
+            file {
+                withProperties { properties ->
+                    properties['org.eclipse.jdt.core.compiler.annotation.nullanalysis'] = 'disabled'
+                    properties['org.eclipse.jdt.core.compiler.problem.potentialNullReference'] = 'ignore'
+                    properties['org.eclipse.jdt.core.compiler.problem.nullReference'] = 'ignore'
+                    properties['org.eclipse.jdt.core.compiler.problem.nullSpecViolation'] = 'ignore'
+                    properties['org.eclipse.jdt.core.compiler.problem.nullAnnotationInferenceConflict'] = 'ignore'
+                }
+            }
+        }
+    }
 
     java {
         toolchain {

@@ -113,9 +113,13 @@ We follow the master plan defined in [`docs/prompts/output/refactor-master-plan.
   - Designated `frontend-angular` (Angular 20) as the primary SPA in `compose.yaml` and `Taskfile.yml`.
   - Preserved legacy React SPA in `/frontend` as design reference.
   - Aligned `README.md` to remove vaporware (Connector Hub, Workflow engine).
-- **Phase 2: AI Engineering Modernization (UPCOMING)**
-  - Spring AI ChatClient, PgVectorStore RAG, Structured Output Extraction, Langfuse Tracing.
-- **Phase 3: Core Backend Hardening (TODO)**
+- **Phase 2: AI Engineering Modernization & Real RAG (COMPLETED)**
+  - In-Process Local Embedding in JVM via Deep Java Library (DJL) ONNX (`all-MiniLM-L6-v2`, 384 dimensions) with zero external API key requirements.
+  - PostgreSQL pgvector HNSW cosine index + BM25 Full-Text Search via Reciprocal Rank Fusion (RRF) Hybrid Search Engine.
+  - Dynamic LLM Client Factory (BYOK) using Spring AI `ChatClient` with Caffeine LRU connection pooling.
+  - Structured JSON fact extraction (`BeanOutputConverter`) with resilient pattern matching fallback.
+  - Enterprise `AgentAuditLog` domain persistence and telemetry tracking.
+- **Phase 3: Core Backend Hardening (UPCOMING)**
   - PostgreSQL RLS Multi-tenancy, ShedLock Distributed Cron, Transactional Outbox, Bucket4j Rate Limiting.
 - **Phase 4: Domain Depth & Advanced Engines (TODO)**
   - RFC 5545 Recurrence Engine, Free-Busy Interval Merge Algorithm, Ebbinghaus Decay.

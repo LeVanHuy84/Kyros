@@ -27,6 +27,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @Service
 public class ReActOrchestratorService {
 
+  private static final Logger log = LoggerFactory.getLogger(ReActOrchestratorService.class);
   private static final int MAX_TURNS = 5;
 
   private final Map<String, AgentToolContract> toolRegistry;
@@ -53,6 +56,7 @@ public class ReActOrchestratorService {
   private final AgentContextAugmenter contextAugmenter;
   private final AgentRulePlanner rulePlanner;
   private final com.assistant.memory.application.ports.in.CoreProfilePort coreProfilePort;
+  private final AgentAuditLogService auditLogService;
 
   @org.springframework.beans.factory.annotation.Autowired
   public ReActOrchestratorService(
@@ -74,7 +78,9 @@ public class ReActOrchestratorService {
       @org.springframework.beans.factory.annotation.Autowired(required = false)
           AgentRulePlanner rulePlanner,
       @org.springframework.beans.factory.annotation.Autowired(required = false)
-          com.assistant.memory.application.ports.in.CoreProfilePort coreProfilePort) {
+          com.assistant.memory.application.ports.in.CoreProfilePort coreProfilePort,
+      @org.springframework.beans.factory.annotation.Autowired(required = false)
+          AgentAuditLogService auditLogService) {
     this.toolList = toolContracts != null ? toolContracts : List.of();
     this.toolRegistry =
         this.toolList.stream()
@@ -90,6 +96,7 @@ public class ReActOrchestratorService {
         contextAugmenter != null ? contextAugmenter : new AgentContextAugmenter(noteRepository);
     this.rulePlanner = rulePlanner != null ? rulePlanner : new AgentRulePlanner(messageSource);
     this.coreProfilePort = coreProfilePort;
+    this.auditLogService = auditLogService;
   }
 
   public ReActOrchestratorService(
@@ -111,6 +118,7 @@ public class ReActOrchestratorService {
         null,
         null,
         null,
+        null,
         null);
   }
 
@@ -126,6 +134,7 @@ public class ReActOrchestratorService {
         memoryStore,
         conversationHistoryPort,
         noteRepository,
+        null,
         null,
         null,
         null,
@@ -210,92 +219,98 @@ public class ReActOrchestratorService {
     Locale callerLocale = LocaleContextHolder.getLocale();
 
     CompletableFuture.runAsync(
-        () -> {
-          try {
-            WorkspaceContextHolder.set(activeWsId);
-            LocaleContextHolder.setLocale(callerLocale);
+            () -> {
+              try {
+                WorkspaceContextHolder.set(activeWsId);
+                LocaleContextHolder.setLocale(callerLocale);
 
-            String trimmed = prompt != null ? prompt.trim() : "";
+                String trimmed = prompt != null ? prompt.trim() : "";
 
-            // 0. Slash Commands (Help Cheatsheet)
-            if (trimmed.equalsIgnoreCase("/help")
-                || trimmed.equals("/?")
-                || trimmed.equalsIgnoreCase("/commands")) {
-              String helpText = getSlashHelpMessage(callerLocale);
-              persistFinalAnswer(activeWsId, targetMemoryId, conversationId, helpText);
-              sendSafe(emitter, SseEmitter.event().name("chunk").data(helpText));
-              sendSafe(
-                  emitter,
-                  SseEmitter.event()
-                      .name("completed")
-                      .data(msg("agent.status.completed", null, "Completed.", callerLocale)));
-              completeSafe(emitter);
-              return;
-            }
+                // 0. Slash Commands (Help Cheatsheet)
+                if (trimmed.equalsIgnoreCase("/help")
+                    || trimmed.equals("/?")
+                    || trimmed.equalsIgnoreCase("/commands")) {
+                  String helpText = getSlashHelpMessage(callerLocale);
+                  persistFinalAnswer(activeWsId, targetMemoryId, conversationId, helpText);
+                  sendSafe(emitter, SseEmitter.event().name("chunk").data(helpText));
+                  sendSafe(
+                      emitter,
+                      SseEmitter.event()
+                          .name("completed")
+                          .data(msg("agent.status.completed", null, "Completed.", callerLocale)));
+                  completeSafe(emitter);
+                  return;
+                }
 
-            // 1. Safety Guard
-            var safetyResult = safetyGuard.evaluatePrompt(workspaceId, prompt, callerLocale);
-            if (safetyResult.isDestructive()) {
-              sendSafe(
-                  emitter,
-                  SseEmitter.event()
-                      .name("approval")
-                      .data(
-                          String.format(
-                              "{\"pendingApproval\":true,\"toolName\":\"%s\",\"reason\":\"%s\",\"argumentsJson\":%s}",
-                              safetyResult.toolName(),
-                              safetyResult.approvalReason(),
-                              objectMapperEscape(safetyResult.argumentsJson()))));
-              completeSafe(emitter);
-              return;
-            }
+                // 1. Safety Guard
+                var safetyResult = safetyGuard.evaluatePrompt(workspaceId, prompt, callerLocale);
+                if (safetyResult.isDestructive()) {
+                  sendSafe(
+                      emitter,
+                      SseEmitter.event()
+                          .name("approval")
+                          .data(
+                              String.format(
+                                  "{\"pendingApproval\":true,\"toolName\":\"%s\",\"reason\":\"%s\",\"argumentsJson\":%s}",
+                                  safetyResult.toolName(),
+                                  safetyResult.approvalReason(),
+                                  objectMapperEscape(safetyResult.argumentsJson()))));
+                  completeSafe(emitter);
+                  return;
+                }
 
-            String augmentedPrompt = contextAugmenter.augmentPrompt(prompt, noteIds, activeWsId);
-            EffectiveAiConfig config =
-                resolveEffectiveConfig(workspaceId, userId, provider, apiKey, baseUrl, model);
+                String augmentedPrompt =
+                    contextAugmenter.augmentPrompt(prompt, noteIds, activeWsId);
+                EffectiveAiConfig config =
+                    resolveEffectiveConfig(workspaceId, userId, provider, apiKey, baseUrl, model);
 
-            syncConversationMemory(activeWsId, targetMemoryId, conversationId, prompt);
-            List<Map<String, String>> history =
-                memoryStore.getLlmFormattedHistory(targetMemoryId, 10);
+                syncConversationMemory(activeWsId, targetMemoryId, conversationId, prompt);
+                List<Map<String, String>> history =
+                    memoryStore.getLlmFormattedHistory(targetMemoryId, 10);
 
-            if (config.hasCustomConfig()) {
-              streamLlmOrchestration(
-                  activeWsId,
-                  targetMemoryId,
-                  conversationId,
-                  userId,
-                  prompt,
-                  augmentedPrompt,
-                  history,
-                  config,
-                  callerLocale,
-                  emitter);
-              return;
-            }
-            // Fallback Rule-based execution
-            streamRuleBasedPlan(
-                activeWsId,
-                targetMemoryId,
-                conversationId,
-                workspaceId,
-                userId,
-                prompt,
-                augmentedPrompt,
-                callerLocale,
-                emitter);
+                if (config.hasCustomConfig()) {
+                  streamLlmOrchestration(
+                      activeWsId,
+                      targetMemoryId,
+                      conversationId,
+                      userId,
+                      prompt,
+                      augmentedPrompt,
+                      history,
+                      config,
+                      callerLocale,
+                      emitter);
+                  return;
+                }
+                // Fallback Rule-based execution
+                streamRuleBasedPlan(
+                    activeWsId,
+                    targetMemoryId,
+                    conversationId,
+                    workspaceId,
+                    userId,
+                    prompt,
+                    augmentedPrompt,
+                    callerLocale,
+                    emitter);
 
-          } catch (Exception e) {
-            sendSafe(
-                emitter,
-                SseEmitter.event()
-                    .name("chunk")
-                    .data("\n\n⚠️ **[System Error]**: " + e.getMessage()));
-            completeSafe(emitter);
-          } finally {
-            WorkspaceContextHolder.clear();
-            LocaleContextHolder.resetLocaleContext();
-          }
-        });
+              } catch (Exception e) {
+                sendSafe(
+                    emitter,
+                    SseEmitter.event()
+                        .name("chunk")
+                        .data("\n\n**[System Error]**: " + e.getMessage()));
+                completeSafe(emitter);
+              } finally {
+                WorkspaceContextHolder.clear();
+                LocaleContextHolder.resetLocaleContext();
+              }
+            })
+        .exceptionally(
+            ex -> {
+              log.error("Unhandled error in async agent execution: {}", ex.getMessage(), ex);
+              return null;
+            });
   }
 
   public void streamUserPrompt(UUID workspaceId, UUID userId, String prompt, SseEmitter emitter) {
@@ -418,7 +433,7 @@ public class ReActOrchestratorService {
                     + " Provider & Vault**.",
                 locale);
         return AgentExecutionResult.completed(
-            "⚠️ **[AI Error (" + config.displayName() + ")]**: " + llmResp.content() + hint, turns);
+            "**[AI Error (" + config.displayName() + ")]**: " + llmResp.content() + hint, turns);
       }
       return AgentExecutionResult.completed(llmResp.content(), turns);
     }
@@ -580,7 +595,7 @@ public class ReActOrchestratorService {
                       + " Provider & Vault**.",
                   locale);
           finalAnswerText =
-              "⚠️ **[AI Error (" + config.displayName() + ")]**: " + llmResp.content() + hint;
+              "**[AI Error (" + config.displayName() + ")]**: " + llmResp.content() + hint;
         } else {
           finalAnswerText = llmResp.content();
         }
@@ -761,20 +776,20 @@ public class ReActOrchestratorService {
     boolean isEn = locale != null && "en".equalsIgnoreCase(locale.getLanguage());
     StringBuilder sb = new StringBuilder();
     if (isEn) {
-      sb.append("📌 **Kyros AI — Summary of Completed Operations**\n\n");
+      sb.append("**Kyros AI — Summary of Completed Operations**\n\n");
       sb.append("| Operation | Target Tool | Status |\n");
       sb.append("| :--- | :--- | :--- |\n");
       for (AgentAction a : actions) {
         String opName =
             switch (a.toolName()) {
-              case "upsert_events" -> "📅 Calendar Event";
-              case "upsert_tasks" -> "🎯 Task / Todo";
-              case "upsert_notes" -> "📝 Note";
-              case "save_memory" -> "🧠 Memory Vault";
-              case "list_events" -> "📅 List Events";
-              case "list_tasks" -> "🎯 List Tasks";
-              case "list_notes" -> "📝 List Notes";
-              case "recall_memory" -> "🔍 Recall Memory";
+              case "upsert_events" -> "Calendar Event";
+              case "upsert_tasks" -> "Task / Todo";
+              case "upsert_notes" -> "Note";
+              case "save_memory" -> "Memory Vault";
+              case "list_events" -> "List Events";
+              case "list_tasks" -> "List Tasks";
+              case "list_notes" -> "List Notes";
+              case "recall_memory" -> "Recall Memory";
               default -> a.toolName();
             };
         sb.append("| ")
@@ -782,26 +797,26 @@ public class ReActOrchestratorService {
             .append(" | `")
             .append(a.toolName())
             .append("`")
-            .append(" | ✅ Success |\n");
+            .append(" | Success |\n");
       }
       if (!resultSummary.isEmpty()) {
         sb.append("\n**Execution Details:**\n").append(resultSummary);
       }
     } else {
-      sb.append("📌 **Kyros AI — Tóm tắt công việc đã thực hiện**\n\n");
+      sb.append("**Kyros AI — Tóm tắt công việc đã thực hiện**\n\n");
       sb.append("| Loại tác vụ | Thao tác | Trạng thái |\n");
       sb.append("| :--- | :--- | :--- |\n");
       for (AgentAction a : actions) {
         String opName =
             switch (a.toolName()) {
-              case "upsert_events" -> "📅 Lịch hẹn (Event)";
-              case "upsert_tasks" -> "🎯 Nhiệm vụ (Task)";
-              case "upsert_notes" -> "📝 Ghi chú (Note)";
-              case "save_memory" -> "🧠 Trí nhớ (Vault)";
-              case "list_events" -> "📅 Xem sự kiện";
-              case "list_tasks" -> "🎯 Xem nhiệm vụ";
-              case "list_notes" -> "📝 Xem ghi chú";
-              case "recall_memory" -> "🔍 Tra cứu trí nhớ";
+              case "upsert_events" -> "Lịch hẹn (Event)";
+              case "upsert_tasks" -> "Nhiệm vụ (Task)";
+              case "upsert_notes" -> "Ghi chú (Note)";
+              case "save_memory" -> "Trí nhớ (Vault)";
+              case "list_events" -> "Xem sự kiện";
+              case "list_tasks" -> "Xem nhiệm vụ";
+              case "list_notes" -> "Xem ghi chú";
+              case "recall_memory" -> "Tra cứu trí nhớ";
               default -> a.toolName();
             };
         sb.append("| ")
@@ -809,7 +824,7 @@ public class ReActOrchestratorService {
             .append(" | `")
             .append(a.toolName())
             .append("`")
-            .append(" | ✅ Hoàn tất |\n");
+            .append(" | Hoàn tất |\n");
       }
       if (!resultSummary.isEmpty()) {
         sb.append("\n**Chi tiết thực thi:**\n").append(resultSummary);
@@ -832,7 +847,8 @@ public class ReActOrchestratorService {
                   : "assistant";
           memoryStore.addMessage(targetMemoryId, roleStr, t.content());
         }
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        log.debug("Failed to populate existing conversation history: {}", e.getMessage());
       }
     }
 
@@ -842,7 +858,8 @@ public class ReActOrchestratorService {
         conversationHistoryPort.appendMessage(
             new AppendTurnCommand(
                 activeWsId, new ConversationId(conversationId), SenderRole.User, prompt));
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        log.debug("Failed to append user message to conversation history: {}", e.getMessage());
       }
     }
   }
@@ -855,8 +872,13 @@ public class ReActOrchestratorService {
         conversationHistoryPort.appendMessage(
             new AppendTurnCommand(
                 activeWsId, new ConversationId(conversationId), SenderRole.Agent, finalAnswerText));
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        log.debug("Failed to append agent turn to conversation history: {}", e.getMessage());
       }
+    }
+    if (auditLogService != null) {
+      auditLogService.recordExecution(
+          activeWsId.value(), null, conversationId, "ai-agent", null, null, null, null, null);
     }
   }
 
@@ -892,7 +914,8 @@ public class ReActOrchestratorService {
   private void completeSafe(SseEmitter emitter) {
     try {
       emitter.complete();
-    } catch (Exception ignored) {
+    } catch (Exception e) {
+      log.trace("Emitter completion terminated or client disconnected: {}", e.getMessage());
     }
   }
 
@@ -910,7 +933,7 @@ public class ReActOrchestratorService {
     boolean isEn = locale != null && "en".equalsIgnoreCase(locale.getLanguage());
     if (isEn) {
       return """
-      ### 📋 Slash Commands Cheatsheet
+      ### Slash Commands Cheatsheet
 
       | Command | Example Syntax | Description |
       | :--- | :--- | :--- |
@@ -923,11 +946,11 @@ public class ReActOrchestratorService {
       | **`/list <tasks|events|notes>`** | `/list tasks` | Quick view list of tasks, events, or notes |
       | **`/help`** | `/help` | Display this command cheatsheet |
 
-      💡 **Shortcut Tip:** Type `/` in the chat input at any time to open the Command Palette!
+      **Shortcut Tip:** Type `/` in the chat input at any time to open the Command Palette.
       """;
     }
     return """
-    ### 📋 Bảng Tra Cứu Lệnh Nhanh (Slash Commands Cheatsheet)
+    ### Bảng Tra Cứu Lệnh Nhanh (Slash Commands Cheatsheet)
 
     | Lệnh (Command) | Cú pháp mẫu | Mô tả chức năng |
     | :--- | :--- | :--- |
@@ -940,7 +963,7 @@ public class ReActOrchestratorService {
     | **`/list <tasks|events|notes>`** | `/list tasks` | Liệt kê danh sách tác vụ nhanh |
     | **`/help`** | `/help` | Hiển thị bảng hướng dẫn lệnh này |
 
-    💡 **Mẹo phím tắt:** Bạn có thể gõ ký tự `/` bất kỳ lúc nào để mở Menu gợi ý lệnh nhanh!
+    **Mẹo phím tắt:** Bạn có thể gõ ký tự `/` bất kỳ lúc nào để mở Menu gợi ý lệnh nhanh.
     """;
   }
 

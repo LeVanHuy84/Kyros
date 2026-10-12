@@ -9,8 +9,18 @@ redis = "3.4.2"
 jjwt = "0.12.6"
 springdocOpenapi = "2.8.3"
 scalarWebmvc = "0.6.60"
+springAi = "1.0.0-M6"
+caffeine = "3.1.8"
+djl = "0.31.1"
 
 [libraries]
+spring-ai-bom = { module = "org.springframework.ai:spring-ai-bom", version.ref = "springAi" }
+spring-ai-core = { module = "org.springframework.ai:spring-ai-core" }
+spring-ai-openai = { module = "org.springframework.ai:spring-ai-openai" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+djl-api = { module = "ai.djl:api", version.ref = "djl" }
+djl-onnxruntime-engine = { module = "ai.djl.onnxruntime:onnxruntime-engine", version.ref = "djl" }
+djl-huggingface-tokenizers = { module = "ai.djl.huggingface:tokenizers", version.ref = "djl" }
 springdoc-openapi-starter-webmvc-api = { module = "org.springdoc:springdoc-openapi-starter-webmvc-api", version.ref = "springdocOpenapi" }
 scalar-webmvc = { module = "com.scalar.maven:scalar-webmvc", version.ref = "scalarWebmvc" }
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }

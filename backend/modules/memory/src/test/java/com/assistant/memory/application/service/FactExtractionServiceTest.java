@@ -81,4 +81,34 @@ class FactExtractionServiceTest {
     List<ExtractedFact> factsEmpty = factExtractionService.extractFacts("");
     assertTrue(factsEmpty.isEmpty());
   }
+
+  @Test
+  void shouldPrioritizeLlmExtractedFactsWhenAvailable() {
+    com.assistant.memory.application.ports.out.LlmFactExtractorPort mockPort =
+        text ->
+            List.of(
+                ExtractedFact.of(
+                    "User likes coffee at 9am", FactCategory.USER_PREFERENCE, 0.98f, "Habit"));
+
+    FactExtractionService serviceWithLlm = new FactExtractionService(mockPort);
+    List<ExtractedFact> facts = serviceWithLlm.extractFacts("Tôi thích uống cafe lúc 9h sáng");
+
+    assertEquals(1, facts.size());
+    assertEquals("User likes coffee at 9am", facts.get(0).content());
+  }
+
+  @Test
+  void shouldFallbackToPatternsWhenLlmFailsOrReturnsEmpty() {
+    com.assistant.memory.application.ports.out.LlmFactExtractorPort failingPort =
+        text -> {
+          throw new RuntimeException("LLM Timeout");
+        };
+
+    FactExtractionService serviceWithFailingLlm = new FactExtractionService(failingPort);
+    String text = "Lưu ý là tôi không bao giờ họp vào chiều thứ Sáu nhé.";
+    List<ExtractedFact> facts = serviceWithFailingLlm.extractFacts(text);
+
+    assertFalse(facts.isEmpty());
+    assertEquals(FactCategory.WORK_RULE, facts.get(0).category());
+  }
 }

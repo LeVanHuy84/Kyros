@@ -18,9 +18,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class NoteService {
 
   private final NoteRepository noteRepository;
+  private final HybridSearchService hybridSearchService;
+
+  public NoteService(
+      NoteRepository noteRepository,
+      @org.springframework.beans.factory.annotation.Autowired(required = false)
+          HybridSearchService hybridSearchService) {
+    this.noteRepository = noteRepository;
+    this.hybridSearchService = hybridSearchService;
+  }
 
   public NoteService(NoteRepository noteRepository) {
-    this.noteRepository = noteRepository;
+    this(noteRepository, null);
   }
 
   public NoteDto createNote(
@@ -33,6 +42,10 @@ public class NoteService {
     Note note = new Note(NoteId.random(), workspaceId, userId, title, content, taskId, eventId);
 
     noteRepository.save(note);
+    if (hybridSearchService != null) {
+      hybridSearchService.indexDocument(
+          workspaceId.value(), note.getId().value(), "NOTE", title + "\n" + content);
+    }
     return toDto(note);
   }
 
@@ -76,6 +89,10 @@ public class NoteService {
 
     note.update(title, content, taskId, eventId);
     noteRepository.save(note);
+    if (hybridSearchService != null) {
+      hybridSearchService.indexDocument(
+          workspaceId.value(), note.getId().value(), "NOTE", title + "\n" + content);
+    }
     return toDto(note);
   }
 
@@ -90,6 +107,9 @@ public class NoteService {
                         "Note not found with ID: " + noteId.value(),
                         noteId.value()));
     noteRepository.delete(note);
+    if (hybridSearchService != null) {
+      hybridSearchService.removeDocumentEmbeddings(workspaceId.value(), noteId.value());
+    }
   }
 
   private NoteDto toDto(Note note) {
