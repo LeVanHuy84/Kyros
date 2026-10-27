@@ -1,5 +1,14 @@
-import React from 'react';
-import { AlertTriangle, Check, X, ShieldAlert, Terminal } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  AlertTriangle,
+  Check,
+  X,
+  ShieldAlert,
+  Terminal,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+} from 'lucide-react';
 
 export interface PendingApprovalData {
   toolName: string;
@@ -9,32 +18,121 @@ export interface PendingApprovalData {
 
 interface ApprovalBannerProps {
   pendingApproval: PendingApprovalData | null;
-  onApprove: () => void;
+  onApprove: () => Promise<void> | void;
   onCancel: () => void;
+  isInline?: boolean;
 }
 
 export const ApprovalBanner: React.FC<ApprovalBannerProps> = ({
   pendingApproval,
   onApprove,
   onCancel,
+  isInline = false,
 }) => {
-  if (!pendingApproval) return null;
+  const [actionState, setActionState] = useState<
+    'idle' | 'approving' | 'approved' | 'rejected'
+  >('idle');
+
+  if (!pendingApproval && actionState === 'idle') return null;
 
   let parsedArgs: Record<string, any> = {};
-  try {
-    parsedArgs = JSON.parse(pendingApproval.argumentsJson || '{}');
-  } catch {
-    parsedArgs = { raw: pendingApproval.argumentsJson };
+  if (pendingApproval) {
+    try {
+      parsedArgs = JSON.parse(pendingApproval.argumentsJson || '{}');
+    } catch {
+      parsedArgs = { raw: pendingApproval.argumentsJson };
+    }
   }
+
+  const handleConfirm = async () => {
+    setActionState('approving');
+    try {
+      await onApprove();
+      setActionState('approved');
+      setTimeout(() => {
+        setActionState('idle');
+      }, 3500);
+    } catch {
+      setActionState('idle');
+    }
+  };
+
+  const handleReject = () => {
+    setActionState('rejected');
+    onCancel();
+    setTimeout(() => {
+      setActionState('idle');
+    }, 2500);
+  };
+
+  if (actionState === 'approved') {
+    return (
+      <div
+        className="fade-in-slide-up"
+        style={{
+          margin: isInline ? '10px 0' : '16px 20px',
+          padding: '14px 18px',
+          borderRadius: 'var(--radius-md, 12px)',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          border: '1px solid rgba(16, 185, 129, 0.3)',
+          color: '#10b981',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontWeight: 600,
+          fontSize: '13px',
+        }}
+      >
+        <CheckCircle2 size={18} />
+        <span>Đã phê duyệt & thực thi thành công!</span>
+      </div>
+    );
+  }
+
+  if (actionState === 'rejected') {
+    return (
+      <div
+        className="fade-in-slide-up"
+        style={{
+          margin: isInline ? '10px 0' : '16px 20px',
+          padding: '14px 18px',
+          borderRadius: 'var(--radius-md, 12px)',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          color: '#ef4444',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontWeight: 600,
+          fontSize: '13px',
+        }}
+      >
+        <XCircle size={18} />
+        <span>Đã từ chối thực thi hành động nhạy cảm.</span>
+      </div>
+    );
+  }
+
+  if (!pendingApproval) return null;
+
+  const isDeleteAction =
+    pendingApproval.toolName.toLowerCase().includes('delete') ||
+    pendingApproval.reason.toLowerCase().includes('xóa');
 
   return (
     <div
       className="card fade-in-slide-up"
       style={{
-        margin: '16px 20px',
-        border: '1px solid rgba(234, 179, 8, 0.4)',
-        backgroundColor: 'rgba(234, 179, 8, 0.06)',
-        boxShadow: '0 8px 30px rgba(234, 179, 8, 0.12)',
+        margin: isInline ? '10px 0' : '16px 20px',
+        border: isDeleteAction
+          ? '1px solid rgba(239, 68, 68, 0.4)'
+          : '1px solid rgba(234, 179, 8, 0.4)',
+        backgroundColor: isDeleteAction
+          ? 'rgba(239, 68, 68, 0.05)'
+          : 'rgba(234, 179, 8, 0.06)',
+        boxShadow: isDeleteAction
+          ? '0 8px 30px rgba(239, 68, 68, 0.12)'
+          : '0 8px 30px rgba(234, 179, 8, 0.12)',
         borderRadius: 'var(--radius-md, 12px)',
         padding: '18px 20px',
         display: 'flex',
@@ -58,8 +156,10 @@ export const ApprovalBanner: React.FC<ApprovalBannerProps> = ({
               width: '36px',
               height: '36px',
               borderRadius: '50%',
-              backgroundColor: 'rgba(234, 179, 8, 0.15)',
-              color: '#eab308',
+              backgroundColor: isDeleteAction
+                ? 'rgba(239, 68, 68, 0.15)'
+                : 'rgba(234, 179, 8, 0.15)',
+              color: isDeleteAction ? '#ef4444' : '#eab308',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -80,13 +180,17 @@ export const ApprovalBanner: React.FC<ApprovalBannerProps> = ({
                 gap: '8px',
               }}
             >
-              Yêu cầu Phê duyệt Hành động Nhạy cảm
+              {isDeleteAction
+                ? '⚠️ Yêu cầu Xác nhận Xóa Dữ liệu'
+                : '⚠️ Yêu cầu Phê duyệt Hành động Nhạy cảm'}
               <span
                 style={{
                   fontSize: '11px',
                   fontWeight: 600,
-                  backgroundColor: 'rgba(234, 179, 8, 0.2)',
-                  color: '#ca8a04',
+                  backgroundColor: isDeleteAction
+                    ? 'rgba(239, 68, 68, 0.2)'
+                    : 'rgba(234, 179, 8, 0.2)',
+                  color: isDeleteAction ? '#dc2626' : '#ca8a04',
                   padding: '2px 8px',
                   borderRadius: '12px',
                   textTransform: 'uppercase',
@@ -143,7 +247,11 @@ export const ApprovalBanner: React.FC<ApprovalBannerProps> = ({
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
           <AlertTriangle
             size={16}
-            style={{ color: '#eab308', flexShrink: 0, marginTop: '2px' }}
+            style={{
+              color: isDeleteAction ? '#ef4444' : '#eab308',
+              flexShrink: 0,
+              marginTop: '2px',
+            }}
           />
           <div>
             <strong>Lý do kiểm soát:</strong> {pendingApproval.reason}
@@ -168,7 +276,7 @@ export const ApprovalBanner: React.FC<ApprovalBannerProps> = ({
                 textTransform: 'uppercase',
               }}
             >
-              Tham số thực thi:
+              Chi tiết mục tác động:
             </div>
             <div
               style={{
@@ -184,13 +292,20 @@ export const ApprovalBanner: React.FC<ApprovalBannerProps> = ({
                     fontSize: '12px',
                     backgroundColor: 'var(--bg-app)',
                     border: '1px solid var(--border-color)',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
+                    padding: '3px 8px',
+                    borderRadius: '6px',
                     color: 'var(--text-main)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
                   }}
                 >
                   <strong style={{ color: 'var(--text-muted)' }}>{key}:</strong>{' '}
-                  {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                  <span style={{ fontWeight: 500 }}>
+                    {typeof val === 'object'
+                      ? JSON.stringify(val)
+                      : String(val)}
+                  </span>
                 </span>
               ))}
             </div>
@@ -209,7 +324,8 @@ export const ApprovalBanner: React.FC<ApprovalBannerProps> = ({
       >
         <button
           className="btn btn-secondary"
-          onClick={onCancel}
+          onClick={handleReject}
+          disabled={actionState === 'approving'}
           style={{ padding: '8px 16px', fontSize: '13px', gap: '6px' }}
         >
           <X size={15} />
@@ -217,19 +333,29 @@ export const ApprovalBanner: React.FC<ApprovalBannerProps> = ({
         </button>
         <button
           className="btn btn-primary"
-          onClick={onApprove}
+          onClick={handleConfirm}
+          disabled={actionState === 'approving'}
           style={{
-            backgroundColor: '#eab308',
-            borderColor: '#eab308',
-            color: '#000',
+            backgroundColor: isDeleteAction ? '#ef4444' : '#eab308',
+            borderColor: isDeleteAction ? '#ef4444' : '#eab308',
+            color: isDeleteAction ? '#fff' : '#000',
             fontWeight: 600,
             padding: '8px 18px',
             fontSize: '13px',
             gap: '6px',
           }}
         >
-          <Check size={16} />
-          <span>Đồng ý & Phê duyệt</span>
+          {actionState === 'approving' ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              <span>Đang thực thi...</span>
+            </>
+          ) : (
+            <>
+              <Check size={16} />
+              <span>Đồng ý thực thi</span>
+            </>
+          )}
         </button>
       </div>
     </div>

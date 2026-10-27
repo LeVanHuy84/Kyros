@@ -127,8 +127,9 @@
 
 ## 3. CHECKLIST KIỂM THỬ GIAI ĐOẠN 4
 
-- [ ] Chat stream không bị giật màn hình hoặc đơ UI khi LLM phản hồi dài.
-- [ ] Approval Card hiển thị đúng dữ liệu và bấm duyệt thực thi thành công.
-- [ ] Pomodoro Timer chạy chính xác và lưu đúng thời gian thực tế vào task.
-- [ ] Giao diện responsive 100% trên các độ phân giải: Mobile (375px), Tablet (768px), Laptop/Desktop (1280px+).
-- [ ] Không có lỗi console log hoặc memory leak từ SSE event listeners.
+- [x] Chat stream không bị giật màn hình hoặc đơ UI khi LLM phản hồi dài.
+- [x] Approval Card hiển thị đúng dữ liệu và bấm duyệt thực thi thành công.
+- [x] Pomodoro Timer chạy chính xác và lưu đúng thời gian thực tế vào task.
+- [x] Giao diện responsive 100% trên các độ phân giải: Mobile (375px), Tablet (768px), Laptop/Desktop (1280px+).
+- [x] Không có lỗi console log hoặc memory leak từ SSE event listeners.
+- [x] Đã hoàn thành và xác minh toàn diện trên giao diện chính thức **`frontend-angular`** (Angular 19, Standalone, Signals).

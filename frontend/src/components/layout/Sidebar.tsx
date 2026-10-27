@@ -7,6 +7,7 @@ import {
   FileText,
   Settings,
   ShieldAlert,
+  BookOpen,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { TenantSelector } from './TenantSelector';
@@ -60,6 +61,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
         <NavLink to="/notes" className="nav-link" onClick={handleNavigate}>
           <FileText size={18} aria-hidden="true" />
           <span>Smart Notes</span>
+        </NavLink>
+
+        <NavLink to="/documents" className="nav-link" onClick={handleNavigate}>
+          <BookOpen size={18} aria-hidden="true" />
+          <span>Knowledge Base</span>
         </NavLink>
 
         <NavLink to="/settings" className="nav-link" onClick={handleNavigate}>

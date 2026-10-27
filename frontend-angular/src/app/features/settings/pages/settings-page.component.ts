@@ -14,9 +14,10 @@ import { CalendarSettingsPanelComponent } from '../components/calendar-settings-
 import { NotificationSettingsPanelComponent } from '../components/notification-settings-panel/notification-settings-panel.component';
 import { PreferencesPanelComponent } from '../components/preferences-panel/preferences-panel.component';
 import { ChangePasswordPanelComponent } from '../components/change-password-panel/change-password-panel.component';
+import { DocumentsPanelComponent } from '../components/documents-panel/documents-panel.component';
 import { LanguageService } from '@core/services/language.service';
 
-export type SettingsSubTab = 'ai' | 'calendar' | 'notif' | 'vault' | 'pref';
+export type SettingsSubTab = 'ai' | 'docs' | 'calendar' | 'notif' | 'vault' | 'pref';
 
 export interface SettingsTabItem {
   id: SettingsSubTab;
@@ -31,6 +32,7 @@ export interface SettingsTabItem {
     CommonModule,
     AppIconComponent,
     AiConfigPanelComponent,
+    DocumentsPanelComponent,
     CalendarSettingsPanelComponent,
     NotificationSettingsPanelComponent,
     PreferencesPanelComponent,
@@ -50,6 +52,7 @@ export class SettingsPageComponent implements OnInit {
     const s = this.languageService.t().settings;
     return [
       { id: 'ai', label: s.tabs.aiProvider, icon: 'brain' },
+      { id: 'docs', label: s.tabs.knowledgeBase, icon: 'file-text' },
       { id: 'calendar', label: s.tabs.calendar, icon: 'calendar' },
       { id: 'notif', label: s.tabs.notifications, icon: 'bell' },
       { id: 'pref', label: s.tabs.general, icon: 'settings' },

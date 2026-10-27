@@ -1,0 +1,219 @@
+<div class="documents-panel-container">
+  <!-- Section Title -->
+  <div class="section-header-block">
+    <div class="header-icon-wrap">
+      <app-icon name="file-text" [size]="18" class="primary-icon"></app-icon>
+    </div>
+    <div class="header-text-block">
+      <h3 class="panel-title">{{ languageService.t().settings.documents.title }}</h3>
+      <p class="panel-desc">{{ languageService.t().settings.documents.subtitle }}</p>
+    </div>
+  </div>
+
+  <!-- Drag and Drop Dropzone -->
+  <div
+    class="upload-dropzone"
+    [class.dragging]="isDragging()"
+    [class.uploading]="isUploading()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="fileInput.click()"
+  >
+    <input
+      #fileInput
+      type="file"
+      accept=".pdf,.docx,.txt,.md"
+      class="hidden-file-input"
+      (change)="onFileInput($event)"
+    />
+
+    <div class="dropzone-icon-wrap">
+      @if (isUploading()) {
+        <app-icon name="loader" [size]="28" class="spin-icon"></app-icon>
+      } @else {
+        <app-icon name="zap" [size]="28" class="primary-icon"></app-icon>
+      }
+    </div>
+
+    <div class="dropzone-text-group">
+      <span class="dropzone-primary-text">
+        @if (isUploading()) {
+          {{ languageService.t().settings.documents.uploading }}
+        } @else {
+          {{ languageService.t().settings.documents.dragDropTitle }}
+        }
+      </span>
+      <span class="dropzone-sub-text">
+        {{ languageService.t().settings.documents.dragDropSubtitle }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Search & Stats Bar -->
+  <div class="controls-bar">
+    <div class="search-input-wrap">
+      <app-icon name="search" [size]="15" class="search-icon"></app-icon>
+      <input
+        type="text"
+        [placeholder]="languageService.t().settings.documents.searchPlaceholder"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        class="search-input"
+      />
+    </div>
+
+    <div class="stats-label">
+      {{ languageService.t().settings.documents.totalDocs }}:
+      <strong>{{ documents().length }}</strong>
+    </div>
+  </div>
+
+  <!-- Documents Grid / List -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <app-icon name="loader" [size]="20" class="spin-icon"></app-icon>
+      <span>Đang tải danh sách tài liệu...</span>
+    </div>
+  } @else if (filteredDocuments().length === 0) {
+    <div class="empty-state-card">
+      <app-icon name="file-text" [size]="32" class="muted-icon"></app-icon>
+      <h4 class="empty-title">
+        @if (documents().length === 0) {
+          {{ languageService.t().settings.documents.emptyTitle }}
+        } @else {
+          {{ languageService.t().settings.documents.noResults }}
+        }
+      </h4>
+      <p class="empty-desc">
+        @if (documents().length === 0) {
+          {{ languageService.t().settings.documents.emptyDesc }}
+        }
+      </p>
+    </div>
+  } @else {
+    <div class="documents-grid">
+      @for (doc of filteredDocuments(); track doc.id) {
+        <div class="doc-card">
+          <div class="doc-main-info">
+            <div class="doc-type-icon">
+              <app-icon name="file-text" [size]="20"></app-icon>
+            </div>
+            <div class="doc-meta">
+              <h5 class="doc-filename" [title]="doc.filename">{{ doc.filename }}</h5>
+              <div class="doc-details-row">
+                <span>{{ formatFileSize(doc.fileSize) }}</span>
+                <span class="dot">•</span>
+                <span>{{ doc.createdAt | date: 'mediumDate' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-card-footer">
+            <div class="chunk-badge" [class.ready]="doc.chunkCount > 0">
+              <app-icon [name]="doc.chunkCount > 0 ? 'check-circle' : 'clock'" [size]="12"></app-icon>
+              <span>{{ doc.chunkCount > 0 ? (languageService.t().settings.documents.readyBadge + ' (' + doc.chunkCount + ' chunks)') : languageService.t().settings.documents.indexingBadge }}</span>
+            </div>
+
+            <div class="doc-actions">
+              <button
+                type="button"
+                class="action-btn"
+                (click)="selectedDoc.set(doc)"
+                [title]="languageService.t().settings.documents.viewDetails"
+              >
+                <app-icon name="eye" [size]="14"></app-icon>
+              </button>
+              <button
+                type="button"
+                class="action-btn danger"
+                (click)="docToDelete.set(doc)"
+                [title]="languageService.t().settings.documents.deleteDoc"
+              >
+                <app-icon name="trash" [size]="14"></app-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- View Details Modal -->
+  @if (selectedDoc(); as doc) {
+    <app-modal
+      [isOpen]="true"
+      [title]="languageService.t().settings.documents.detailsTitle"
+      [maxWidth]="'480px'"
+      (close)="selectedDoc.set(null)"
+    >
+      <div class="doc-details-body">
+        <div class="detail-row">
+          <span class="detail-label">{{ languageService.t().settings.documents.fileName }}</span>
+          <span class="detail-value bold">{{ doc.filename }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ languageService.t().settings.documents.docId }}</span>
+          <code class="detail-code">{{ doc.id }}</code>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ languageService.t().settings.documents.fileSize }}</span>
+          <span class="detail-value">{{ formatFileSize(doc.fileSize) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ languageService.t().settings.documents.chunkCount }}</span>
+          <span class="detail-value primary">{{ doc.chunkCount }} chunks</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">{{ languageService.t().settings.documents.createdAt }}</span>
+          <span class="detail-value">{{ doc.createdAt | date: 'medium' }}</span>
+        </div>
+      </div>
+
+      <div modal-footer class="modal-footer-actions">
+        <app-button variant="secondary" size="sm" (click)="selectedDoc.set(null)">
+          {{ languageService.t().settings.documents.close }}
+        </app-button>
+      </div>
+    </app-modal>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  @if (docToDelete(); as doc) {
+    <app-modal
+      [isOpen]="true"
+      [title]="languageService.t().settings.documents.deleteConfirmTitle"
+      [maxWidth]="'460px'"
+      (close)="isDeleting() ? null : docToDelete.set(null)"
+    >
+      <div class="delete-confirm-body">
+        <p class="delete-warning-text">
+          {{ languageService.t().settings.documents.deleteConfirmDesc }}
+        </p>
+        <div class="doc-to-delete-chip">
+          <app-icon name="file-text" [size]="16"></app-icon>
+          <span>{{ doc.filename }}</span>
+        </div>
+      </div>
+
+      <div modal-footer class="modal-footer-actions">
+        <app-button
+          variant="secondary"
+          size="sm"
+          [disabled]="isDeleting()"
+          (click)="docToDelete.set(null)"
+        >
+          {{ languageService.t().settings.documents.cancel }}
+        </app-button>
+        <app-button
+          variant="danger"
+          size="sm"
+          [loading]="isDeleting()"
+          (click)="confirmDelete()"
+        >
+          {{ languageService.t().settings.documents.confirmDelete }}
+        </app-button>
+      </div>
+    </app-modal>
+  }
+</div>

@@ -44,6 +44,17 @@ const getToolBadge = (stepText: string) => {
   ) {
     return <span className="tool-badge tool-badge-memory">🧠 Memory Tool</span>;
   }
+  if (
+    lower.includes('document') ||
+    lower.includes('tài liệu') ||
+    lower.includes('tri thức') ||
+    lower.includes('knowledge') ||
+    lower.includes('search_documents')
+  ) {
+    return (
+      <span className="tool-badge tool-badge-document">📄 Document Tool</span>
+    );
+  }
   if (lower.startsWith('🔧') || lower.includes('tool:')) {
     return <span className="tool-badge tool-badge-generic">⚡ Agent Tool</span>;
   }

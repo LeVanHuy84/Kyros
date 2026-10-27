@@ -1,10 +1,12 @@
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AppNotification, NotificationPriority, NotificationType } from '../models/notification.models';
 import { WorkspaceContextService } from './workspace-context.service';
 import { SseService } from './sse.service';
 import { environment } from '@env/environment';
-import { catchError, of } from 'rxjs';
+import { Subscription, catchError, of } from 'rxjs';
+
+export type SseConnectionStatus = 'connected' | 'reconnecting' | 'disconnected';
 
 interface BackendNotificationResponse {
   notificationId: string;
@@ -30,7 +32,7 @@ interface NotificationsApiResponse {
 @Injectable({
   providedIn: 'root',
 })
-export class NotificationService {
+export class NotificationService implements OnDestroy {
   private readonly STORAGE_KEY = 'kyros_notifications_data';
   private readonly http = inject(HttpClient);
   private readonly workspaceService = inject(WorkspaceContextService);
@@ -38,6 +40,11 @@ export class NotificationService {
 
   readonly notifications = signal<AppNotification[]>(this.loadInitialNotifications());
   readonly isLoading = signal<boolean>(false);
+  readonly connectionStatus = signal<SseConnectionStatus>('disconnected');
+
+  private sseSubscription?: Subscription;
+  private reconnectTimeout?: ReturnType<typeof setTimeout>;
+  private reconnectAttempts = 0;
 
   readonly unreadCount = computed(() => {
     return this.notifications().filter((n) => !n.isRead).length;
@@ -86,46 +93,96 @@ export class NotificationService {
    * Listen to real-time notification stream via Server-Sent Events (SSE)
    */
   private initSseStream(workspaceId: string): void {
+    if (this.sseSubscription) {
+      this.sseSubscription.unsubscribe();
+      this.sseSubscription = undefined;
+    }
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = undefined;
+    }
+
+    this.connectionStatus.set('reconnecting');
     const streamUrl = `/api/v1/workspaces/${workspaceId}/notifications/stream`;
-    this.sseService
-      .stream<any>(streamUrl)
-      .pipe(catchError(() => of(null)))
-      .subscribe((event) => {
-        if (event?.data) {
-          // Ignore heartbeat / ping messages sent by the backend SseNotificationRegistry
-          if (
-            event.event === 'ping' ||
-            event.data === 'connected' ||
-            event.data === 'keep-alive'
-          ) {
-            return;
-          }
 
-          let payload: any = event.data;
-          if (typeof event.data === 'string') {
-            try {
-              payload = JSON.parse(event.data);
-            } catch {
-              payload = null;
-            }
-          }
+    this.sseSubscription = this.sseService.stream<any>(streamUrl).subscribe({
+      next: (event) => {
+        this.reconnectAttempts = 0;
+        this.connectionStatus.set('connected');
 
-          if (payload && typeof payload === 'object' && (payload.notificationId || payload.title)) {
-            const newNotif = this.mapFromBackend({
-              notificationId: payload.notificationId || payload.id || `notif-${Date.now()}`,
-              workspaceId: payload.workspaceId || workspaceId,
-              title: payload.title || 'Thông báo mới',
-              content: payload.content || payload.message || '',
-              urgencyLevel: payload.urgencyLevel || 'NORMAL',
-              status: 'Unread',
-              metadata: payload.metadata || {},
-              createdAt: payload.createdAt || new Date().toISOString(),
-            });
+        if (!event?.data) return;
 
-            this.persist([newNotif, ...this.notifications().filter((n) => n.id !== newNotif.id)]);
+        // Heartbeat / ping messages sent by the backend SseNotificationRegistry
+        if (
+          event.event === 'ping' ||
+          event.data === 'connected' ||
+          event.data === 'keep-alive'
+        ) {
+          return;
+        }
+
+        let payload: any = event.data;
+        if (typeof event.data === 'string') {
+          try {
+            payload = JSON.parse(event.data);
+          } catch {
+            payload = null;
           }
         }
-      });
+
+        if (payload && typeof payload === 'object' && (payload.notificationId || payload.title)) {
+          const newNotif = this.mapFromBackend({
+            notificationId: payload.notificationId || payload.id || `notif-${Date.now()}`,
+            workspaceId: payload.workspaceId || workspaceId,
+            title: payload.title || 'Thông báo mới',
+            content: payload.content || payload.message || '',
+            urgencyLevel: payload.urgencyLevel || 'NORMAL',
+            status: 'Unread',
+            metadata: payload.metadata || {},
+            createdAt: payload.createdAt || new Date().toISOString(),
+          });
+
+          this.persist([newNotif, ...this.notifications().filter((n) => n.id !== newNotif.id)]);
+        }
+      },
+      error: (err) => {
+        console.warn('[NotificationService] SSE stream error:', err);
+        this.scheduleReconnect(workspaceId);
+      },
+      complete: () => {
+        this.scheduleReconnect(workspaceId);
+      },
+    });
+  }
+
+  private scheduleReconnect(workspaceId: string): void {
+    if (this.reconnectAttempts < 5) {
+      this.reconnectAttempts++;
+      this.connectionStatus.set('reconnecting');
+      const delay = Math.min(1000 * Math.pow(1.5, this.reconnectAttempts), 10000);
+      this.reconnectTimeout = setTimeout(() => {
+        this.initSseStream(workspaceId);
+      }, delay);
+    } else {
+      this.connectionStatus.set('disconnected');
+    }
+  }
+
+  reconnect(): void {
+    const wsId = this.workspaceService.activeWorkspaceId();
+    if (wsId) {
+      this.reconnectAttempts = 0;
+      this.initSseStream(wsId);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.sseSubscription) {
+      this.sseSubscription.unsubscribe();
+    }
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
   }
 
   private mapFromBackend(item: BackendNotificationResponse): AppNotification {

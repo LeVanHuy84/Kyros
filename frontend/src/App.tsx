@@ -12,6 +12,7 @@ const AgentCoordinator = lazy(() => import('./pages/AgentCoordinator'));
 const TaskManagement = lazy(() => import('./pages/TaskManagement'));
 const ScheduleOverlaps = lazy(() => import('./pages/ScheduleOverlaps'));
 const NotesManagement = lazy(() => import('./pages/NotesManagement'));
+const Documents = lazy(() => import('./pages/Documents'));
 const Settings = lazy(() => import('./pages/Settings'));
 const UserAdmin = lazy(() => import('./pages/admin/UserAdmin'));
 const WorkspaceAdmin = lazy(() => import('./pages/admin/WorkspaceAdmin'));
@@ -91,6 +92,15 @@ function App() {
                     element={
                       <Suspense fallback={<PageLoader />}>
                         <NotesManagement />
+                      </Suspense>
+                    }
+                  />
+
+                  <Route
+                    path="/documents"
+                    element={
+                      <Suspense fallback={<PageLoader />}>
+                        <Documents />
                       </Suspense>
                     }
                   />

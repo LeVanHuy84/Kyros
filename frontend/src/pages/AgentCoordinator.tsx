@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Bot, Radio, Key, Plus, SunMedium } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bot, Radio, Key, Plus, SunMedium, X } from 'lucide-react';
 import { useWorkspace } from '../hooks/useWorkspace';
 import { useNotes } from '../hooks/useNotes';
 import { useAgentChat } from '../hooks/useAgentChat';
+import apiClient from '../services/api-client';
 import { ByokConfigModal } from '../components/agent/ByokConfigModal';
 import { ConversationSidebar } from '../components/agent/ConversationSidebar';
 import { ChatWindow } from '../components/agent/ChatWindow';
@@ -14,6 +15,16 @@ export const AgentCoordinator: React.FC = () => {
   const { activeWorkspace } = useWorkspace();
   const { notes } = useNotes();
   const [showBriefingModal, setShowBriefingModal] = useState(false);
+
+  const todayKey = `briefing_dismissed_${new Date().toISOString().slice(0, 10)}`;
+  const [isBriefingDismissed, setIsBriefingDismissed] = useState<boolean>(
+    () => localStorage.getItem(todayKey) === 'true'
+  );
+  const [briefingStats, setBriefingStats] = useState<{
+    events: number;
+    tasks: number;
+  } | null>(null);
+
   const {
     conversations,
     activeConversationId,
@@ -23,6 +34,9 @@ export const AgentCoordinator: React.FC = () => {
     setInputTurn,
     selectedNotes,
     setSelectedNotes,
+    documents,
+    selectedDocs,
+    setSelectedDocs,
     isThinking,
     isStreamingMode,
     setIsStreamingMode,
@@ -37,6 +51,32 @@ export const AgentCoordinator: React.FC = () => {
     startNewConversation,
     loadConversationTurns,
   } = useAgentChat();
+
+  // Load quick morning briefing preview for the top banner
+  useEffect(() => {
+    if (!activeWorkspace) return;
+    const hour = new Date().getHours();
+    const type = hour >= 16 ? 'EVENING' : 'MORNING';
+
+    apiClient
+      .get(
+        `/v1/workspaces/${activeWorkspace.id}/executive/briefing/today?type=${type}`
+      )
+      .then((res) => {
+        if (res.data) {
+          setBriefingStats({
+            events: res.data.totalEvents ?? res.data.upcomingEventsCount ?? 0,
+            tasks: res.data.totalTasksPending ?? res.data.urgentTasksCount ?? 0,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [activeWorkspace]);
+
+  const handleMarkBriefingRead = () => {
+    localStorage.setItem(todayKey, 'true');
+    setIsBriefingDismissed(true);
+  };
 
   return (
     <div
@@ -55,7 +95,7 @@ export const AgentCoordinator: React.FC = () => {
           padding: '16px 20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: '14px',
           flex: 1,
           height: '100%',
           minHeight: 0,
@@ -160,6 +200,82 @@ export const AgentCoordinator: React.FC = () => {
           </div>
         </div>
 
+        {/* Morning / Executive Briefing Floating Alert Banner */}
+        {!isBriefingDismissed && briefingStats && (
+          <div
+            className="fade-in-slide-up"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 16px',
+              backgroundColor: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.25)',
+              borderRadius: 'var(--radius-sm)',
+              color: 'var(--text-main)',
+              fontSize: '13px',
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                flexWrap: 'wrap',
+              }}
+            >
+              <SunMedium
+                size={18}
+                style={{ color: '#d97706', flexShrink: 0 }}
+              />
+              <span>
+                ☀️ <strong>Chào buổi sáng!</strong> Hôm nay bạn có{' '}
+                <strong style={{ color: '#3b82f6' }}>
+                  {briefingStats.events} cuộc họp
+                </strong>{' '}
+                và{' '}
+                <strong style={{ color: '#ef4444' }}>
+                  {briefingStats.tasks} nhiệm vụ
+                </strong>{' '}
+                cần giải quyết.
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowBriefingModal(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-primary)',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  textDecoration: 'underline',
+                  fontSize: '13px',
+                  padding: 0,
+                }}
+              >
+                Bấm để xem tóm tắt điều hành &rarr;
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={handleMarkBriefingRead}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--text-muted)',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              title="Đóng lời nhắc hôm nay"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        )}
+
         {/* Modal BYOK Provider Config */}
         <ByokConfigModal
           show={showConfigModal}
@@ -170,6 +286,7 @@ export const AgentCoordinator: React.FC = () => {
         <ExecutiveBriefingModal
           isOpen={showBriefingModal}
           onClose={() => setShowBriefingModal(false)}
+          onMarkRead={handleMarkBriefingRead}
         />
 
         {/* Main Conversation & Chat Body */}
@@ -201,13 +318,16 @@ export const AgentCoordinator: React.FC = () => {
           />
         </div>
 
-        {/* Chat Input & Note Mention Area */}
+        {/* Chat Input & Mentions Area */}
         <ChatInputArea
           inputTurn={inputTurn}
           setInputTurn={setInputTurn}
           selectedNotes={selectedNotes}
           setSelectedNotes={setSelectedNotes}
           notes={notes}
+          selectedDocs={selectedDocs}
+          setSelectedDocs={setSelectedDocs}
+          documents={documents}
           onSendMessage={handleSendMessage}
         />
       </div>

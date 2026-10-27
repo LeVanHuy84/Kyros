@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
   Sun,
@@ -9,23 +9,31 @@ import {
   X,
   RefreshCw,
   ArrowRight,
+  Clock,
+  CheckCircle,
 } from 'lucide-react';
 import apiClient from '../../services/api-client';
 import { useWorkspace } from '../../hooks/useWorkspace';
 
 export interface ExecutiveBriefingDto {
-  briefingType: 'MORNING' | 'EVENING';
-  generatedAt: string;
-  summary: string;
-  upcomingEventsCount: number;
-  urgentTasksCount: number;
-  eventsSummary: Array<{
+  type?: 'MORNING' | 'EVENING';
+  briefingType?: 'MORNING' | 'EVENING';
+  title?: string;
+  markdownContent?: string;
+  summary?: string;
+  totalEvents?: number;
+  upcomingEventsCount?: number;
+  totalTasksPending?: number;
+  urgentTasksCount?: number;
+  totalTasksCompleted?: number;
+  generatedAt?: string;
+  eventsSummary?: Array<{
     title: string;
     startTime: string;
     endTime: string;
     location?: string;
   }>;
-  tasksSummary: Array<{
+  tasksSummary?: Array<{
     title: string;
     priority: string;
     dueDate?: string;
@@ -35,11 +43,13 @@ export interface ExecutiveBriefingDto {
 interface ExecutiveBriefingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onMarkRead?: () => void;
 }
 
 export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
   isOpen,
   onClose,
+  onMarkRead,
 }) => {
   const { activeWorkspace } = useWorkspace();
   const [briefingType, setBriefingType] = useState<'MORNING' | 'EVENING'>(
@@ -50,25 +60,28 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBriefing = async (type: 'MORNING' | 'EVENING') => {
-    if (!activeWorkspace) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await apiClient.get(
-        `/v1/workspaces/${activeWorkspace.id}/executive/briefing/today`,
-        { params: { type } }
-      );
-      setBriefing(res.data);
-    } catch (err: any) {
-      console.warn('Failed to load briefing', err);
-      setError(
-        err?.response?.data?.message || 'Không thể tải bản tin điều hành.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const fetchBriefing = useCallback(
+    async (type: 'MORNING' | 'EVENING') => {
+      if (!activeWorkspace) return;
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await apiClient.get(
+          `/v1/workspaces/${activeWorkspace.id}/executive/briefing/today`,
+          { params: { type } }
+        );
+        setBriefing(res.data);
+      } catch (err: any) {
+        console.warn('Failed to load briefing', err);
+        setError(
+          err?.response?.data?.message || 'Không thể tải bản tin điều hành.'
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [activeWorkspace]
+  );
 
   const generateNewBriefing = async () => {
     if (!activeWorkspace) return;
@@ -96,15 +109,26 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
 
   useEffect(() => {
     if (isOpen && activeWorkspace) {
-      // Auto-select based on current hour
       const hour = new Date().getHours();
       const defaultType = hour >= 16 ? 'EVENING' : 'MORNING';
       setBriefingType(defaultType);
       fetchBriefing(defaultType);
     }
-  }, [isOpen, activeWorkspace]);
+  }, [isOpen, activeWorkspace, fetchBriefing]);
 
   if (!isOpen) return null;
+
+  const totalEvents =
+    briefing?.totalEvents ?? briefing?.upcomingEventsCount ?? 0;
+  const totalTasks =
+    briefing?.totalTasksPending ?? briefing?.urgentTasksCount ?? 0;
+  const totalCompleted = briefing?.totalTasksCompleted ?? 0;
+  const markdownText = briefing?.markdownContent || briefing?.summary || '';
+
+  const handleStartDay = () => {
+    if (onMarkRead) onMarkRead();
+    onClose();
+  };
 
   return (
     <div
@@ -114,8 +138,8 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        backdropFilter: 'blur(4px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        backdropFilter: 'blur(5px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -128,37 +152,38 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
         className="card fade-in-slide-up"
         style={{
           width: '100%',
-          maxWidth: '750px',
+          maxWidth: '780px',
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
           backgroundColor: 'var(--bg-card)',
           borderRadius: 'var(--radius-lg, 16px)',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.35)',
           overflow: 'hidden',
           border: '1px solid var(--border-color)',
+          padding: 0,
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         <div
           style={{
-            padding: '20px 24px',
+            padding: '18px 24px',
             borderBottom: '1px solid var(--border-color)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             background:
               briefingType === 'MORNING'
-                ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%)'
-                : 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)',
+                ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(99, 102, 241, 0.06) 100%)'
+                : 'linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.1) 100%)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div
               style={{
-                width: '40px',
-                height: '40px',
+                width: '42px',
+                height: '42px',
                 borderRadius: '12px',
                 backgroundColor:
                   briefingType === 'MORNING' ? '#fef3c7' : '#ede9fe',
@@ -166,12 +191,13 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                boxShadow: 'var(--shadow-sm)',
               }}
             >
               {briefingType === 'MORNING' ? (
-                <Sun size={22} />
+                <Sun size={24} />
               ) : (
-                <Moon size={22} />
+                <Moon size={24} />
               )}
             </div>
             <div>
@@ -186,14 +212,25 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                   gap: '8px',
                 }}
               >
-                {briefingType === 'MORNING'
-                  ? 'Bản Tin Điều Hành Buổi Sáng'
-                  : 'Tổng Kết Điều Hành Cuối Ngày'}
+                {briefing?.title ||
+                  (briefingType === 'MORNING'
+                    ? 'Bản Tin Điều Hành Buổi Sáng'
+                    : 'Tổng Kết Điều Hành Cuối Ngày')}
               </h3>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  marginTop: '2px',
+                }}
+              >
+                <Clock size={12} />
                 {briefing?.generatedAt
-                  ? `Được tổng hợp lúc ${new Date(briefing.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                  : 'Tự động bởi Kyros AI Agent'}
+                  ? `Cập nhật lúc ${new Date(briefing.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                  : 'Tự động bởi Trợ lý Kyros AI'}
               </span>
             </div>
           </div>
@@ -233,8 +270,6 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
-                  boxShadow:
-                    briefingType === 'MORNING' ? 'var(--shadow-sm)' : 'none',
                 }}
               >
                 <Sun size={13} /> Sáng
@@ -263,8 +298,6 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
-                  boxShadow:
-                    briefingType === 'EVENING' ? 'var(--shadow-sm)' : 'none',
                 }}
               >
                 <Moon size={13} /> Tối
@@ -304,7 +337,7 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
           {isLoading ? (
             <div
               style={{
-                padding: '40px',
+                padding: '50px 20px',
                 textAlign: 'center',
                 color: 'var(--text-muted)',
                 display: 'flex',
@@ -314,11 +347,13 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
               }}
             >
               <Sparkles
-                size={28}
+                size={32}
                 className="animate-spin"
                 style={{ color: 'var(--color-primary)' }}
               />
-              <span>Đang thu thập lịch trình và nhiệm vụ trọng tâm...</span>
+              <span style={{ fontSize: '14px', fontWeight: 500 }}>
+                Đang tổng hợp lịch trình và nhiệm vụ trọng tâm hôm nay...
+              </span>
             </div>
           ) : error ? (
             <div
@@ -340,9 +375,9 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                 Sinh bản tin mới ngay
               </button>
             </div>
-          ) : briefing ? (
+          ) : (
             <>
-              {/* Stat Badges */}
+              {/* Stat Highlights Cards */}
               <div
                 style={{
                   display: 'grid',
@@ -361,21 +396,21 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                     gap: '12px',
                   }}
                 >
-                  <Calendar size={20} style={{ color: '#3b82f6' }} />
+                  <Calendar size={22} style={{ color: '#3b82f6' }} />
                   <div>
                     <div
                       style={{
-                        fontSize: '18px',
-                        fontWeight: '700',
+                        fontSize: '20px',
+                        fontWeight: '800',
                         color: '#3b82f6',
                       }}
                     >
-                      {briefing.upcomingEventsCount}
+                      {totalEvents}
                     </div>
                     <div
                       style={{ fontSize: '12px', color: 'var(--text-muted)' }}
                     >
-                      Sự kiện / Cuộc họp
+                      Cuộc họp & Lịch trình
                     </div>
                   </div>
                 </div>
@@ -391,33 +426,63 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                     gap: '12px',
                   }}
                 >
-                  <CheckSquare size={20} style={{ color: '#ef4444' }} />
+                  <CheckSquare size={22} style={{ color: '#ef4444' }} />
                   <div>
                     <div
                       style={{
-                        fontSize: '18px',
-                        fontWeight: '700',
+                        fontSize: '20px',
+                        fontWeight: '800',
                         color: '#ef4444',
                       }}
                     >
-                      {briefing.urgentTasksCount}
+                      {totalTasks}
                     </div>
                     <div
                       style={{ fontSize: '12px', color: 'var(--text-muted)' }}
                     >
-                      Nhiệm vụ ưu tiên cao
+                      Task cần giải quyết
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                    border: '1px solid rgba(16, 185, 129, 0.2)',
+                    borderRadius: '10px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
+                  <CheckCircle size={22} style={{ color: '#10b981' }} />
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '20px',
+                        fontWeight: '800',
+                        color: '#10b981',
+                      }}
+                    >
+                      {totalCompleted}
+                    </div>
+                    <div
+                      style={{ fontSize: '12px', color: 'var(--text-muted)' }}
+                    >
+                      Đã hoàn tất
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* AI Markdown Briefing Summary */}
+              {/* Full Executive Briefing Body (Markdown) */}
               <div
                 style={{
                   backgroundColor: 'var(--bg-app)',
                   border: '1px solid var(--border-color)',
-                  borderRadius: '10px',
-                  padding: '16px 20px',
+                  borderRadius: '12px',
+                  padding: '20px 22px',
                 }}
               >
                 <div
@@ -428,28 +493,42 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
                     fontSize: '13px',
                     fontWeight: '700',
                     color: 'var(--color-primary)',
-                    marginBottom: '10px',
+                    marginBottom: '12px',
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                   }}
                 >
-                  <Sparkles size={14} /> Tổng quan từ Kyros AI
+                  <Sparkles size={15} /> Tóm tắt điều hành & Lộ trình hôm nay
                 </div>
-                <div
-                  className="markdown-body"
-                  style={{ fontSize: '14px', lineHeight: '1.7' }}
-                >
-                  <ReactMarkdown>{briefing.summary}</ReactMarkdown>
-                </div>
+
+                {markdownText ? (
+                  <div
+                    className="markdown-body"
+                    style={{ fontSize: '14px', lineHeight: '1.75' }}
+                  >
+                    <ReactMarkdown>{markdownText}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <p
+                    style={{
+                      margin: 0,
+                      color: 'var(--text-muted)',
+                      fontSize: '13px',
+                    }}
+                  >
+                    Không có thông tin lịch trình hoặc task tồn đọng cho ngày
+                    hôm nay. Chúc bạn một ngày làm việc hiệu quả!
+                  </p>
+                )}
               </div>
             </>
-          ) : null}
+          )}
         </div>
 
         {/* Modal Footer */}
         <div
           style={{
-            padding: '16px 24px',
+            padding: '14px 24px',
             borderTop: '1px solid var(--border-color)',
             display: 'flex',
             alignItems: 'center',
@@ -474,11 +553,11 @@ export const ExecutiveBriefingModal: React.FC<ExecutiveBriefingModalProps> = ({
           <button
             type="button"
             className="btn btn-primary"
-            onClick={onClose}
-            style={{ fontSize: '13px', gap: '6px' }}
+            onClick={handleStartDay}
+            style={{ fontSize: '13px', gap: '6px', padding: '10px 22px' }}
           >
-            <span>Bắt đầu ngày làm việc</span>
-            <ArrowRight size={14} />
+            <span>Bắt đầu ngày mới</span>
+            <ArrowRight size={15} />
           </button>
         </div>
       </div>

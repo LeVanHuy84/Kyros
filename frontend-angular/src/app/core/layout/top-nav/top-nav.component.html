@@ -21,6 +21,28 @@
   </div>
 
   <div class="nav-right">
+    <!-- Realtime SSE Connection Status Pill -->
+    <div
+      class="connection-status-pill"
+      [class.connected]="notificationService.connectionStatus() === 'connected'"
+      [class.reconnecting]="notificationService.connectionStatus() === 'reconnecting'"
+      [class.disconnected]="notificationService.connectionStatus() === 'disconnected'"
+      [title]="getConnectionStatusTitle()"
+    >
+      <span class="status-dot"></span>
+      <span class="status-label">{{ getConnectionStatusLabel() }}</span>
+      @if (notificationService.connectionStatus() === 'disconnected') {
+        <button
+          type="button"
+          class="retry-conn-btn"
+          (click)="notificationService.reconnect()"
+          [title]="languageService.t().topNav.realtime.retry"
+        >
+          <app-icon name="refresh-cw" [size]="11"></app-icon>
+        </button>
+      }
+    </div>
+
     <!-- Language Switcher -->
     <button
       class="lang-switch-btn"

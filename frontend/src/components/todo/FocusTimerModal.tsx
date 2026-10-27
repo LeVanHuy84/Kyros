@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Timer,
   Play,
@@ -32,6 +32,7 @@ export const FocusTimerModal: React.FC<FocusTimerModalProps> = ({
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
   const [sessionNotes, setSessionNotes] = useState<string>('');
   const [isStopping, setIsStopping] = useState<boolean>(false);
+  const [markAsCompleted, setMarkAsCompleted] = useState<boolean>(false);
 
   const timerRef = useRef<number | null>(null);
 
@@ -46,6 +47,43 @@ export const FocusTimerModal: React.FC<FocusTimerModalProps> = ({
       setSessionNotes('');
     }
   }, [task]);
+
+  const handleCompleteTimer = useCallback(async () => {
+    setIsRunning(false);
+    // Play subtle audio alert if possible
+    try {
+      const audioCtx = new (
+        window.AudioContext || (window as any).webkitAudioContext
+      )();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.8);
+    } catch {
+      // Audio not permitted or available
+    }
+
+    if (task && activeWorkspace) {
+      try {
+        await apiClient.post(
+          `/v1/workspaces/${activeWorkspace.id}/tasks/${task.taskId}/timer/stop`,
+          {
+            notes: `Hoàn thành chu kỳ Pomodoro (${initialMinutes} phút)`,
+            markCompleted: markAsCompleted,
+          }
+        );
+        if (onTimerComplete) {
+          onTimerComplete(task, initialMinutes);
+        }
+      } catch (e) {
+        console.warn('Failed to record completed timer log', e);
+      }
+    }
+  }, [task, activeWorkspace, initialMinutes, markAsCompleted, onTimerComplete]);
 
   // Countdown effect
   useEffect(() => {
@@ -68,7 +106,7 @@ export const FocusTimerModal: React.FC<FocusTimerModalProps> = ({
     return () => {
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
-  }, [isRunning, secondsLeft]);
+  }, [isRunning, secondsLeft, handleCompleteTimer]);
 
   const handleStart = async () => {
     if (!task || !activeWorkspace) return;
@@ -98,6 +136,7 @@ export const FocusTimerModal: React.FC<FocusTimerModalProps> = ({
         `/v1/workspaces/${activeWorkspace.id}/tasks/${task.taskId}/timer/stop`,
         {
           notes: sessionNotes || 'Tập trung Pomodoro',
+          markCompleted: markAsCompleted,
         }
       );
       if (onTimerComplete) {
@@ -109,42 +148,6 @@ export const FocusTimerModal: React.FC<FocusTimerModalProps> = ({
       setIsStopping(false);
       setIsRunning(false);
       onClose();
-    }
-  };
-
-  const handleCompleteTimer = async () => {
-    setIsRunning(false);
-    // Play subtle audio alert if possible
-    try {
-      const audioCtx = new (
-        window.AudioContext || (window as any).webkitAudioContext
-      )();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.8);
-    } catch {
-      // Audio not permitted or available
-    }
-
-    if (task && activeWorkspace) {
-      try {
-        await apiClient.post(
-          `/v1/workspaces/${activeWorkspace.id}/tasks/${task.taskId}/timer/stop`,
-          {
-            notes: `Hoàn thành chu kỳ Pomodoro (${initialMinutes} phút)`,
-          }
-        );
-        if (onTimerComplete) {
-          onTimerComplete(task, initialMinutes);
-        }
-      } catch (e) {
-        console.warn('Failed to record completed timer log', e);
-      }
     }
   };
 
@@ -494,6 +497,28 @@ export const FocusTimerModal: React.FC<FocusTimerModalProps> = ({
               }}
             />
           </div>
+
+          {/* Mark completed checkbox */}
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              color: 'var(--text-main)',
+              userSelect: 'none',
+              alignSelf: 'flex-start',
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={markAsCompleted}
+              onChange={(e) => setMarkAsCompleted(e.target.checked)}
+              style={{ cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+            />
+            <span>Đánh dấu hoàn thành Task khi kết thúc phiên</span>
+          </label>
 
           {/* Controls */}
           <div

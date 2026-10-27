@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Settings as SettingsIcon,
   Brain,
@@ -9,6 +10,7 @@ import {
   X,
   Loader2,
   Cpu,
+  BookOpen,
 } from 'lucide-react';
 import { useConversations } from '../hooks/useConversations';
 import { PreferencesPanel } from '../components/settings/PreferencesPanel';
@@ -16,13 +18,29 @@ import { MemoryVaultPanel } from '../components/settings/MemoryVaultPanel';
 import { ConversationsDirectoryPanel } from '../components/settings/ConversationsDirectoryPanel';
 import { NotificationSettingsPanel } from '../components/settings/NotificationSettingsPanel';
 import { AiConfigPanel } from '../components/settings/AiConfigPanel';
+import { DocumentsTab } from '../components/settings/DocumentsTab';
 import { TurnsModal } from '../components/settings/TurnsModal';
 import type { ConversationTurn } from '../types/memory';
 
+const VALID_TABS = ['ai', 'docs', 'pref', 'vault', 'conv', 'notif', 'ws'];
+
 const Settings: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+
   const [activeSubTab, setActiveSubTab] = useState<
-    'ai' | 'pref' | 'vault' | 'conv' | 'notif' | 'ws'
-  >('ai');
+    'ai' | 'docs' | 'pref' | 'vault' | 'conv' | 'notif' | 'ws'
+  >(
+    requestedTab && VALID_TABS.includes(requestedTab)
+      ? (requestedTab as any)
+      : 'ai'
+  );
+
+  useEffect(() => {
+    if (requestedTab && VALID_TABS.includes(requestedTab)) {
+      setActiveSubTab(requestedTab as any);
+    }
+  }, [requestedTab]);
   const { getConversationTurns } = useConversations();
 
   // Alert and success statuses
@@ -173,6 +191,11 @@ const Settings: React.FC = () => {
               icon: <Cpu size={16} />,
             },
             {
+              id: 'docs',
+              label: 'Knowledge Base',
+              icon: <BookOpen size={16} />,
+            },
+            {
               id: 'pref',
               label: 'Preferences',
               icon: <SettingsIcon size={16} />,
@@ -232,6 +255,10 @@ const Settings: React.FC = () => {
         <div style={{ padding: '32px', minHeight: '300px' }}>
           {activeSubTab === 'ai' && (
             <AiConfigPanel onSuccess={handleSuccess} onError={handleError} />
+          )}
+
+          {activeSubTab === 'docs' && (
+            <DocumentsTab onSuccess={handleSuccess} onError={handleError} />
           )}
 
           {activeSubTab === 'pref' && (

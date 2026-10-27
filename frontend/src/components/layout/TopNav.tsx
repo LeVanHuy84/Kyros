@@ -28,9 +28,31 @@ export const TopNav: React.FC<TopNavProps> = ({ onToggleSidebar }) => {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Periodic ping to verify real network connection to backend
+    const interval = setInterval(async () => {
+      if (!navigator.onLine) {
+        setConnectionStatus('disconnected');
+        return;
+      }
+      try {
+        const pingRes = await fetch('/api/v1/workspaces', {
+          method: 'HEAD',
+          cache: 'no-cache',
+        });
+        if (!pingRes.ok && pingRes.status >= 500) {
+          setConnectionStatus('reconnecting');
+        } else {
+          setConnectionStatus('connected');
+        }
+      } catch {
+        setConnectionStatus('disconnected');
+      }
+    }, 45000);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      clearInterval(interval);
     };
   }, []);
 
@@ -81,6 +103,13 @@ export const TopNav: React.FC<TopNavProps> = ({ onToggleSidebar }) => {
         title: 'Schedule Bounded Context',
         description:
           'Analyze timeline intervals to intercept scheduling collisions.',
+      };
+    }
+    if (path.startsWith('/documents')) {
+      return {
+        title: 'Knowledge Base & Documents',
+        description:
+          'Manage ingested documents, text chunks, and vector embeddings for AI context.',
       };
     }
 
@@ -184,12 +213,24 @@ export const TopNav: React.FC<TopNavProps> = ({ onToggleSidebar }) => {
           />
           <span className="hide-mobile">
             {connectionStatus === 'connected'
-              ? 'Live SSE'
+              ? 'Realtime Active'
               : connectionStatus === 'reconnecting'
-                ? 'Reconnecting'
-                : 'Offline'}
+                ? 'Reconnecting...'
+                : 'Disconnected'}
           </span>
-          {connectionStatus === 'disconnected' && <RefreshCw size={11} />}
+          {connectionStatus === 'disconnected' && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '2px',
+                fontSize: '11px',
+                textDecoration: 'underline',
+              }}
+            >
+              <RefreshCw size={11} /> Thử lại
+            </span>
+          )}
         </div>
 
         {/* Workspace Display */}

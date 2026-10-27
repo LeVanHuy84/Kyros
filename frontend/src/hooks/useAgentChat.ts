@@ -6,6 +6,17 @@ import type { MessageItem } from '../components/agent/ChatWindow';
 import type { PendingApprovalData } from '../components/agent/ApprovalBanner';
 import type { Note } from './useNotes';
 
+export interface WorkspaceDocument {
+  id: string;
+  workspaceId: string;
+  userId?: string;
+  filename: string;
+  contentType: string;
+  fileSize: number;
+  chunkCount: number;
+  createdAt: string;
+}
+
 export const getApiBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL;
   if (!envUrl) return '/api';
@@ -21,6 +32,8 @@ export const useAgentChat = () => {
   >(null);
 
   const [selectedNotes, setSelectedNotes] = useState<Note[]>([]);
+  const [documents, setDocuments] = useState<WorkspaceDocument[]>([]);
+  const [selectedDocs, setSelectedDocs] = useState<WorkspaceDocument[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([
     {
       sender: 'agent',
@@ -70,7 +83,20 @@ export const useAgentChat = () => {
         console.warn('Failed to load conversations from backend', err);
       }
     };
+
+    const fetchDocuments = async () => {
+      try {
+        const res = await apiClient.get(
+          `/v1/workspaces/${activeWorkspace.id}/documents`
+        );
+        setDocuments(res.data || []);
+      } catch (err) {
+        console.warn('Failed to load documents for chat mention', err);
+      }
+    };
+
     fetchConversations();
+    fetchDocuments();
   }, [activeWorkspace]);
 
   const loadConversationTurns = async (wsId: string, convId: string) => {
@@ -220,15 +246,26 @@ export const useAgentChat = () => {
 
     const userText = inputTurn.trim();
     const noteIdParams = selectedNotes.map((n) => n.id);
+    const attachedDocNames = selectedDocs.map((d) => d.filename);
+    const fullUserText =
+      attachedDocNames.length > 0
+        ? `${userText}\n\n📎 *Đính kèm tài liệu:* ${attachedDocNames.map((name) => `\`${name}\``).join(', ')}`
+        : userText;
+
     const now = new Date().toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
     });
 
-    const userMsg: MessageItem = { sender: 'user', text: userText, time: now };
+    const userMsg: MessageItem = {
+      sender: 'user',
+      text: fullUserText,
+      time: now,
+    };
     setMessages((prev) => [...prev, userMsg]);
     setInputTurn('');
     setSelectedNotes([]);
+    setSelectedDocs([]);
     setIsThinking(true);
 
     if (currentConvId) {
@@ -237,7 +274,7 @@ export const useAgentChat = () => {
           `/v1/workspaces/${currentWorkspaceId}/conversations/${currentConvId}/turns`,
           {
             senderRole: 'USER',
-            messageContent: userText,
+            messageContent: fullUserText,
           }
         )
         .then(() => {
@@ -285,7 +322,7 @@ export const useAgentChat = () => {
             : '';
         const apiBase = getApiBaseUrl();
         const response = await fetch(
-          `${apiBase}/v1/workspaces/${currentWorkspaceId}/agent/chat/stream?prompt=${encodeURIComponent(userText)}${convParam}${notesParam}`,
+          `${apiBase}/v1/workspaces/${currentWorkspaceId}/agent/chat/stream?prompt=${encodeURIComponent(fullUserText)}${convParam}${notesParam}`,
           { headers: secureHeaders }
         );
 
@@ -307,6 +344,8 @@ export const useAgentChat = () => {
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split('\n');
           buffer = lines.pop() || '';
+
+          let hasChunkUpdate = false;
 
           for (const line of lines) {
             if (line.startsWith('event:')) {
@@ -395,24 +434,24 @@ export const useAgentChat = () => {
                 currentEvent === 'message'
               ) {
                 fullAgentResponse += dataText;
+                hasChunkUpdate = true;
               }
-
-              const currentContent = fullAgentResponse;
-              setMessages((prev) => {
-                const next = [...prev];
-                if (
-                  next.length > 0 &&
-                  next[next.length - 1].sender === 'agent'
-                ) {
-                  next[next.length - 1] = {
-                    ...next[next.length - 1],
-                    text: currentContent,
-                    isStreaming: true,
-                  };
-                }
-                return next;
-              });
             }
+          }
+
+          if (hasChunkUpdate) {
+            const currentContent = fullAgentResponse;
+            setMessages((prev) => {
+              const next = [...prev];
+              if (next.length > 0 && next[next.length - 1].sender === 'agent') {
+                next[next.length - 1] = {
+                  ...next[next.length - 1],
+                  text: currentContent,
+                  isStreaming: true,
+                };
+              }
+              return next;
+            });
           }
         }
 
@@ -603,6 +642,9 @@ export const useAgentChat = () => {
     setInputTurn,
     selectedNotes,
     setSelectedNotes,
+    documents,
+    selectedDocs,
+    setSelectedDocs,
     isThinking,
     isStreamingMode,
     setIsStreamingMode,

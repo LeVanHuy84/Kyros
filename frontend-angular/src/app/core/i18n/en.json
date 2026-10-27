@@ -19,7 +19,16 @@
     "darkModeTooltip": "Switch to Dark theme",
     "notificationsTooltip": "Notifications",
     "userProfile": "Executive profile",
-    "switchLangTooltip": "Chuyển sang Tiếng Việt"
+    "switchLangTooltip": "Chuyển sang Tiếng Việt",
+    "realtime": {
+      "active": "Realtime Active",
+      "reconnecting": "Reconnecting...",
+      "disconnected": "Disconnected",
+      "retry": "Retry",
+      "tooltipConnected": "SSE stream is active and healthy",
+      "tooltipReconnecting": "Re-establishing real-time connection...",
+      "tooltipDisconnected": "Disconnected from server. Click to retry."
+    }
   },
   "auth": {
     "loginTitle": "Sign in to Kyros",
@@ -186,10 +195,38 @@
     "subtitle": "AI configuration, security, and workspace preferences",
     "tabs": {
       "aiProvider": "AI Provider",
+      "knowledgeBase": "Knowledge Base",
       "calendar": "Calendar",
       "notifications": "Notifications",
       "vault": "Vault Security",
       "general": "General"
+    },
+    "documents": {
+      "title": "Workspace Knowledge Base & Documents",
+      "subtitle": "Upload documents (.pdf, .docx, .txt, .md) to vectorize into semantic embeddings. Kyros AI Agent will utilize these documents as grounded context during conversations.",
+      "dragDropTitle": "Drag & drop files here or click to browse",
+      "dragDropSubtitle": "Supports PDF, DOCX, TXT, MD (Max 25MB)",
+      "uploading": "Uploading and generating vector chunks...",
+      "searchPlaceholder": "Search indexed documents...",
+      "totalDocs": "Total",
+      "emptyTitle": "No knowledge documents uploaded yet",
+      "emptyDesc": "Drag and drop your first document above so Kyros AI can learn your workspace domain knowledge.",
+      "noResults": "No matching documents found",
+      "readyBadge": "Ready",
+      "indexingBadge": "Indexing",
+      "viewDetails": "View Details",
+      "deleteDoc": "Delete Document",
+      "deleteConfirmTitle": "Confirm Document Deletion",
+      "deleteConfirmDesc": "Are you sure you want to delete this document? Associated vector embeddings and chunks will be permanently purged from the AI memory.",
+      "detailsTitle": "Document Details",
+      "fileName": "File Name:",
+      "fileSize": "File Size:",
+      "docId": "Document ID:",
+      "chunkCount": "Vector Chunk Count:",
+      "createdAt": "Uploaded At:",
+      "close": "Close",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete Document"
     },
     "language": {
       "title": "Display Language",

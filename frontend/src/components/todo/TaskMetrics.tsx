@@ -9,10 +9,12 @@ interface TaskMetricsProps {
 }
 
 interface ProductivityStats {
-  totalFocusMinutes: number;
-  totalCompletedTasks: number;
-  onTimeCompletionRate: number;
-  totalSessionsLogged: number;
+  totalFocusedMinutes?: number;
+  totalFocusMinutes?: number;
+  totalSessionsCount?: number;
+  totalSessionsLogged?: number;
+  averageSessionMinutes?: number;
+  onTimeCompletionRate?: number;
 }
 
 export const TaskMetrics: React.FC<TaskMetricsProps> = ({ metrics }) => {
@@ -42,6 +44,14 @@ export const TaskMetrics: React.FC<TaskMetricsProps> = ({ metrics }) => {
     return `${hrs}h`;
   };
 
+  const totalFocusMins =
+    prodStats?.totalFocusedMinutes ?? prodStats?.totalFocusMinutes ?? 0;
+  const totalTasks = metrics.activeCount + metrics.completedCount;
+  const completionRate =
+    totalTasks > 0
+      ? Math.round((metrics.completedCount / totalTasks) * 100)
+      : 100;
+
   const items = [
     {
       label: 'Active Tasks',
@@ -55,15 +65,13 @@ export const TaskMetrics: React.FC<TaskMetricsProps> = ({ metrics }) => {
     },
     {
       label: 'Focus Time',
-      count: prodStats ? formatHours(prodStats.totalFocusMinutes) : '0h',
+      count: formatHours(totalFocusMins),
       color: '#6366f1',
       icon: <Timer size={14} style={{ color: '#6366f1' }} />,
     },
     {
-      label: 'On-Time Rate',
-      count: prodStats
-        ? `${Math.round(prodStats.onTimeCompletionRate || 100)}%`
-        : '100%',
+      label: 'Completion Rate',
+      count: `${completionRate}%`,
       color: '#f59e0b',
       icon: <Flame size={14} style={{ color: '#f59e0b' }} />,
     },

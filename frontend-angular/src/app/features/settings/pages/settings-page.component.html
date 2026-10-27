@@ -35,6 +35,10 @@
       <app-ai-config-panel></app-ai-config-panel>
     }
 
+    @if (activeSubTab() === 'docs') {
+      <app-documents-panel></app-documents-panel>
+    }
+
     @if (activeSubTab() === 'calendar') {
       <app-calendar-settings-panel></app-calendar-settings-panel>
     }

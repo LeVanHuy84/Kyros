@@ -19,7 +19,16 @@
     "darkModeTooltip": "Chuyển sang giao diện Tối",
     "notificationsTooltip": "Thông báo",
     "userProfile": "Tài khoản điều hành",
-    "switchLangTooltip": "Chuyển sang English"
+    "switchLangTooltip": "Chuyển sang English",
+    "realtime": {
+      "active": "Realtime Active",
+      "reconnecting": "Đang kết nối lại...",
+      "disconnected": "Mất kết nối",
+      "retry": "Thử lại",
+      "tooltipConnected": "SSE đang hoạt động bình thường",
+      "tooltipReconnecting": "Đang thử kết nối lại luồng dữ liệu thời gian thực...",
+      "tooltipDisconnected": "Mất kết nối tới máy chủ. Nhấn để thử lại."
+    }
   },
   "auth": {
     "loginTitle": "Đăng nhập vào Kyros",
@@ -186,10 +195,38 @@
     "subtitle": "Cấu hình AI, bảo mật và tùy chọn hệ thống",
     "tabs": {
       "aiProvider": "Nhà cung cấp AI",
+      "knowledgeBase": "Kho Tri Thức",
       "calendar": "Lịch biểu",
       "notifications": "Thông báo",
       "vault": "Bảo mật Vault",
       "general": "Cài đặt chung"
+    },
+    "documents": {
+      "title": "Kho Tri Thức Workspace & Quản Lý Tài Liệu",
+      "subtitle": "Tải lên tài liệu (.pdf, .docx, .txt, .md) để tự động phân tích vector embedding. Trợ lý Kyros AI sẽ sử dụng các tài liệu này làm ngữ cảnh chính xác khi đối thoại.",
+      "dragDropTitle": "Kéo thả tài liệu vào đây hoặc bấm để chọn tệp",
+      "dragDropSubtitle": "Hỗ trợ định dạng PDF, DOCX, TXT, MD (Tối đa 25MB)",
+      "uploading": "Đang tải lên và xử lý vector chunks...",
+      "searchPlaceholder": "Tìm kiếm tài liệu đã lập chỉ mục...",
+      "totalDocs": "Tổng cộng",
+      "emptyTitle": "Chưa có tài liệu tri thức nào được tải lên",
+      "emptyDesc": "Hãy kéo thả tệp tài liệu đầu tiên của bạn ở trên để Kyros AI học hỏi kiến thức chuyên môn của workspace.",
+      "noResults": "Không tìm thấy tài liệu phù hợp",
+      "readyBadge": "Sẵn sàng",
+      "indexingBadge": "Đang chỉ mục",
+      "viewDetails": "Xem chi tiết",
+      "deleteDoc": "Xóa tài liệu",
+      "deleteConfirmTitle": "Xác nhận xóa tài liệu khỏi Tri thức",
+      "deleteConfirmDesc": "Bạn có chắc chắn muốn xóa tài liệu này? Các vector embedding và chunk liên quan sẽ bị xóa vĩnh viễn khỏi bộ nhớ của AI.",
+      "detailsTitle": "Thông tin chi tiết tài liệu",
+      "fileName": "Tên tệp:",
+      "fileSize": "Dung lượng:",
+      "docId": "Mã tài liệu:",
+      "chunkCount": "Số lượng Vector Chunks:",
+      "createdAt": "Thời gian tải lên:",
+      "close": "Đóng",
+      "cancel": "Hủy",
+      "confirmDelete": "Xóa tài liệu"
     },
     "language": {
       "title": "Ngôn ngữ hiển thị",
