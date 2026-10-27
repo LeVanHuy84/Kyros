@@ -69,6 +69,16 @@ public class TaskTimeLog {
     this.notes = notes;
   }
 
+  public void stop(String notes, long durationMinutes) {
+    this.endTime = Instant.now();
+    this.durationMinutes = Math.max(1, durationMinutes);
+    this.notes = notes;
+  }
+
+  public boolean isActive() {
+    return endTime == null;
+  }
+
   public UUID getId() {
     return id;
   }

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,10 +24,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/workspaces/{workspaceId}/tasks")
 public class TaskTimeTrackingController {
 
-  public record StopTimerRequest(String notes, UUID userId) {}
+  public record StopTimerRequest(String notes, UUID userId, Boolean markCompleted) {}
 
   public record LogCompletedSessionRequest(
-      long durationMinutes, String notes, UUID userId, Instant startTime, Instant endTime) {}
+      long durationMinutes,
+      String notes,
+      UUID userId,
+      Instant startTime,
+      Instant endTime,
+      Boolean markCompleted) {}
 
   public record TimeLogResponse(
       UUID id,
@@ -80,8 +86,9 @@ public class TaskTimeTrackingController {
     TaskId tId = new TaskId(taskId);
     UserId uId = new UserId(resolveUserId(request != null ? request.userId() : null));
     String notes = request != null ? request.notes() : null;
+    Boolean markCompleted = request != null ? request.markCompleted() : null;
 
-    TaskTimeLog log = timeTrackingService.stopTimer(wsId, tId, uId, notes);
+    TaskTimeLog log = timeTrackingService.stopTimer(wsId, tId, uId, notes, markCompleted);
     return ResponseEntity.ok(toResponse(log));
   }
 
@@ -99,9 +106,11 @@ public class TaskTimeTrackingController {
     String notes = request != null ? request.notes() : null;
     Instant start = request != null ? request.startTime() : null;
     Instant end = request != null ? request.endTime() : null;
+    Boolean markCompleted = request != null ? request.markCompleted() : null;
 
     TaskTimeLog log =
-        timeTrackingService.logCompletedSession(wsId, tId, uId, duration, notes, start, end);
+        timeTrackingService.logCompletedSession(
+            wsId, tId, uId, duration, notes, start, end, markCompleted);
     return ResponseEntity.ok(toResponse(log));
   }
 
@@ -115,6 +124,19 @@ public class TaskTimeTrackingController {
     List<TimeLogResponse> list =
         timeTrackingService.getTaskLogs(wsId, tId).stream().map(this::toResponse).toList();
     return ResponseEntity.ok(list);
+  }
+
+  @DeleteMapping("/{taskId}/timer/logs/{logId}")
+  public ResponseEntity<Void> deleteLog(
+      @PathVariable("workspaceId") UUID workspaceId,
+      @PathVariable("taskId") UUID taskId,
+      @PathVariable("logId") UUID logId) {
+    validateWorkspace(workspaceId);
+    WorkspaceId wsId = new WorkspaceId(workspaceId);
+    TaskId tId = new TaskId(taskId);
+
+    timeTrackingService.deleteLog(wsId, tId, logId);
+    return ResponseEntity.noContent().build();
   }
 
   @GetMapping("/productivity/stats")

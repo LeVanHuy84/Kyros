@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CreateTaskDto, TaskItem, TaskPriority, UpdateTaskDto } from '../../models/task.models';
+import { CreateTaskDto, TaskItem, TaskPriority, TaskTimeLog, UpdateTaskDto } from '../../models/task.models';
 import { TasksService } from '../../services/tasks.service';
 import { TagPickerComponent } from '../tag-picker/tag-picker.component';
 import { AppIconComponent } from '@shared/components/icon/icon.component';
@@ -51,6 +51,7 @@ export class TaskFormModalComponent {
   readonly estimatedDuration = signal<number | null>(null);
   readonly tags = signal<string[]>([]);
   readonly autoSchedule = signal<boolean>(false);
+  readonly taskLogs = signal<TaskTimeLog[]>([]);
 
   readonly isSaving = signal<boolean>(false);
 
@@ -68,8 +69,13 @@ export class TaskFormModalComponent {
         this.estimatedDuration.set(task.estimatedDurationMinutes || null);
         this.tags.set([...task.tags]);
         this.autoSchedule.set(task.autoSchedule || false);
+        this.tasksService.getTaskLogs(task.id).subscribe({
+          next: (logs) => this.taskLogs.set(logs || []),
+          error: () => this.taskLogs.set([]),
+        });
       } else {
         this.resetForm();
+        this.taskLogs.set([]);
         this.priority.set(this.defaultPriority());
       }
     }, { allowSignalWrites: true });
@@ -84,6 +90,22 @@ export class TaskFormModalComponent {
 
   setPriority(p: TaskPriority): void {
     this.priority.set(p);
+  }
+
+  deleteSessionLog(logId: string, event: Event): void {
+    event.stopPropagation();
+    const task = this.taskToEdit();
+    if (!task) return;
+
+    this.tasksService.deleteTaskLog(task.id, logId).subscribe({
+      next: () => {
+        this.taskLogs.update((list) => list.filter((l) => l.id !== logId));
+        this.toastService.success('Đã xóa phiên làm việc.');
+      },
+      error: () => {
+        this.toastService.error('Không thể xóa phiên làm việc.');
+      },
+    });
   }
 
   handleSave(): void {

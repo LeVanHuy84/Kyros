@@ -14,6 +14,8 @@ public interface SpringDataTaskTimeLogRepository extends JpaRepository<TaskTimeL
 
   Optional<TaskTimeLogJpaEntity> findByIdAndWorkspaceId(UUID id, UUID workspaceId);
 
+  void deleteByIdAndWorkspaceId(UUID id, UUID workspaceId);
+
   @Query(
       "SELECT t FROM TaskTimeLogJpaEntity t WHERE t.workspaceId = :workspaceId AND t.taskId ="
           + " :taskId AND t.userId = :userId AND t.endTime IS NULL")
@@ -34,4 +36,17 @@ public interface SpringDataTaskTimeLogRepository extends JpaRepository<TaskTimeL
       @Param("userId") UUID userId,
       @Param("fromTime") Instant fromTime,
       @Param("toTime") Instant toTime);
+
+  @Query(
+      "SELECT t.taskId, COALESCE(SUM(t.durationMinutes), 0L), COUNT(t.id) "
+          + "FROM TaskTimeLogJpaEntity t "
+          + "WHERE t.workspaceId = :workspaceId AND t.endTime IS NOT NULL "
+          + "GROUP BY t.taskId")
+  List<Object[]> findDurationSummariesByWorkspaceId(@Param("workspaceId") UUID workspaceId);
+
+  @Query(
+      "SELECT t FROM TaskTimeLogJpaEntity t "
+          + "WHERE t.workspaceId = :workspaceId AND t.notes IS NOT NULL AND TRIM(t.notes) != '' "
+          + "ORDER BY t.startTime DESC")
+  List<TaskTimeLogJpaEntity> findRecentNotesByWorkspaceId(@Param("workspaceId") UUID workspaceId);
 }

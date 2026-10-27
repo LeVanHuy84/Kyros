@@ -29,6 +29,7 @@ dependencies {
     runtimeOnly libs.postgresql
     implementation libs.springdoc.openapi.starter.webmvc.api
     implementation libs.scalar.webmvc
+    implementation libs.pdfbox
 
 
     testImplementation libs.spring.boot.starter.test

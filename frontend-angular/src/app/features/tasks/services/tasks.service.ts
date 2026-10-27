@@ -36,6 +36,9 @@ interface RawTaskResponse {
   tags: string[];
   dueDate?: string;
   estimatedDurationMinutes?: number;
+  actualDurationMinutes?: number;
+  loggedSessionsCount?: number;
+  lastSessionNotes?: string;
   autoSchedule?: boolean;
   subtasks?: string;
   lifecycleStatus: string;
@@ -561,7 +564,8 @@ export class TasksService {
   logCompletedSession(
     taskId: string,
     durationMinutes: number,
-    notes?: string
+    notes?: string,
+    markCompleted: boolean = false
   ): Observable<TaskTimeLog> {
     const wsId = this.wsId;
     if (!wsId) return throwError(() => new Error('No active workspace'));
@@ -570,11 +574,36 @@ export class TasksService {
       .post<TaskTimeLog>(`/api/v1/workspaces/${wsId}/tasks/${taskId}/timer/log`, {
         durationMinutes,
         notes: notes?.trim() || null,
+        markCompleted,
       })
       .pipe(
         tap(() => {
           this.activeTimer.set(null);
           this.loadProductivityStats().subscribe();
+          this.loadTasks().subscribe();
+        })
+      );
+  }
+
+  getTaskLogs(taskId: string): Observable<TaskTimeLog[]> {
+    const wsId = this.wsId;
+    if (!wsId) return of([]);
+
+    return this.http.get<TaskTimeLog[]>(
+      `/api/v1/workspaces/${wsId}/tasks/${taskId}/timer/logs`
+    );
+  }
+
+  deleteTaskLog(taskId: string, logId: string): Observable<void> {
+    const wsId = this.wsId;
+    if (!wsId) return of(undefined);
+
+    return this.http
+      .delete<void>(`/api/v1/workspaces/${wsId}/tasks/${taskId}/timer/logs/${logId}`)
+      .pipe(
+        tap(() => {
+          this.loadProductivityStats().subscribe();
+          this.loadTasks().subscribe();
         })
       );
   }
@@ -636,6 +665,9 @@ export class TasksService {
       tags: r.tags || [],
       dueDate: r.dueDate,
       estimatedDurationMinutes: r.estimatedDurationMinutes,
+      actualDurationMinutes: r.actualDurationMinutes || 0,
+      loggedSessionsCount: r.loggedSessionsCount || 0,
+      lastSessionNotes: r.lastSessionNotes,
       autoSchedule: r.autoSchedule,
       subtasks: r.subtasks,
       lifecycleStatus: isCompleted ? 'Completed' : (r.lifecycleStatus as any) || 'Active',

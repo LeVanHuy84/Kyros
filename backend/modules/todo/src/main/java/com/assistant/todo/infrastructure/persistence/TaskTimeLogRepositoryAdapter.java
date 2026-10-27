@@ -6,7 +6,9 @@ import com.assistant.todo.domain.model.TaskId;
 import com.assistant.todo.domain.model.TaskTimeLog;
 import com.assistant.todo.domain.repository.TaskTimeLogRepository;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,6 +36,11 @@ public class TaskTimeLogRepositoryAdapter implements TaskTimeLogRepository {
   }
 
   @Override
+  public void deleteById(UUID id, WorkspaceId workspaceId) {
+    springDataRepo.deleteByIdAndWorkspaceId(id, workspaceId.value());
+  }
+
+  @Override
   public Optional<TaskTimeLog> findActiveLog(
       WorkspaceId workspaceId, TaskId taskId, UserId userId) {
     return springDataRepo
@@ -58,6 +65,58 @@ public class TaskTimeLogRepositoryAdapter implements TaskTimeLogRepository {
         .stream()
         .map(this::toDomain)
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public Map<TaskId, TaskDurationSummary> getDurationSummaries(WorkspaceId workspaceId) {
+    Map<TaskId, TaskDurationSummary> map = new HashMap<>();
+    List<Object[]> summaries =
+        springDataRepo.findDurationSummariesByWorkspaceId(workspaceId.value());
+    for (Object[] row : summaries) {
+      if (row != null && row.length >= 3 && row[0] != null) {
+        TaskId taskId = new TaskId((UUID) row[0]);
+        long totalMins = row[1] != null ? ((Number) row[1]).longValue() : 0L;
+        int count = row[2] != null ? ((Number) row[2]).intValue() : 0;
+        map.put(taskId, new TaskDurationSummary(totalMins, count, null));
+      }
+    }
+
+    List<TaskTimeLogJpaEntity> recentNotes =
+        springDataRepo.findRecentNotesByWorkspaceId(workspaceId.value());
+    for (TaskTimeLogJpaEntity entity : recentNotes) {
+      if (entity.getTaskId() != null) {
+        TaskId taskId = new TaskId(entity.getTaskId());
+        TaskDurationSummary existing = map.get(taskId);
+        if (existing != null && existing.lastNotes() == null) {
+          map.put(
+              taskId,
+              new TaskDurationSummary(
+                  existing.totalMinutes(), existing.sessionCount(), entity.getNotes()));
+        } else if (existing == null) {
+          map.put(taskId, new TaskDurationSummary(0L, 0, entity.getNotes()));
+        }
+      }
+    }
+
+    return map;
+  }
+
+  @Override
+  public TaskDurationSummary getTaskDurationSummary(WorkspaceId workspaceId, TaskId taskId) {
+    List<TaskTimeLog> logs = findByTaskId(workspaceId, taskId);
+    long totalMins = 0;
+    int count = 0;
+    String lastNotes = null;
+    for (TaskTimeLog log : logs) {
+      if (log.getEndTime() != null) {
+        totalMins += log.getDurationMinutes();
+        count++;
+        if (lastNotes == null && log.getNotes() != null && !log.getNotes().isBlank()) {
+          lastNotes = log.getNotes();
+        }
+      }
+    }
+    return new TaskDurationSummary(totalMins, count, lastNotes);
   }
 
   private TaskTimeLogJpaEntity toEntity(TaskTimeLog log) {

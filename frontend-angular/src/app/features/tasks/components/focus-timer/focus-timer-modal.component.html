@@ -119,6 +119,52 @@
             class="notes-input"
           />
         </div>
+
+        <!-- Mark Task Completed Checkbox -->
+        <div class="complete-checkbox-row">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [ngModel]="markCompleted()"
+              (ngModelChange)="markCompleted.set($event)"
+              class="checkbox-input"
+            />
+            <span class="checkbox-text">Đánh dấu hoàn thành công việc sau phiên này</span>
+          </label>
+        </div>
+
+        <!-- Past Sessions History -->
+        @if (taskLogs().length > 0) {
+          <div class="past-sessions-section">
+            <div class="past-sessions-header">
+              <app-icon name="clock" [size]="13"></app-icon>
+              <span>Lịch sử các phiên đã làm ({{ taskLogs().length }})</span>
+            </div>
+            <div class="past-sessions-list">
+              @for (log of taskLogs(); track log.id) {
+                <div class="session-log-item">
+                  <div class="session-log-meta">
+                    <span class="session-duration">⏱️ {{ log.durationMinutes }} phút</span>
+                    <div class="meta-right">
+                      <span class="session-time">{{ log.startTime | date:'HH:mm dd/MM' }}</span>
+                      <button
+                        type="button"
+                        class="delete-log-btn"
+                        (click)="deleteSessionLog(log.id, $event)"
+                        title="Xóa phiên này"
+                      >
+                        <app-icon name="trash" [size]="12"></app-icon>
+                      </button>
+                    </div>
+                  </div>
+                  @if (log.notes) {
+                    <p class="session-note-content">💬 {{ log.notes }}</p>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
       </div>
 
       <!-- Footer -->

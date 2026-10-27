@@ -11,6 +11,9 @@ export interface TaskItem {
   tags: string[];
   dueDate?: string; // ISO string
   estimatedDurationMinutes?: number;
+  actualDurationMinutes?: number;
+  loggedSessionsCount?: number;
+  lastSessionNotes?: string;
   autoSchedule?: boolean;
   subtasks?: string;
   lifecycleStatus: 'Active' | 'Completed' | 'SoftDeleted';
@@ -32,6 +35,9 @@ export interface CreateTaskDto {
   tags?: string[];
   dueDate?: string; // ISO string
   estimatedDurationMinutes?: number;
+  actualDurationMinutes?: number;
+  loggedSessionsCount?: number;
+  lastSessionNotes?: string;
   autoSchedule?: boolean;
   subtasks?: string;
 }

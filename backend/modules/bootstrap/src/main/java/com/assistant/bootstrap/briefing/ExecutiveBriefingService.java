@@ -70,7 +70,7 @@ public class ExecutiveBriefingService {
         todoPort.listTasks(workspaceId, null, null, null, false, null, null, PageRequest.of(0, 20));
     List<Task> pendingTasks = tasksPage.getContent();
 
-    // 3. Format Morning Markdown Briefing
+    // 3. Format Daytime Markdown Briefing based on current hour
     String dateStr =
         now.format(
             DateTimeFormatter.ofPattern(
@@ -79,8 +79,28 @@ public class ExecutiveBriefingService {
       dateStr = Character.toUpperCase(dateStr.charAt(0)) + dateStr.substring(1);
     }
 
+    int hour = now.getHour();
+    String headerTitle;
+    String adviceText;
+    if (hour < 12) {
+      headerTitle = "## Bản Tin Điều Hành Buổi Sáng\n\n";
+      adviceText =
+          "**Gợi ý của Trợ lý Kyros:** Ưu tiên xử lý các đầu việc quan trọng trước 11:30 sáng và"
+              + " dành 60-90 phút cho các dự án cốt lõi.";
+    } else if (hour < 18) {
+      headerTitle = "## Bản Tin Điều Hành Trong Ngày (Buổi Chiều)\n\n";
+      adviceText =
+          "**Gợi ý của Trợ lý Kyros:** Tập trung giải quyết dứt điểm các công việc còn tồn đọng"
+              + " trong buổi chiều và kiểm tra lại lịch trình các cuộc họp còn lại.";
+    } else {
+      headerTitle = "## Bản Tin Điều Hành Trong Ngày\n\n";
+      adviceText =
+          "**Gợi ý của Trợ lý Kyros:** Rà soát lại tiến độ các công việc trong ngày và chuẩn bị sẵn"
+              + " sàng kế hoạch cho ngày mai.";
+    }
+
     StringBuilder md = new StringBuilder();
-    md.append("## Bản Tin Điều Hành Buổi Sáng\n\n");
+    md.append(headerTitle);
     md.append("**Thời gian:** ").append(dateStr).append("\n\n");
 
     md.append("### Lịch trình & Cuộc họp hôm nay (").append(events.size()).append(")\n");
@@ -127,9 +147,7 @@ public class ExecutiveBriefingService {
       md.append("\n");
     }
 
-    md.append(
-        "**Gợi ý của Trợ lý Kyros:** Ưu tiên xử lý các đầu việc quan trọng trước 11:30 sáng và"
-            + " dành 60-90 phút cho các dự án cốt lõi.");
+    md.append(adviceText);
 
     String briefingTitle = "Bản tin điều hành: " + dateStr;
     String finalContent = md.toString();

@@ -274,6 +274,111 @@
   }
 }
 
+.complete-checkbox-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+
+  .checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+
+    .checkbox-input {
+      accent-color: var(--color-primary);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+  }
+}
+
+.past-sessions-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background-color: var(--bg-surface-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+
+  .past-sessions-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .past-sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 110px;
+    overflow-y: auto;
+
+    .session-log-item {
+      padding: 6px 8px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+
+      .session-log-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        font-weight: 600;
+
+        .session-duration {
+          color: var(--color-primary);
+        }
+
+        .session-time {
+          color: var(--text-muted);
+          font-size: 10.5px;
+        }
+
+        .meta-right {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+
+          .delete-log-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px;
+            border-radius: var(--radius-xs);
+            display: inline-flex;
+            align-items: center;
+
+            &:hover {
+              color: var(--color-danger);
+              background-color: rgba(239, 68, 68, 0.1);
+            }
+          }
+        }
+      }
+
+      .session-note-content {
+        margin: 3px 0 0 0;
+        font-size: 11px;
+        color: var(--text-secondary);
+        line-height: 1.3;
+      }
+    }
+  }
+}
+
 .modal-footer {
   flex-shrink: 0;
   display: flex;

@@ -138,6 +138,45 @@
           </label>
         </div>
 
+        <!-- Time Tracking & Sessions Summary -->
+        @if (taskToEdit()) {
+          <div class="form-group time-tracking-summary-box">
+            <div class="time-summary-header">
+              <div class="header-title">
+                <app-icon name="clock" [size]="14"></app-icon>
+                <span>Thời gian làm việc & Phiên tập trung</span>
+              </div>
+              @if (taskToEdit()!.actualDurationMinutes && taskToEdit()!.actualDurationMinutes! > 0) {
+                <span class="actual-time-badge">Tổng đã làm: {{ taskToEdit()!.actualDurationMinutes }}m</span>
+              }
+            </div>
+
+            @if (taskLogs().length > 0) {
+              <div class="session-logs-mini-list">
+                @for (log of taskLogs(); track log.id) {
+                  <div class="session-mini-item">
+                    <span class="mini-duration">⏱️ {{ log.durationMinutes }}m</span>
+                    <span class="mini-date">{{ log.startTime | date:'dd/MM HH:mm' }}</span>
+                    @if (log.notes) {
+                      <span class="mini-notes" [title]="log.notes">💬 {{ log.notes }}</span>
+                    }
+                    <button
+                      type="button"
+                      class="delete-mini-log-btn"
+                      (click)="deleteSessionLog(log.id, $event)"
+                      title="Xóa phiên này"
+                    >
+                      <app-icon name="trash" [size]="11"></app-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            } @else {
+              <span class="no-logs-hint">Chưa có phiên làm việc nào được ghi nhận cho công việc này.</span>
+            }
+          </div>
+        }
+
         <!-- Footer / Action Buttons -->
         <div class="modal-footer">
           <span class="shortcut-hint">{{ languageService.t().tasks.form.shortcutHint }}</span>

@@ -4,6 +4,7 @@ import com.assistant.kernel.context.WorkspaceContextHolder;
 import com.assistant.kernel.domain.RecurrencePattern;
 import com.assistant.kernel.domain.WorkspaceId;
 import com.assistant.todo.application.port.in.TodoPort;
+import com.assistant.todo.application.service.TaskTimeTrackingService;
 import com.assistant.todo.domain.model.Priority;
 import com.assistant.todo.domain.model.Tag;
 import com.assistant.todo.domain.model.Task;
@@ -40,9 +41,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class TodoController {
 
   private final TodoPort todoPort;
+  private final TaskTimeTrackingService timeTrackingService;
 
   public TodoController(TodoPort todoPort) {
+    this(todoPort, null);
+  }
+
+  public TodoController(TodoPort todoPort, TaskTimeTrackingService timeTrackingService) {
     this.todoPort = todoPort;
+    this.timeTrackingService = timeTrackingService;
   }
 
   private void validateWorkspace(UUID pathWorkspaceId) {
@@ -99,10 +106,25 @@ public class TodoController {
     Priority p = priority != null ? Priority.valueOf(priority) : null;
     Pageable pageable = PageRequest.of(page, size);
 
+    var summaries =
+        timeTrackingService != null
+            ? timeTrackingService.getTasksDurationSummaries(wsId)
+            : java.util.Collections
+                .<TaskId,
+                    com.assistant.todo.domain.repository.TaskTimeLogRepository.TaskDurationSummary>
+                    emptyMap();
+
     Page<TaskResponse> tasks =
         todoPort
             .listTasks(wsId, title, p, tag, isCompleted, dueDateFrom, dueDateTo, pageable)
-            .map(TaskResponse::fromDomain);
+            .map(
+                task -> {
+                  var summary = summaries.get(task.getId());
+                  long actual = summary != null ? summary.totalMinutes() : 0L;
+                  int count = summary != null ? summary.sessionCount() : 0;
+                  String lastNotes = summary != null ? summary.lastNotes() : null;
+                  return TaskResponse.fromDomain(task, actual, count, lastNotes);
+                });
     return ResponseEntity.ok(tasks);
   }
 
@@ -127,9 +149,15 @@ public class TodoController {
     WorkspaceId wsId = new WorkspaceId(workspaceId);
     TaskId tId = new TaskId(taskId);
 
+    var summary =
+        timeTrackingService != null ? timeTrackingService.getTaskDurationSummary(wsId, tId) : null;
+    long actual = summary != null ? summary.totalMinutes() : 0L;
+    int count = summary != null ? summary.sessionCount() : 0;
+    String lastNotes = summary != null ? summary.lastNotes() : null;
+
     return todoPort
         .getTask(tId, wsId)
-        .map(TaskResponse::fromDomain)
+        .map(task -> TaskResponse.fromDomain(task, actual, count, lastNotes))
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }

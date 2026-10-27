@@ -4,6 +4,7 @@ import com.assistant.agent.domain.model.ToolExecutionResult;
 import com.assistant.agent.domain.tool.AgentToolContract;
 import com.assistant.kernel.context.WorkspaceContextHolder;
 import com.assistant.kernel.domain.WorkspaceId;
+import com.assistant.memory.application.service.HybridSearchService;
 import com.assistant.memory.domain.model.Note;
 import com.assistant.memory.domain.repository.MemoryEntryRepository;
 import com.assistant.memory.domain.repository.NoteRepository;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,15 +25,26 @@ public class SemanticSearchToolAdapter implements AgentToolContract {
 
   private final NoteRepository noteRepository;
   private final MemoryEntryRepository memoryEntryRepository;
+  private final HybridSearchService hybridSearchService;
   private final ObjectMapper objectMapper;
+
+  @Autowired
+  public SemanticSearchToolAdapter(
+      NoteRepository noteRepository,
+      MemoryEntryRepository memoryEntryRepository,
+      @Autowired(required = false) HybridSearchService hybridSearchService,
+      ObjectMapper objectMapper) {
+    this.noteRepository = noteRepository;
+    this.memoryEntryRepository = memoryEntryRepository;
+    this.hybridSearchService = hybridSearchService;
+    this.objectMapper = objectMapper;
+  }
 
   public SemanticSearchToolAdapter(
       NoteRepository noteRepository,
       MemoryEntryRepository memoryEntryRepository,
       ObjectMapper objectMapper) {
-    this.noteRepository = noteRepository;
-    this.memoryEntryRepository = memoryEntryRepository;
-    this.objectMapper = objectMapper;
+    this(noteRepository, memoryEntryRepository, null, objectMapper);
   }
 
   @Override
@@ -78,47 +91,66 @@ public class SemanticSearchToolAdapter implements AgentToolContract {
       WorkspaceId workspaceId = new WorkspaceId(wsUuid);
 
       List<String> searchResults = new ArrayList<>();
-      String lowerQuery = query.toLowerCase(Locale.ROOT);
-      @SuppressWarnings("StringSplitter")
-      String[] keywords = WHITESPACE_PATTERN.split(lowerQuery);
 
-      // 1. Search notes
-      List<Note> allNotes = noteRepository.findByWorkspaceId(workspaceId);
-      List<ScoredItem> scoredNotes = new ArrayList<>();
-      for (Note note : allNotes) {
-        String title = note.getTitle() != null ? note.getTitle().toLowerCase(Locale.ROOT) : "";
-        String content =
-            note.getContent() != null ? note.getContent().toLowerCase(Locale.ROOT) : "";
-        int score = 0;
-        for (String kw : keywords) {
-          if (kw.length() >= 2) {
-            if (title.contains(kw)) {
-              score += 3;
-            }
-            if (content.contains(kw)) {
-              score += 1;
+      // 1. Vector + Lexical Hybrid Search (Notes & Documents)
+      if (hybridSearchService != null) {
+        try {
+          var hybridResults = hybridSearchService.search(wsUuid, query, limit);
+          if (hybridResults != null && !hybridResults.isEmpty()) {
+            for (var res : hybridResults) {
+              searchResults.add(
+                  String.format(
+                      "[%s] (RRF: %.4f):\n%s", res.documentType(), res.rrfScore(), res.content()));
             }
           }
-        }
-        if (score > 0 || title.contains(lowerQuery) || content.contains(lowerQuery)) {
-          scoredNotes.add(
-              new ScoredItem(
-                  score,
-                  "Note: \""
-                      + note.getTitle()
-                      + "\" (ID: "
-                      + note.getId().value()
-                      + ")\n"
-                      + (note.getContent() != null ? note.getContent() : "")));
+        } catch (Exception e) {
+          // Fallback to legacy note search if vector search fails
         }
       }
 
-      scoredNotes.sort((a, b) -> Integer.compare(b.score, a.score));
-      for (int i = 0; i < Math.min(limit, scoredNotes.size()); i++) {
-        searchResults.add(scoredNotes.get(i).text);
+      // If hybrid search didn't yield results, fallback to direct note scanning
+      if (searchResults.isEmpty()) {
+        String lowerQuery = query.toLowerCase(Locale.ROOT);
+        @SuppressWarnings("StringSplitter")
+        String[] keywords = WHITESPACE_PATTERN.split(lowerQuery);
+
+        List<Note> allNotes = noteRepository.findByWorkspaceId(workspaceId);
+        List<ScoredItem> scoredNotes = new ArrayList<>();
+        for (Note note : allNotes) {
+          String title = note.getTitle() != null ? note.getTitle().toLowerCase(Locale.ROOT) : "";
+          String content =
+              note.getContent() != null ? note.getContent().toLowerCase(Locale.ROOT) : "";
+          int score = 0;
+          for (String kw : keywords) {
+            if (kw.length() >= 2) {
+              if (title.contains(kw)) {
+                score += 3;
+              }
+              if (content.contains(kw)) {
+                score += 1;
+              }
+            }
+          }
+          if (score > 0 || title.contains(lowerQuery) || content.contains(lowerQuery)) {
+            scoredNotes.add(
+                new ScoredItem(
+                    score,
+                    "Note: \""
+                        + note.getTitle()
+                        + "\" (ID: "
+                        + note.getId().value()
+                        + ")\n"
+                        + (note.getContent() != null ? note.getContent() : "")));
+          }
+        }
+
+        scoredNotes.sort((a, b) -> Integer.compare(b.score, a.score));
+        for (int i = 0; i < Math.min(limit, scoredNotes.size()); i++) {
+          searchResults.add(scoredNotes.get(i).text);
+        }
       }
 
-      // 2. Search memory facts
+      // 2. Search semantic memory facts
       try {
         var memEntries = memoryEntryRepository.findBySemanticQuery(workspaceId, query, limit, 0.5);
         for (var entry : memEntries) {

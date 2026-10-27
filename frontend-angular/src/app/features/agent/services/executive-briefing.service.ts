@@ -16,15 +16,17 @@ export class ExecutiveBriefingService {
   readonly isGenerating = signal<boolean>(false);
 
   /**
-   * Fetches today's executive daily briefing.
+   * Fetches today's executive daily briefing or evening wrapup.
    */
-  getTodayBriefing(): Observable<ExecutiveBriefingData> {
+  getTodayBriefing(type: 'MORNING' | 'EVENING' = 'MORNING'): Observable<ExecutiveBriefingData> {
     const wsId = this.workspaceService.activeWorkspaceId();
     if (!wsId) return throwError(() => new Error('No active workspace'));
 
     this.isLoading.set(true);
     return this.http
-      .get<ExecutiveBriefingData>(`/api/v1/workspaces/${wsId}/executive/briefing/today`)
+      .get<ExecutiveBriefingData>(`/api/v1/workspaces/${wsId}/executive/briefing/today`, {
+        params: { type },
+      })
       .pipe(
         tap((data) => {
           this.briefing.set(data);
@@ -38,9 +40,9 @@ export class ExecutiveBriefingService {
   }
 
   /**
-   * Generates or regenerates fresh executive daily briefing.
+   * Generates or regenerates fresh executive daily briefing or evening wrapup.
    */
-  generateBriefing(): Observable<ExecutiveBriefingData> {
+  generateBriefing(type: 'MORNING' | 'EVENING' = 'MORNING'): Observable<ExecutiveBriefingData> {
     const wsId = this.workspaceService.activeWorkspaceId();
     if (!wsId) return throwError(() => new Error('No active workspace'));
 
@@ -48,7 +50,10 @@ export class ExecutiveBriefingService {
     return this.http
       .post<ExecutiveBriefingData>(
         `/api/v1/workspaces/${wsId}/executive/briefing/generate`,
-        {}
+        {},
+        {
+          params: { type },
+        }
       )
       .pipe(
         tap((data) => {

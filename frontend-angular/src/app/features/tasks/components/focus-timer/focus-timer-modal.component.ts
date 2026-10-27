@@ -3,6 +3,7 @@ import {
   Component,
   OnDestroy,
   computed,
+  effect,
   inject,
   input,
   output,
@@ -10,7 +11,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TaskItem } from '../../models/task.models';
+import { TaskItem, TaskTimeLog } from '../../models/task.models';
 import { TasksService } from '../../services/tasks.service';
 import { AppIconComponent } from '@shared/components/icon/icon.component';
 import { ButtonComponent } from '@shared/components/button/button.component';
@@ -38,8 +39,51 @@ export class FocusTimerModalComponent implements OnDestroy {
   readonly secondsLeft = signal<number>(25 * 60);
   readonly isRunning = signal<boolean>(false);
   readonly notes = signal<string>('');
+  readonly markCompleted = signal<boolean>(false);
+  readonly taskLogs = signal<TaskTimeLog[]>([]);
+  readonly isLoadingLogs = signal<boolean>(false);
 
   private intervalId: any = null;
+
+  constructor() {
+    effect(() => {
+      const isModalOpen = this.isOpen();
+      const currentTask = this.task();
+      if (isModalOpen && currentTask) {
+        this.loadSessionLogs(currentTask.id);
+      }
+    });
+  }
+
+  loadSessionLogs(taskId: string): void {
+    this.isLoadingLogs.set(true);
+    this.tasksService.getTaskLogs(taskId).subscribe({
+      next: (logs) => {
+        this.taskLogs.set(logs || []);
+        this.isLoadingLogs.set(false);
+      },
+      error: () => {
+        this.taskLogs.set([]);
+        this.isLoadingLogs.set(false);
+      },
+    });
+  }
+
+  deleteSessionLog(logId: string, event: Event): void {
+    event.stopPropagation();
+    const t = this.task();
+    if (!t) return;
+
+    this.tasksService.deleteTaskLog(t.id, logId).subscribe({
+      next: () => {
+        this.taskLogs.update((list) => list.filter((l) => l.id !== logId));
+        this.toastService.success('Đã xóa phiên làm việc.');
+      },
+      error: () => {
+        this.toastService.error('Không thể xóa phiên làm việc.');
+      },
+    });
+  }
 
   readonly minutesDisplay = computed(() => {
     const mins = Math.floor(this.secondsLeft() / 60);
@@ -110,11 +154,17 @@ export class FocusTimerModalComponent implements OnDestroy {
     const duration =
       elapsedMinutes >= 1 ? elapsedMinutes : Math.round(this.totalSeconds() / 60);
 
-    this.tasksService.logCompletedSession(t.id, duration, this.notes()).subscribe({
+    const markDone = this.markCompleted();
+
+    this.tasksService.logCompletedSession(t.id, duration, this.notes(), markDone).subscribe({
       next: () => {
-        this.toastService.success(`Đã lưu phiên tập trung (${duration} phút) vào hệ thống!`);
+        const msg = markDone
+          ? `Đã lưu phiên tập trung (${duration} phút) và hoàn thành công việc!`
+          : `Đã lưu phiên tập trung (${duration} phút) vào hệ thống!`;
+        this.toastService.success(msg);
         this.resetTimer();
         this.notes.set('');
+        this.markCompleted.set(false);
         this.closeModal.emit();
       },
       error: () => {

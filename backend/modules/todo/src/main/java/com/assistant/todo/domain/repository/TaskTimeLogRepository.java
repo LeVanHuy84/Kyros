@@ -6,10 +6,14 @@ import com.assistant.todo.domain.model.TaskId;
 import com.assistant.todo.domain.model.TaskTimeLog;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface TaskTimeLogRepository {
+
+  record TaskDurationSummary(long totalMinutes, int sessionCount, String lastNotes) {}
+
   TaskTimeLog save(TaskTimeLog timeLog);
 
   Optional<TaskTimeLog> findById(UUID id, WorkspaceId workspaceId);
@@ -20,4 +24,10 @@ public interface TaskTimeLogRepository {
 
   List<TaskTimeLog> findByTimeRange(
       WorkspaceId workspaceId, UserId userId, Instant fromTime, Instant toTime);
+
+  Map<TaskId, TaskDurationSummary> getDurationSummaries(WorkspaceId workspaceId);
+
+  TaskDurationSummary getTaskDurationSummary(WorkspaceId workspaceId, TaskId taskId);
+
+  void deleteById(UUID id, WorkspaceId workspaceId);
 }

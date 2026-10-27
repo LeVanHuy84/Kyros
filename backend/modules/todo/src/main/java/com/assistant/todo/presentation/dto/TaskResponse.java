@@ -21,8 +21,16 @@ public record TaskResponse(
     String lifecycleStatus,
     int version,
     Instant createdAt,
-    Instant updatedAt) {
+    Instant updatedAt,
+    Long actualDurationMinutes,
+    Integer loggedSessionsCount,
+    String lastSessionNotes) {
   public static TaskResponse fromDomain(Task task) {
+    return fromDomain(task, 0L, 0, null);
+  }
+
+  public static TaskResponse fromDomain(
+      Task task, Long actualDurationMinutes, Integer loggedSessionsCount, String lastSessionNotes) {
     return new TaskResponse(
         task.getId().toString(),
         task.getWorkspaceId().toString(),
@@ -38,6 +46,9 @@ public record TaskResponse(
         task.getLifecycleStatus().name(),
         task.getVersion(),
         task.getCreatedAt(),
-        task.getUpdatedAt());
+        task.getUpdatedAt(),
+        actualDurationMinutes != null ? actualDurationMinutes : 0L,
+        loggedSessionsCount != null ? loggedSessionsCount : 0,
+        lastSessionNotes);
   }
 }

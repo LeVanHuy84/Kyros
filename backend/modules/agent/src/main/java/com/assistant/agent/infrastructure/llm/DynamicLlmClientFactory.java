@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 public class DynamicLlmClientFactory {
 
   private static final Logger log = LoggerFactory.getLogger(DynamicLlmClientFactory.class);
-  private static final String DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
+  private static final String DEFAULT_BASE_URL = "https://api.groq.com/openai";
   private static final String DEFAULT_MODEL = "llama-3.3-70b-versatile";
 
   private final Cache<String, ChatClient> clientCache;
@@ -45,7 +45,16 @@ public class DynamicLlmClientFactory {
       @Nullable String model) {
 
     String rawBaseUrl = (baseUrl != null && !baseUrl.isBlank()) ? baseUrl.trim() : DEFAULT_BASE_URL;
-    final String finalBaseUrl = rawBaseUrl.endsWith("/") ? rawBaseUrl : rawBaseUrl + "/";
+    while (rawBaseUrl.endsWith("/")) {
+      rawBaseUrl = rawBaseUrl.substring(0, rawBaseUrl.length() - 1);
+    }
+    if (rawBaseUrl.endsWith("/v1")) {
+      rawBaseUrl = rawBaseUrl.substring(0, rawBaseUrl.length() - 3);
+    }
+    while (rawBaseUrl.endsWith("/")) {
+      rawBaseUrl = rawBaseUrl.substring(0, rawBaseUrl.length() - 1);
+    }
+    final String finalBaseUrl = rawBaseUrl;
     final String finalModel = (model != null && !model.isBlank()) ? model.trim() : DEFAULT_MODEL;
     final String finalApiKey = (apiKey != null) ? apiKey.trim() : "";
 

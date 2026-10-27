@@ -188,4 +188,28 @@ class ToolAdaptersTest {
 
     assertTrue(result.output().contains("Task Test"));
   }
+
+  @Test
+  void testSemanticSearchToolAdapter() {
+    SemanticSearchToolAdapter adapter =
+        new SemanticSearchToolAdapter(noteRepository, memoryEntryRepository, null, objectMapper);
+    assertEquals("semantic_search", adapter.getName());
+
+    UUID wsId = UUID.randomUUID();
+    Note note =
+        new Note(
+            NoteId.random(),
+            new WorkspaceId(wsId),
+            new UserId(UUID.randomUUID()),
+            "Tài chính quý 4",
+            "Ngân sách dự kiến 500 triệu",
+            null,
+            null);
+    when(noteRepository.findByWorkspaceId(any())).thenReturn(List.of(note));
+
+    String json = "{\"workspaceId\":\"" + wsId + "\",\"query\":\"tài chính\"}";
+    ToolExecutionResult result = adapter.execute(json);
+
+    assertTrue(result.output().contains("Tài chính quý 4"));
+  }
 }

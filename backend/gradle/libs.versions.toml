@@ -12,6 +12,7 @@ scalarWebmvc = "0.6.60"
 springAi = "1.0.0-M6"
 caffeine = "3.1.8"
 djl = "0.31.1"
+pdfbox = "3.0.4"
 
 [libraries]
 spring-ai-bom = { module = "org.springframework.ai:spring-ai-bom", version.ref = "springAi" }
@@ -39,6 +40,7 @@ flyway-core = { module = "org.flywaydb:flyway-core" }
 flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 archunit = { module = "com.tngtech.archunit:archunit", version.ref = "archUnit" }
+pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
 
 spotless-gradle-plugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 spotbugs-gradle-plugin = { module = "com.github.spotbugs:com.github.spotbugs.gradle.plugin", version.ref = "spotbugsPlugin" }
